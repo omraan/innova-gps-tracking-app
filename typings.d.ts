@@ -19,6 +19,11 @@ type CustomerList = {
 	value: Customer;
 };
 
+type OrderList = {
+	name: ID;
+	value: Order;
+};
+
 interface RegisterOrder {
 	organisationId: string;
 	driverId?: string;

@@ -3,11 +3,11 @@ import { useNavigation } from "@react-navigation/native";
 import { Icon } from "@rneui/themed";
 import { signOut } from "firebase/auth";
 import React, { useLayoutEffect } from "react";
+import colors from "../colors";
 import { auth } from "../firebase";
 import CustomersScreen from "../screens/CustomersScreen";
 import OrderCreateScreen from "../screens/OrderCreateScreen";
 import OrdersScreen from "../screens/OrdersScreen";
-
 export type TabStackParamList = {
 	Customers: undefined;
 	Orders: undefined;
@@ -33,7 +33,7 @@ const TabNavigator = () => {
 	return (
 		<Tab.Navigator
 			screenOptions={({ route }) => ({
-				tabBarActiveTintColor: "#58C1CC",
+				tabBarActiveTintColor: colors.secondary,
 				tabBarInactiveTintColor: "gray",
 				tabBarIcon: ({ focused, color, size }) => {
 					let iconName;
@@ -47,13 +47,19 @@ const TabNavigator = () => {
 					} else if (route.name === "Logout") {
 						iconName = "log-out";
 					}
-					return <Icon name={iconName!} type="entypo" color={focused ? "#59C1CC" : "gray"} />;
+					return <Icon name={iconName!} type="entypo" color={focused ? colors.secondary : "gray"} />;
 				},
 			})}
 		>
 			<Tab.Screen name="Customers" component={CustomersScreen} />
 			<Tab.Screen name="Orders" component={OrdersScreen} />
-			<Tab.Screen name="OrderCreate" component={OrderCreateScreen} />
+			<Tab.Screen
+				name="OrderCreate"
+				component={OrderCreateScreen}
+				options={{
+					tabBarLabel: "Create Order",
+				}}
+			/>
 			<Tab.Screen
 				name="Logout"
 				component={CustomersScreen} // This is a placeholder, it won't be shown

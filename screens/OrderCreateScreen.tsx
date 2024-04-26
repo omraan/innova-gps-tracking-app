@@ -40,7 +40,7 @@ const OrderCreateScreen = () => {
 		// Now you can safely use customers.data
 		// alert("Customers data is: " + customers.data.getCustomers);
 		const selectedCustomer = customers.data.getCustomers.filter(
-			(customer: Customer) => customer.value.code === data
+			(customer: CustomerList) => customer.value.code === data
 		);
 		if (selectedCustomer.length > 0) {
 			alert(

@@ -2,9 +2,10 @@ import { useQuery } from "@apollo/client";
 import { BottomTabNavigationProp } from "@react-navigation/bottom-tabs";
 import { CompositeNavigationProp, useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { Image, Input } from "@rneui/themed";
-import React, { useEffect, useLayoutEffect, useState } from "react";
-import { ActivityIndicator, SafeAreaView, ScrollView, Text, View } from "react-native";
+import { Input } from "@rneui/themed";
+import { LinearGradient } from "expo-linear-gradient";
+import React, { useLayoutEffect, useState } from "react";
+import { SafeAreaView, ScrollView, Text, View } from "react-native";
 import { useTailwind } from "tailwind-rn";
 import CustomerCard from "../components/CustomerCard";
 import { GET_CUSTOMERS } from "../graphql/queries";
@@ -29,31 +30,38 @@ const CustomersScreen = () => {
 	}, []);
 
 	return (
-		<ScrollView style={tw("bg-gray-100")}>
-			<SafeAreaView>
-				<View>
-					<View style={tw("p-5 rounded-lg")}>
-						<Input
-							placeholder="Search..."
-							value={input}
-							onChangeText={(text) => setInput(text)}
-							style={tw("text-sm rounded")}
-							containerStyle={tw("pt-5 pb-0 px-5 mb-2 bg-white rounded")}
-						/>
-					</View>
+		<LinearGradient
+			style={tw("h-full")}
+			colors={["rgba(99, 102, 241, 1)", "rgba(99, 102, 241, 0.4)"]}
+			start={[0, 0]}
+			end={[1, 1]}
+		>
+			<ScrollView style={tw("")}>
+				<SafeAreaView>
+					<View>
+						<View style={tw("p-5 rounded-lg")}>
+							<Input
+								placeholder="Search..."
+								value={input}
+								onChangeText={(text) => setInput(text)}
+								style={tw("text-sm rounded")}
+								containerStyle={tw("pt-5 pb-0 px-5 bg-white rounded")}
+							/>
+						</View>
 
-					{data?.getCustomers
-						?.filter(
-							(customer: CustomerList) =>
-								customer.value.name.toLowerCase().includes(input.toLowerCase()) ||
-								customer.value.code.toLowerCase().includes(input.toLowerCase())
-						)
-						.map((customer: CustomerList) => (
-							<CustomerCard {...customer.value} key={customer.name} />
-						))}
-				</View>
-			</SafeAreaView>
-		</ScrollView>
+						{data?.getCustomers
+							?.filter(
+								(customer: CustomerList) =>
+									customer.value.name.toLowerCase().includes(input.toLowerCase()) ||
+									customer.value.code.toLowerCase().includes(input.toLowerCase())
+							)
+							.map((customer: CustomerList) => (
+								<CustomerCard {...customer.value} key={customer.name} />
+							))}
+					</View>
+				</SafeAreaView>
+			</ScrollView>
+		</LinearGradient>
 	);
 };
 

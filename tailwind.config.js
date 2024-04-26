@@ -1,7 +1,11 @@
+const colors = require("./colors");
+
 module.exports = {
 	content: ["./**/*.tsx"],
 	theme: {
-		extend: {},
+		extend: {
+			colors: colors,
+		},
 	},
 	plugins: [],
 	corePlugins: require("tailwind-rn/unsupported-core-plugins"),

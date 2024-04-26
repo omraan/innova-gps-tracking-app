@@ -19,7 +19,7 @@ const CustomerCard = (customer: Customer) => {
 				})
 			}
 		>
-			<Card containerStyle={tw("m-0 border-t-0 border-b py-5 px-5")}>
+			<Card containerStyle={[tw("mx-5 my-2 border-0 rounded py-5 px-5 bg-white"), { elevation: 2 }]}>
 				<View style={tw("flex-row justify-between")}>
 					<View style={tw("flex-row items-center")}>
 						<View
@@ -27,10 +27,10 @@ const CustomerCard = (customer: Customer) => {
 								"bg-gray-200 w-[60px] items-center px-2 py-1 h-8 flex-col justify-center rounded mr-5"
 							)}
 						>
-							<Text style={tw("text-xs font-bold text-gray-500")}>{customer.code}</Text>
+							<Text style={tw("text-xs font-bold text-primary")}>{customer.code}</Text>
 						</View>
 						<View style={tw("flex")}>
-							<Text style={tw("text-lg text-gray-600 font-bold")}>{customer.name}</Text>
+							<Text style={tw("text-lg text-primary font-bold")}>{customer.name}</Text>
 						</View>
 					</View>
 				</View>
