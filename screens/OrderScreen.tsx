@@ -24,7 +24,7 @@ const OrderScreen = () => {
 
 	useLayoutEffect(() => {
 		navigation.setOptions({
-			headerTitle: order.trackingItems.customer.name,
+			headerTitle: "test",
 			headerTitleStyle: { color: "Black" },
 			headerBackTitle: "Deliveries",
 			headerTintColor: "pink",

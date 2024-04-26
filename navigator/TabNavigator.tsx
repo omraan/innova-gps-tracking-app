@@ -1,12 +1,18 @@
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { useNavigation } from "@react-navigation/native";
 import { Icon } from "@rneui/themed";
+import { signOut } from "firebase/auth";
 import React, { useLayoutEffect } from "react";
+import { auth } from "../firebase";
 import CustomersScreen from "../screens/CustomersScreen";
+import OrderCreateScreen from "../screens/OrderCreateScreen";
 import OrdersScreen from "../screens/OrdersScreen";
+
 export type TabStackParamList = {
 	Customers: undefined;
 	Orders: undefined;
+	Logout: undefined;
+	OrderCreate: undefined;
 };
 
 const Tab = createBottomTabNavigator<TabStackParamList>();
@@ -20,22 +26,44 @@ const TabNavigator = () => {
 		});
 	}, []);
 
+	const handleSignOut = () => {
+		signOut(auth).then(() => console.log("User signed out!"));
+	};
+
 	return (
 		<Tab.Navigator
 			screenOptions={({ route }) => ({
 				tabBarActiveTintColor: "#58C1CC",
 				tabBarInactiveTintColor: "gray",
 				tabBarIcon: ({ focused, color, size }) => {
+					let iconName;
+
 					if (route.name === "Customers") {
-						return <Icon name="users" type="entypo" color={focused ? "#59C1CC" : "gray"} />;
+						iconName = "users";
 					} else if (route.name === "Orders") {
-						return <Icon name="box" type="entypo" color={focused ? "#EB6A7C" : "gray"} />;
+						iconName = "box";
+					} else if (route.name === "OrderCreate") {
+						iconName = "plus";
+					} else if (route.name === "Logout") {
+						iconName = "log-out";
 					}
+					return <Icon name={iconName!} type="entypo" color={focused ? "#59C1CC" : "gray"} />;
 				},
 			})}
 		>
 			<Tab.Screen name="Customers" component={CustomersScreen} />
 			<Tab.Screen name="Orders" component={OrdersScreen} />
+			<Tab.Screen name="OrderCreate" component={OrderCreateScreen} />
+			<Tab.Screen
+				name="Logout"
+				component={CustomersScreen} // This is a placeholder, it won't be shown
+				listeners={{
+					tabPress: (e) => {
+						e.preventDefault(); // Prevent the default action (navigation)
+						handleSignOut();
+					},
+				}}
+			/>
 		</Tab.Navigator>
 	);
 };

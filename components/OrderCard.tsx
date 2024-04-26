@@ -24,16 +24,13 @@ const OrderCard = ({ order }: Props) => {
 				<View style={tw("flex-row justify-between items-center")}>
 					<View>
 						<Icon name="truck-delivery" type="material-community" color={"#EB6A7C"} />
-						<Text style={{ fontSize: 10 }}>{new Date(order.createdAt).toDateString()}</Text>
+						<Text style={{ fontSize: 10 }}>{new Date(order.expectedDeliveryDate!).toDateString()}</Text>
 					</View>
 					<View>
-						<Text style={[tw("text-gray-400"), { fontSize: 10 }]}>
-							{order.carrier}-{order.trackingId}
-						</Text>
-						<Text style={tw("text-gray-500 text-xl")}>{order.trackingItems.customer.name}</Text>
+						<Text style={[tw("text-gray-400"), { fontSize: 10 }]}>{order.orderCategory}</Text>
+						<Text style={tw("text-gray-500 text-xl")}></Text>
 					</View>
 					<View style={tw("flex-row items-center")}>
-						<Text style={[tw("text-sm"), { color: "#EB6A7C" }]}>{order.trackingItems.items.length} x</Text>
 						<Icon style={tw("ml-2")} name="box" type="feather" />
 					</View>
 				</View>

@@ -1,3 +1,4 @@
+import { useQuery } from "@apollo/client";
 import { BottomTabNavigationProp } from "@react-navigation/bottom-tabs";
 import { CompositeNavigationProp, useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -6,6 +7,7 @@ import React, { useLayoutEffect, useState } from "react";
 import { ActivityIndicator, ScrollView, Text, View } from "react-native";
 import { useTailwind } from "tailwind-rn";
 import OrderCard from "../components/OrderCard";
+import { GET_CUSTOMERS, GET_ORDERS } from "../graphql/queries";
 import useOrders from "../hooks/useOrders";
 import { RootStackParamList } from "../navigator/RootNavigator";
 import { TabStackParamList } from "../navigator/TabNavigator";
@@ -19,7 +21,7 @@ const OrdersScreen = () => {
 	const tw = useTailwind();
 	const navigation = useNavigation<OrdersScreenNavigationProp>();
 
-	const { loading, error, orders } = useOrders();
+	const { loading, error, data } = useQuery(GET_ORDERS);
 	const [ascending, setAscending] = useState<Boolean>(false);
 
 	useLayoutEffect(() => {
@@ -30,6 +32,11 @@ const OrdersScreen = () => {
 			),
 		});
 	}, []);
+
+	useLayoutEffect(() => {
+		console.log(data);
+		// console.log(error);
+	}, [data, error]);
 
 	return (
 		<ScrollView style={{ backgroundColor: "#EB6A7C" }}>
@@ -47,17 +54,10 @@ const OrdersScreen = () => {
 				>
 					{ascending ? "Showing Oldest First" : "Showing Most Recent First"}
 				</Button>
-				{orders
-					?.sort((a, b) => {
-						if (ascending) {
-							return new Date(a.createdAt) > new Date(b.createdAt) ? 1 : -1;
-						} else {
-							return new Date(a.createdAt) < new Date(b.createdAt) ? 1 : -1;
-						}
-					})
-					.map((order) => (
-						<OrderCard key={order.trackingId} order={order} />
-					))}
+				{data?.getOrders.map((order: Order) => (
+					<OrderCard key={order.id} order={order} />
+					// <Text key={order.id}>{order.id}</Text>
+				))}
 			</View>
 		</ScrollView>
 	);
