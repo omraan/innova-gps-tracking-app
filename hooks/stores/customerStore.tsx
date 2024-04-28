@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { GET_CUSTOMERS } from "../../graphql/queries";
+import { asyncStorageAdapter } from "../../lib/asyncStorageAdapter";
 import { client } from "../../lib/client";
 import { useUserStore } from "./userStore";
 
@@ -82,6 +83,7 @@ export const useCustomerStore = create<CustomerStore>()(
 		}),
 		{
 			name: "customer-storage",
+			storage: asyncStorageAdapter,
 		}
 	)
 );

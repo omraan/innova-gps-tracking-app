@@ -1,40 +1,60 @@
-import { ApolloClient, ApolloProvider, InMemoryCache, createHttpLink, gql } from "@apollo/client";
+import { ApolloClient, ApolloProvider, InMemoryCache, createHttpLink, gql, useLazyQuery } from "@apollo/client";
 import { loadDevMessages, loadErrorMessages } from "@apollo/client/dev";
 import { NavigationContainer } from "@react-navigation/native";
 import { onAuthStateChanged } from "firebase/auth";
 import { useEffect, useLayoutEffect, useState } from "react";
 import { TailwindProvider } from "tailwind-rn";
-import UserContext from "./UserContext";
 import { auth } from "./firebase";
+import { GET_CUSTOMERS_BY_ORGANISATION_ID, GET_USER_BY_ID } from "./graphql/queries";
+import { useCustomerStore } from "./hooks/stores/customerStore";
+import { useUserStore } from "./hooks/stores/userStore";
 import RootNavigator from "./navigator/RootNavigator";
 import SignInScreen from "./screens/login/SignInScreen";
 import utilities from "./tailwind.json";
 
-export default function App() {
-	// if (__DEV__) {
-	// 	// Adds messages only in a dev environment
-	// 	loadDevMessages();
-	// 	loadErrorMessages();
-	// }
-	const [initializing, setInitializing] = useState(true);
-	const [user, setUser] = useState(null);
-	const [userId, setUserId] = useState<string | null>(null);
+type AppContentProps = {
+	userId: string | null;
+};
 
-	const url = `https://${process.env.REACT_APP_STEPZEN_ACCOUNT}.stepzen.net/${process.env.REACT_APP_STEPZEN_ENDPOINT}/__graphql`;
-	// Handle user state changes
-	function onAuthStateChange(user: any) {
-		setUser(user);
-		if (initializing) setInitializing(false);
-	}
+const AppContent = ({ userId }: AppContentProps) => {
+	const { selectedUser, setSelectedUser } = useUserStore();
+	const [getUserById, { data: userData }] = useLazyQuery(GET_USER_BY_ID);
+	// const [getCustomersByOrganisationId, { data: customerData }] = useLazyQuery(GET_CUSTOMERS_BY_ORGANISATION_ID);
+	const { initCustomers } = useCustomerStore();
+	useEffect(() => {
+		if (userId !== null) {
+			getUserById({ variables: { id: userId } });
+		}
+	}, [userId]);
 
 	useEffect(() => {
-		const subscriber = onAuthStateChanged(auth, onAuthStateChange);
-		return subscriber; // unsubscribe on unmount
-	}, []);
+		if (userData?.getUserById) {
+			console.log("selected org id", userData.getUserById.selectedOrganisationId);
+			setSelectedUser(userData.getUserById);
+		}
+	}, [userData]);
 
-	if (initializing) {
-		return null; // or a loading spinner
+	useEffect(() => {
+		if (selectedUser) {
+			initCustomers();
+		}
+	}, [selectedUser]);
+
+	return selectedUser && userId ? <RootNavigator /> : <SignInScreen />;
+};
+
+export default function App() {
+	if (__DEV__) {
+		// Adds messages only in a dev environment
+		loadDevMessages();
+		loadErrorMessages();
 	}
+	const [userId, setUserId] = useState<string | null>(null);
+
+	onAuthStateChanged(auth, (user) => setUserId(user && user.uid));
+
+	const url = `https://${process.env.REACT_APP_STEPZEN_ACCOUNT}.stepzen.net/${process.env.REACT_APP_STEPZEN_ENDPOINT}/__graphql`;
+
 	const client = new ApolloClient({
 		uri: url,
 		headers: {
@@ -46,11 +66,11 @@ export default function App() {
 	return (
 		// @ts-ignore - TailwinProvider is missing type definition
 		<TailwindProvider utilities={utilities}>
-			<UserContext.Provider value={{ userId, setUserId }}>
-				<ApolloProvider client={client}>
-					<NavigationContainer>{user ? <RootNavigator /> : <SignInScreen />}</NavigationContainer>
-				</ApolloProvider>
-			</UserContext.Provider>
+			<ApolloProvider client={client}>
+				<NavigationContainer>
+					<AppContent userId={userId} />
+				</NavigationContainer>
+			</ApolloProvider>
 		</TailwindProvider>
 	);
 }

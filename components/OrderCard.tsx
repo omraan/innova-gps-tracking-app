@@ -24,7 +24,7 @@ const OrderCard = ({ order, orderId }: OrderCardProps) => {
 				})
 			}
 		>
-			<Card containerStyle={tw("px-5 rounded-lg w-full mx-auto")}>
+			<Card containerStyle={tw("px-5 rounded w-full mx-auto py-3")}>
 				<View style={tw("flex-row justify-between items-center")}>
 					<View>
 						<Icon

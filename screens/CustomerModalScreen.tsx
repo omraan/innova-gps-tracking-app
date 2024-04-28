@@ -7,7 +7,6 @@ import { FlatList, Linking, Pressable, StyleSheet, Text, TouchableOpacity, View 
 import MapView, { Callout, Marker, PROVIDER_GOOGLE } from "react-native-maps";
 import { useTailwind } from "tailwind-rn";
 import DeliveryCard from "../components/DeliveryCard";
-import useCustomerOrders from "../hooks/useCustomerOrders";
 import { RootStackParamList } from "../navigator/RootNavigator";
 import { TabStackParamList } from "../navigator/TabNavigator";
 

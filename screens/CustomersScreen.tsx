@@ -9,6 +9,8 @@ import { SafeAreaView, ScrollView, Text, View } from "react-native";
 import { useTailwind } from "tailwind-rn";
 import CustomerCard from "../components/CustomerCard";
 import { GET_CUSTOMERS } from "../graphql/queries";
+import { useCustomerStore } from "../hooks/stores/customerStore";
+import { useUserStore } from "../hooks/stores/userStore";
 import { RootStackParamList } from "../navigator/RootNavigator";
 import { TabStackParamList } from "../navigator/TabNavigator";
 export type CustomerScreenNavigationProp = CompositeNavigationProp<
@@ -22,15 +24,21 @@ const CustomersScreen = () => {
 	const navigation = useNavigation<CustomerScreenNavigationProp>();
 	const [input, setInput] = useState<string>("");
 	const { loading, error, data } = useQuery(GET_CUSTOMERS);
-
+	const { selectedUser } = useUserStore();
+	const [loadingCustomers, setLoadingCustomers] = useState(true);
+	const { customers } = useCustomerStore();
 	useLayoutEffect(() => {
 		navigation.setOptions({
 			headerShown: false,
 		});
 	}, []);
 	useEffect(() => {
-		console.log("Customers", data);
-	}, [data]);
+		if (customers.length > 0 && selectedUser?.selectedOrganisationId) {
+			setLoadingCustomers(false);
+			console.log("Customers", customers);
+		}
+	}, [customers, selectedUser]);
+
 	return (
 		<LinearGradient
 			style={tw("h-full")}
@@ -41,7 +49,7 @@ const CustomersScreen = () => {
 			<ScrollView style={tw("")}>
 				<SafeAreaView>
 					<View>
-						<View style={tw("p-5 rounded-lg")}>
+						<View style={tw("p-5")}>
 							<Input
 								placeholder="Search..."
 								value={input}
@@ -51,16 +59,14 @@ const CustomersScreen = () => {
 							/>
 						</View>
 
-						{data?.getCustomers.length > 0 ? (
-							data?.getCustomers
+						{!loadingCustomers ? (
+							customers
 								?.filter(
-									(customer: CustomerList) =>
-										customer.value.name.toLowerCase().includes(input.toLowerCase()) ||
-										customer.value.code.toLowerCase().includes(input.toLowerCase())
+									(customer: Customer) =>
+										customer.name.toLowerCase().includes(input.toLowerCase()) ||
+										customer.code.toLowerCase().includes(input.toLowerCase())
 								)
-								.map((customer: CustomerList) => (
-									<CustomerCard {...customer.value} key={customer.name} />
-								))
+								.map((customer: Customer) => <CustomerCard {...customer} key={customer.name} />)
 						) : (
 							<View>
 								<Text>No customers found</Text>

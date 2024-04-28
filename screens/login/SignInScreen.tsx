@@ -1,31 +1,22 @@
+import { useLazyQuery, useQuery } from "@apollo/client";
 import { LinearGradient } from "expo-linear-gradient";
 import { signInWithEmailAndPassword } from "firebase/auth";
-import React, { useContext, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { Alert, Pressable, SafeAreaView, StyleSheet, Text, TextInput, View } from "react-native";
 import { useTailwind } from "tailwind-rn";
-import UserContext from "../../UserContext";
 import { auth } from "../../firebase";
 
 export default function SignInScreen() {
-	const [email, setEmail] = useState("test@test.nl");
-	const [password, setPassword] = useState("OTtest01!");
+	const [email, setEmail] = useState("omraan93@gmail.com");
+	const [password, setPassword] = useState("omraan");
 	const [loading, setLoading] = useState(false);
 	const tw = useTailwind();
-	const userContext = React.useContext(UserContext);
-
-	if (!userContext) {
-		throw new Error("UserContext is null");
-	}
-	const { setUserId } = userContext;
 
 	const handleSignIn = async () => {
 		// Handle sign-in logic here
 		setLoading(true);
 		try {
 			const response = await signInWithEmailAndPassword(auth, email, password);
-			if (response) {
-				setUserId(response.user.uid);
-			}
 		} catch (error: any) {
 			console.error(error);
 			Alert.alert("Failed to sign in" + error.message);
@@ -44,7 +35,7 @@ export default function SignInScreen() {
 				<View style={tw(`mb-2`)}>
 					<TextInput
 						style={tw(
-							`px-4 pt-1 pb-4 border border-gray-300 rounded-lg text-white text-lg mb-5 w-[80%] mx-auto`
+							`px-4 pt-1 pb-4 border border-gray-300 rounded-lg text-white text-lg mb-5 w-[80%] mx-auto tracking-wider`
 						)}
 						value={email}
 						onChangeText={setEmail}
@@ -54,7 +45,7 @@ export default function SignInScreen() {
 					/>
 					<TextInput
 						style={tw(
-							`px-4 pt-1 pb-4 border border-gray-300 rounded-lg text-white text-lg mb-5 w-[80%] mx-auto`
+							`px-4 pt-1 pb-4 border border-gray-300 rounded-lg text-white text-lg mb-5 w-[80%] mx-auto tracking-wider`
 						)}
 						value={password}
 						onChangeText={setPassword}
@@ -69,7 +60,7 @@ export default function SignInScreen() {
 						)}
 						onPress={handleSignIn}
 					>
-						<Text style={tw("text-lg text-primary")}>Log in</Text>
+						<Text style={tw("text-lg text-primary font-bold tracking-wider")}>Log in</Text>
 					</Pressable>
 				</View>
 			</SafeAreaView>

@@ -86,7 +86,7 @@ const OrdersScreen = () => {
 				<SafeAreaView>
 					<View style={tw("p-5")}>
 						<View>
-							<View style={tw("bg-white p-5 flex-row justify-between items-center rounded-lg")}>
+							<View style={tw("bg-white p-5 flex-row justify-between items-center rounded mb-3")}>
 								<View>
 									<RNDateTimePicker display="compact" value={date} mode="date" onChange={onChange} />
 								</View>

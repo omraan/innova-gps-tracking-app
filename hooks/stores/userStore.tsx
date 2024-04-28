@@ -1,14 +1,11 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { set as dbSet, push, ref, remove, update } from "firebase/database";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { db } from "../../firebase";
 import { GET_USERS } from "../../graphql/queries";
+import { asyncStorageAdapter } from "../../lib/asyncStorageAdapter"; // adjust the path as needed
 import { client } from "../../lib/client";
-
-// We use GraphQL for gathering information about Users
-// For mutations we need to use Firebase Realtime Database directly
-// The reason is that Firebase is object-oriented and doesn't fit well with GraphQL queries/mutations
-// Therefore we need to flatten the query result to match the structure of the type User
 
 type UserInit = {
 	name: string;
@@ -109,6 +106,7 @@ export const useUserStore = create<UserStore>()(
 		}),
 		{
 			name: "user-storage",
+			storage: asyncStorageAdapter,
 		}
 	)
 );

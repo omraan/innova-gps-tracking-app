@@ -20,6 +20,29 @@ export const GET_CUSTOMERS = gql`
 		}
 	}
 `;
+
+export const GET_CUSTOMERS_BY_ORGANISATION_ID = gql`
+	query getCustomersByOrganisationId($organisationId: ID!) {
+		getCustomersByOrganisationId(organisationId: $organisationId) {
+			name
+			value {
+				name
+				email
+				lat
+				lng
+				organisationId
+				code
+				city
+				streetName
+				streetNumber
+				streetSuffix
+				phone_number
+				phone_number_2
+			}
+		}
+	}
+`;
+
 export const GET_ORGANISATIONS = gql`
 	query getOrganisations {
 		getOrganisations {
@@ -46,6 +69,17 @@ export const GET_USERS = gql`
 				status
 				selectedOrganisationId
 			}
+		}
+	}
+`;
+
+export const GET_USER_BY_ID = gql`
+	query getUserById($id: ID!) {
+		getUserById(id: $id) {
+			email
+			name
+			status
+			selectedOrganisationId
 		}
 	}
 `;

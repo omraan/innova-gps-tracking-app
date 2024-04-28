@@ -8,11 +8,12 @@ import { auth } from "../firebase";
 import CustomersScreen from "../screens/CustomersScreen";
 import OrderCreateScreen from "../screens/OrderCreateScreen";
 import OrdersScreen from "../screens/OrdersScreen";
+import SettingsScreen from "../screens/settings/SettingsScreen";
 export type TabStackParamList = {
 	Customers: undefined;
 	Orders: undefined;
-	Logout: undefined;
 	OrderCreate: undefined;
+	Settings: undefined;
 };
 
 const Tab = createBottomTabNavigator<TabStackParamList>();
@@ -26,10 +27,6 @@ const TabNavigator = () => {
 		});
 	}, []);
 
-	const handleSignOut = () => {
-		signOut(auth).then(() => console.log("User signed out!"));
-	};
-
 	return (
 		<Tab.Navigator
 			screenOptions={({ route }) => ({
@@ -37,17 +34,18 @@ const TabNavigator = () => {
 				tabBarInactiveTintColor: "gray",
 				tabBarIcon: ({ focused, color, size }) => {
 					let iconName;
-
+					let type = "entypo";
 					if (route.name === "Customers") {
 						iconName = "users";
 					} else if (route.name === "Orders") {
 						iconName = "box";
 					} else if (route.name === "OrderCreate") {
 						iconName = "plus";
-					} else if (route.name === "Logout") {
-						iconName = "log-out";
+					} else if (route.name === "Settings") {
+						iconName = "bars";
+						type = "font-awesome";
 					}
-					return <Icon name={iconName!} type="entypo" color={focused ? colors.secondary : "gray"} />;
+					return <Icon name={iconName!} type={type} color={focused ? colors.secondary : "gray"} />;
 				},
 			})}
 		>
@@ -60,16 +58,7 @@ const TabNavigator = () => {
 					tabBarLabel: "Create Order",
 				}}
 			/>
-			<Tab.Screen
-				name="Logout"
-				component={CustomersScreen} // This is a placeholder, it won't be shown
-				listeners={{
-					tabPress: (e) => {
-						e.preventDefault(); // Prevent the default action (navigation)
-						handleSignOut();
-					},
-				}}
-			/>
+			<Tab.Screen name="Settings" component={SettingsScreen} />
 		</Tab.Navigator>
 	);
 };
