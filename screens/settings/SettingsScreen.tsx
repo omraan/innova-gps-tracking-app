@@ -57,7 +57,9 @@ const SettingsScreen = () => {
 					</View>
 				)}
 				renderSectionHeader={({ section: { title } }) => (
-					<Text style={tw("p-5 bg-gray-100 text-center font-bold text-gray-400")}>{title}</Text>
+					<View style={[tw("border-b pb-2 border-gray-300")]}>
+						<Text style={tw("pt-1 text-lg bg-white text-center font-bold")}>{title}</Text>
+					</View>
 				)}
 				style={tw("flex-1")}
 			/>

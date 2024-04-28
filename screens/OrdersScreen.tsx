@@ -12,6 +12,7 @@ import RNPickerSelect from "react-native-picker-select";
 import { useTailwind } from "tailwind-rn";
 import OrderCard from "../components/OrderCard";
 import { GET_ORDERS } from "../graphql/queries";
+import { pickerSelectStyles } from "../lib/styles";
 import { RootStackParamList } from "../navigator/RootNavigator";
 import { TabStackParamList } from "../navigator/TabNavigator";
 export type OrdersScreenNavigationProp = CompositeNavigationProp<
@@ -36,29 +37,6 @@ const OrdersScreen = () => {
 		setDate(currentDate);
 	};
 
-	const pickerSelectStyles = StyleSheet.create({
-		inputIOS: {
-			fontSize: 16,
-			paddingVertical: 12,
-			paddingHorizontal: 20,
-			backgroundColor: "white",
-			borderWidth: 1,
-			borderColor: "gray",
-			borderRadius: 4,
-			color: "black",
-			textAlign: "center",
-		},
-		inputAndroid: {
-			fontSize: 16,
-			paddingHorizontal: 10,
-			paddingVertical: 8,
-			borderWidth: 0.5,
-			borderColor: "purple",
-			borderRadius: 8,
-			color: "black",
-			textAlign: "center",
-		},
-	});
 	function getISOWeek(date: Date) {
 		const tempDate: any = new Date(date.valueOf());
 		const dayNumber = (date.getUTCDay() + 6) % 7;

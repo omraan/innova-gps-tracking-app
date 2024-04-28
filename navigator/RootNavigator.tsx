@@ -55,7 +55,13 @@ const RootNavigator = () => {
 				<RootStack.Screen name="Settings" component={SettingsScreen} />
 			</RootStack.Group>
 			<RootStack.Group>
-				<RootStack.Screen name="Organisation" component={OrganisationScreen} />
+				<RootStack.Screen
+					name="Organisation"
+					component={OrganisationScreen}
+					options={{
+						headerBackTitle: "Settings", // Set your custom label here
+					}}
+				/>
 			</RootStack.Group>
 		</RootStack.Navigator>
 	);

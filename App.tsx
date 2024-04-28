@@ -2,10 +2,10 @@ import { ApolloClient, ApolloProvider, InMemoryCache, createHttpLink, gql, useLa
 import { loadDevMessages, loadErrorMessages } from "@apollo/client/dev";
 import { NavigationContainer } from "@react-navigation/native";
 import { onAuthStateChanged } from "firebase/auth";
-import { useEffect, useLayoutEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { TailwindProvider } from "tailwind-rn";
 import { auth } from "./firebase";
-import { GET_CUSTOMERS_BY_ORGANISATION_ID, GET_USER_BY_ID } from "./graphql/queries";
+import { GET_USER_BY_ID } from "./graphql/queries";
 import { useCustomerStore } from "./hooks/stores/customerStore";
 import { useOrganisationStore } from "./hooks/stores/organisationStore";
 import { useUserStore } from "./hooks/stores/userStore";
@@ -31,8 +31,7 @@ const AppContent = ({ userId }: AppContentProps) => {
 
 	useEffect(() => {
 		if (userData?.getUserById) {
-			console.log("selected org id", userData.getUserById.selectedOrganisationId);
-			setSelectedUser(userData.getUserById);
+			setSelectedUser({ ...userData.getUserById, id: userId });
 		}
 	}, [userData]);
 
