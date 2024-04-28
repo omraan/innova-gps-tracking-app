@@ -116,3 +116,17 @@ interface RegisterVehicle {
 interface Vehicle extends RegisterVehicle {
 	id: string;
 }
+
+interface RegisterOrganisation {
+	name: string;
+	address: string;
+	settings?: {
+		order: {
+			categories: string[];
+		};
+	};
+}
+
+interface Organisation extends RegisterOrganisation {
+	id: string;
+}

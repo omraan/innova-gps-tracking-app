@@ -7,6 +7,7 @@ import { TailwindProvider } from "tailwind-rn";
 import { auth } from "./firebase";
 import { GET_CUSTOMERS_BY_ORGANISATION_ID, GET_USER_BY_ID } from "./graphql/queries";
 import { useCustomerStore } from "./hooks/stores/customerStore";
+import { useOrganisationStore } from "./hooks/stores/organisationStore";
 import { useUserStore } from "./hooks/stores/userStore";
 import RootNavigator from "./navigator/RootNavigator";
 import SignInScreen from "./screens/login/SignInScreen";
@@ -21,6 +22,7 @@ const AppContent = ({ userId }: AppContentProps) => {
 	const [getUserById, { data: userData }] = useLazyQuery(GET_USER_BY_ID);
 	// const [getCustomersByOrganisationId, { data: customerData }] = useLazyQuery(GET_CUSTOMERS_BY_ORGANISATION_ID);
 	const { initCustomers } = useCustomerStore();
+	const { initOrganisations, initSelectedOrganisation } = useOrganisationStore();
 	useEffect(() => {
 		if (userId !== null) {
 			getUserById({ variables: { id: userId } });
@@ -37,6 +39,8 @@ const AppContent = ({ userId }: AppContentProps) => {
 	useEffect(() => {
 		if (selectedUser) {
 			initCustomers();
+			initOrganisations();
+			initSelectedOrganisation();
 		}
 	}, [selectedUser]);
 

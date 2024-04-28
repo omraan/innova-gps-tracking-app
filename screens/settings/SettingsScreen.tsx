@@ -34,6 +34,12 @@ const SettingsScreen = () => {
 		},
 	];
 
+	const handleItemPress = (item: string) => {
+		if (item === "Organisation") {
+			navigation.navigate("Organisation");
+		}
+	};
+
 	const handleSignOut = () => {
 		signOut(auth).then(() => console.log("User signed out!"));
 	};
@@ -43,8 +49,16 @@ const SettingsScreen = () => {
 			<SectionList
 				sections={sections}
 				keyExtractor={(item, index) => item + index}
-				renderItem={({ item }) => <Text style={tw("p-5")}>{item}</Text>}
-				renderSectionHeader={({ section: { title } }) => <Text style={tw("p-5 bg-gray-100")}>{title}</Text>}
+				renderItem={({ item }) => (
+					<View style={tw("border-b border-gray-200 py-2 ")}>
+						<Text style={tw("p-5 text-gray-700")} onPress={() => handleItemPress(item)}>
+							{item}
+						</Text>
+					</View>
+				)}
+				renderSectionHeader={({ section: { title } }) => (
+					<Text style={tw("p-5 bg-gray-100 text-center font-bold text-gray-400")}>{title}</Text>
+				)}
 				style={tw("flex-1")}
 			/>
 

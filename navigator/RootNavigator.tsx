@@ -6,6 +6,7 @@ import CustomerModalScreen from "../screens/CustomerModalScreen";
 import OrderCreateScreen from "../screens/OrderCreateScreen";
 import OrderModalScreen from "../screens/OrderModalScreen";
 import OrderScreen from "../screens/OrderScreen";
+import OrganisationScreen from "../screens/settings/OrganisationScreen";
 import SettingsScreen from "../screens/settings/SettingsScreen";
 import TabNavigator from "./TabNavigator";
 export type RootStackParamList = {
@@ -15,6 +16,7 @@ export type RootStackParamList = {
 	Order: { order: Order };
 	OrderCreate: undefined;
 	Settings: undefined;
+	Organisation: undefined;
 };
 
 const RootNavigator = () => {
@@ -51,6 +53,9 @@ const RootNavigator = () => {
 			</RootStack.Group>
 			<RootStack.Group>
 				<RootStack.Screen name="Settings" component={SettingsScreen} />
+			</RootStack.Group>
+			<RootStack.Group>
+				<RootStack.Screen name="Organisation" component={OrganisationScreen} />
 			</RootStack.Group>
 		</RootStack.Navigator>
 	);

@@ -70,10 +70,10 @@ const OrdersScreen = () => {
 		}
 		return 1 + Math.ceil((firstThursday - tempDate) / (7 * 24 * 3600 * 1000));
 	}
-	useEffect(() => {
-		console.log("Orders", data);
-		console.log("Error", error);
-	}, [data, error]);
+	// useEffect(() => {
+	// 	console.log("Orders", data);
+	// 	console.log("Error", error);
+	// }, [data, error]);
 
 	return (
 		<LinearGradient
