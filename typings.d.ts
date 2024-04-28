@@ -96,3 +96,23 @@ type CustomerResponse = {
 	name: ID;
 	value: Customer;
 };
+type RegisterUser = {
+	name: string;
+	email: string;
+	isAdmin: boolean;
+	status?: string;
+	selectedOrganisationId?: string;
+};
+
+interface User extends RegisterUser {
+	id: string;
+}
+interface RegisterVehicle {
+	name: string;
+	licensePlate: string;
+	organisationId?: string;
+}
+
+interface Vehicle extends RegisterVehicle {
+	id: string;
+}
