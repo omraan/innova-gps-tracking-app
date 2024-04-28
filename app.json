@@ -1,7 +1,7 @@
 {
 	"expo": {
-		"name": "ups-app",
-		"slug": "ups-app",
+		"name": "gps-tracking",
+		"slug": "gps-tracking",
 		"version": "1.0.0",
 		"orientation": "portrait",
 		"icon": "./assets/icon.png",
@@ -16,6 +16,10 @@
 			"supportsTablet": true,
 			"infoPlist": {
 				"NSCameraUsageDescription": "This app uses the camera to scan barcodes."
+			},
+			"bundleIdentifier": "com.innova.gpstracking",
+			"config": {
+				"googleMapsApiKey": "AIzaSyDB-FZjxkFGjiHJ-zYxnWDLq9VsRr4mRus"
 			}
 		},
 		"android": {
@@ -23,10 +27,24 @@
 			"adaptiveIcon": {
 				"foregroundImage": "./assets/adaptive-icon.png",
 				"backgroundColor": "#ffffff"
-			}
+			},
+			"package": "com.innova.gpstracking"
 		},
 		"web": {
 			"favicon": "./assets/favicon.png"
+		},
+		"plugins": [
+			[
+				"expo-dev-launcher",
+				{
+					"launchModeExperimental": "most-recent"
+				}
+			]
+		],
+		"extra": {
+			"eas": {
+				"projectId": "a245bd7e-82ee-49e0-9be6-92699343d76f"
+			}
 		}
 	}
 }

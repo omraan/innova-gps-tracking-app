@@ -4,10 +4,12 @@ import { NavigationContainer } from "@react-navigation/native";
 import { onAuthStateChanged } from "firebase/auth";
 import { useEffect, useLayoutEffect, useState } from "react";
 import { TailwindProvider } from "tailwind-rn";
+import UserContext from "./UserContext";
 import { auth } from "./firebase";
 import RootNavigator from "./navigator/RootNavigator";
 import SignInScreen from "./screens/login/SignInScreen";
 import utilities from "./tailwind.json";
+
 export default function App() {
 	// if (__DEV__) {
 	// 	// Adds messages only in a dev environment
@@ -16,6 +18,7 @@ export default function App() {
 	// }
 	const [initializing, setInitializing] = useState(true);
 	const [user, setUser] = useState(null);
+	const [userId, setUserId] = useState<string | null>(null);
 
 	const url = `https://${process.env.REACT_APP_STEPZEN_ACCOUNT}.stepzen.net/${process.env.REACT_APP_STEPZEN_ENDPOINT}/__graphql`;
 	// Handle user state changes
@@ -32,8 +35,6 @@ export default function App() {
 	if (initializing) {
 		return null; // or a loading spinner
 	}
-	console.log("URL is: ", url);
-
 	const client = new ApolloClient({
 		uri: url,
 		headers: {
@@ -45,12 +46,11 @@ export default function App() {
 	return (
 		// @ts-ignore - TailwinProvider is missing type definition
 		<TailwindProvider utilities={utilities}>
-			<ApolloProvider client={client}>
-				<NavigationContainer>{user ? <RootNavigator /> : <SignInScreen />}</NavigationContainer>
-				{/* <NavigationContainer>
-					<RootNavigator />
-				</NavigationContainer> */}
-			</ApolloProvider>
+			<UserContext.Provider value={{ userId, setUserId }}>
+				<ApolloProvider client={client}>
+					<NavigationContainer>{user ? <RootNavigator /> : <SignInScreen />}</NavigationContainer>
+				</ApolloProvider>
+			</UserContext.Provider>
 		</TailwindProvider>
 	);
 }

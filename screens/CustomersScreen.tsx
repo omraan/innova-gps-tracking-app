@@ -4,7 +4,7 @@ import { CompositeNavigationProp, useNavigation } from "@react-navigation/native
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Input } from "@rneui/themed";
 import { LinearGradient } from "expo-linear-gradient";
-import React, { useLayoutEffect, useState } from "react";
+import React, { useEffect, useLayoutEffect, useState } from "react";
 import { SafeAreaView, ScrollView, Text, View } from "react-native";
 import { useTailwind } from "tailwind-rn";
 import CustomerCard from "../components/CustomerCard";
@@ -28,7 +28,9 @@ const CustomersScreen = () => {
 			headerShown: false,
 		});
 	}, []);
-
+	useEffect(() => {
+		console.log("Customers", data);
+	}, [data]);
 	return (
 		<LinearGradient
 			style={tw("h-full")}
@@ -49,15 +51,21 @@ const CustomersScreen = () => {
 							/>
 						</View>
 
-						{data?.getCustomers
-							?.filter(
-								(customer: CustomerList) =>
-									customer.value.name.toLowerCase().includes(input.toLowerCase()) ||
-									customer.value.code.toLowerCase().includes(input.toLowerCase())
-							)
-							.map((customer: CustomerList) => (
-								<CustomerCard {...customer.value} key={customer.name} />
-							))}
+						{data?.getCustomers.length > 0 ? (
+							data?.getCustomers
+								?.filter(
+									(customer: CustomerList) =>
+										customer.value.name.toLowerCase().includes(input.toLowerCase()) ||
+										customer.value.code.toLowerCase().includes(input.toLowerCase())
+								)
+								.map((customer: CustomerList) => (
+									<CustomerCard {...customer.value} key={customer.name} />
+								))
+						) : (
+							<View>
+								<Text>No customers found</Text>
+							</View>
+						)}
 					</View>
 				</SafeAreaView>
 			</ScrollView>

@@ -20,8 +20,8 @@ type CustomerList = {
 };
 
 type OrderList = {
-	name: ID;
-	value: Order;
+	name: string;
+	value: OrderExtended;
 };
 
 interface RegisterOrder {
@@ -32,19 +32,44 @@ interface RegisterOrder {
 	expectedDeliveryDate?: number;
 	orderCategory: string;
 	events?: OrderEvent[];
+	status?: string;
 }
 
 interface Order extends RegisterOrder {
 	id: string;
 }
 
+interface OrderExtended extends Order {
+	driver: {
+		name: string;
+		email: string;
+	};
+	vehicle: {
+		licensePlate: string;
+		name: string;
+	};
+	customer: {
+		lat: number;
+		lng: number;
+		name: string;
+		code: string;
+		email?: string;
+		city?: string;
+		streetName?: string;
+		streetNumber?: number;
+		streetSuffix?: string;
+		phone_number?: string;
+		phone_number_2?: string;
+	};
+}
+
 interface RegisterOrderEvent {
-	date: number;
+	date?: number;
+	timestamp?: number;
 	status: string;
 	createdBy: string;
 	name: string;
-	description?: string;
-	currentIndicator: string;
+	currentIndicator?: string;
 }
 interface OrderEvent extends RegisterOrder {
 	id: string;

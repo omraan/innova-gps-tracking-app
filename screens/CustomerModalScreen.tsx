@@ -13,12 +13,12 @@ import { TabStackParamList } from "../navigator/TabNavigator";
 
 type ModalScreenNavigationProp = CompositeNavigationProp<
 	BottomTabNavigationProp<TabStackParamList>,
-	NativeStackNavigationProp<RootStackParamList, "MyModal">
+	NativeStackNavigationProp<RootStackParamList, "CustomerModal">
 >;
 
-type ModalScreenRoutProp = RouteProp<RootStackParamList, "MyModal">;
+type ModalScreenRoutProp = RouteProp<RootStackParamList, "CustomerModal">;
 
-const ModalScreen = () => {
+const CustomerModalScreen = () => {
 	const tw = useTailwind();
 	const navigation = useNavigation<ModalScreenNavigationProp>();
 	const {
@@ -100,4 +100,4 @@ const ModalScreen = () => {
 	);
 };
 
-export default ModalScreen;
+export default CustomerModalScreen;

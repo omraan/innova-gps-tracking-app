@@ -1,23 +1,34 @@
-import { Button } from "@rneui/themed";
 import { LinearGradient } from "expo-linear-gradient";
 import { signInWithEmailAndPassword } from "firebase/auth";
-import React, { useState } from "react";
-import { Pressable, SafeAreaView, StyleSheet, Text, TextInput, View } from "react-native";
+import React, { useContext, useState } from "react";
+import { Alert, Pressable, SafeAreaView, StyleSheet, Text, TextInput, View } from "react-native";
 import { useTailwind } from "tailwind-rn";
+import UserContext from "../../UserContext";
 import { auth } from "../../firebase";
+
 export default function SignInScreen() {
 	const [email, setEmail] = useState("test@test.nl");
 	const [password, setPassword] = useState("OTtest01!");
 	const [loading, setLoading] = useState(false);
 	const tw = useTailwind();
+	const userContext = React.useContext(UserContext);
+
+	if (!userContext) {
+		throw new Error("UserContext is null");
+	}
+	const { setUserId } = userContext;
+
 	const handleSignIn = async () => {
 		// Handle sign-in logic here
 		setLoading(true);
 		try {
 			const response = await signInWithEmailAndPassword(auth, email, password);
+			if (response) {
+				setUserId(response.user.uid);
+			}
 		} catch (error: any) {
 			console.error(error);
-			alert("Failed to sign in" + error.message);
+			Alert.alert("Failed to sign in" + error.message);
 		}
 	};
 

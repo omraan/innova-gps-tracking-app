@@ -59,7 +59,7 @@ export const GET_VEHICLES = gql`
 				licensePlate
 				organisationId
 			}
-		} #
+		}
 	}
 `;
 
@@ -74,11 +74,13 @@ export const GET_ORDERS = gql`
 				vehicleId
 				driverId
 				customerId
+				status
 				customer {
 					email
 					lat
 					lng
 					name
+					code
 				}
 				driver {
 					email
@@ -87,13 +89,6 @@ export const GET_ORDERS = gql`
 				vehicle {
 					licensePlate
 					name
-				}
-				events {
-					createdBy
-					currentIndicator
-					description
-					name
-					status
 				}
 			}
 		}
@@ -132,7 +127,6 @@ export const GET_ORDER_BY_ID = gql`
 			events {
 				createdBy
 				currentIndicator
-				description
 				name
 				status
 			}

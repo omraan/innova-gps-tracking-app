@@ -2,14 +2,15 @@ import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import React from "react";
 import { Text, View } from "react-native";
-import ModalScreen from "../screens/CustomerModalScreen";
+import CustomerModalScreen from "../screens/CustomerModalScreen";
 import OrderCreateScreen from "../screens/OrderCreateScreen";
+import OrderModalScreen from "../screens/OrderModalScreen";
 import OrderScreen from "../screens/OrderScreen";
 import TabNavigator from "./TabNavigator";
-
 export type RootStackParamList = {
 	Main: undefined;
 	CustomerModal: { customer: Customer };
+	OrderModal: { order: OrderExtended; orderId: string };
 	Order: { order: Order };
 	OrderCreate: undefined;
 };
@@ -27,7 +28,18 @@ const RootNavigator = () => {
 					presentation: "modal",
 				}}
 			>
-				<RootStack.Screen options={{ headerShown: false }} name="CustomerModal" component={ModalScreen} />
+				<RootStack.Screen
+					options={{ headerShown: false }}
+					name="CustomerModal"
+					component={CustomerModalScreen}
+				/>
+			</RootStack.Group>
+			<RootStack.Group
+				screenOptions={{
+					presentation: "modal",
+				}}
+			>
+				<RootStack.Screen options={{ headerShown: false }} name="OrderModal" component={OrderModalScreen} />
 			</RootStack.Group>
 			<RootStack.Group>
 				<RootStack.Screen name="Order" component={OrderScreen} />

@@ -5,21 +5,26 @@ import { Text, TouchableOpacity, View } from "react-native";
 import { useTailwind } from "tailwind-rn";
 import colors from "../colors";
 import { OrdersScreenNavigationProp } from "../screens/OrdersScreen";
-const OrderCard = (order: Order) => {
+
+type OrderCardProps = {
+	order: OrderExtended;
+	orderId: string;
+};
+
+const OrderCard = ({ order, orderId }: OrderCardProps) => {
 	const tw = useTailwind();
 	const navigation = useNavigation<OrdersScreenNavigationProp>();
-	useEffect(() => {
-		console.log(order);
-	}, []);
+
 	return (
 		<TouchableOpacity
 			onPress={() =>
-				navigation.navigate("Order", {
+				navigation.navigate("OrderModal", {
 					order: order,
+					orderId: orderId,
 				})
 			}
 		>
-			<Card containerStyle={tw("px-5 rounded-lg")}>
+			<Card containerStyle={tw("px-5 rounded-lg w-full mx-auto")}>
 				<View style={tw("flex-row justify-between items-center")}>
 					<View>
 						<Icon
@@ -34,12 +39,12 @@ const OrderCard = (order: Order) => {
 								: "No date available"}
 						</Text>
 					</View>
-					<View>
-						<Text style={[tw("text-gray-400"), { fontSize: 10 }]}>{order.orderCategory}</Text>
-						<Text style={tw("text-gray-500 text-xl")}></Text>
+					<View style={tw("flex-1 ml-5")}>
+						<Text style={[tw("text-gray-400 text-lg font-bold ")]}>{order.customer.name}</Text>
+						<Text style={tw("text-gray-500 text-sm")}>{order.customer.code}</Text>
 					</View>
 					<View style={tw("flex-row items-center")}>
-						<Icon style={tw("ml-2")} name="box" type="feather" />
+						<Icon style={tw("ml-2")} name="box" type="feather" color={colors.primary} />
 					</View>
 				</View>
 			</Card>
