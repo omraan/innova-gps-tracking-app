@@ -4,8 +4,8 @@ import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Icon } from "@rneui/themed";
 import React, { useEffect, useRef } from "react";
 import { FlatList, Linking, Pressable, StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import MapView, { Callout, Marker, PROVIDER_GOOGLE } from "react-native-maps";
 import { useTailwind } from "tailwind-rn";
+import { CustomerMap } from "../components/CustomerMap";
 import DeliveryCard from "../components/DeliveryCard";
 import { RootStackParamList } from "../navigator/RootNavigator";
 import { TabStackParamList } from "../navigator/TabNavigator";
@@ -23,8 +23,6 @@ const CustomerModalScreen = () => {
 	const {
 		params: { customer },
 	} = useRoute<ModalScreenRoutProp>();
-
-	const mapRef = useRef<MapView>(null);
 
 	useEffect(() => {
 		navigation.setOptions({
@@ -62,38 +60,9 @@ const CustomerModalScreen = () => {
 						}
 					>
 						<Text style={tw("text-white text-center")}>Navigate with Google Maps</Text>
+						<CustomerMap customer={customer} />
 					</Pressable>
 				</View>
-			</View>
-			<View style={{ flex: 1 }}>
-				<MapView
-					style={StyleSheet.absoluteFillObject}
-					provider={PROVIDER_GOOGLE}
-					initialRegion={{
-						latitude: customer.lat,
-						longitude: customer.lng,
-						latitudeDelta: 0.005,
-						longitudeDelta: 0.005,
-					}}
-					ref={mapRef}
-					// style={[tw("w-full"), { flexGrow: 1, height: 400 }]}
-				>
-					{customer.lat && customer.lng && (
-						<Marker
-							coordinate={{
-								latitude: customer.lat,
-								longitude: customer.lng,
-							}}
-							title="Delivery Location"
-							description={customer.city}
-							identifier="destination"
-						>
-							<Callout style={tw("w-[150px] py-5 px-3")}>
-								<Text style={tw("mb-5")}>{customer.city}</Text>
-							</Callout>
-						</Marker>
-					)}
-				</MapView>
 			</View>
 		</View>
 	);

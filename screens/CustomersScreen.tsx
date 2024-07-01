@@ -5,10 +5,10 @@ import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Input } from "@rneui/themed";
 import { LinearGradient } from "expo-linear-gradient";
 import React, { useEffect, useLayoutEffect, useState } from "react";
-import { SafeAreaView, ScrollView, Text, View } from "react-native";
+import { Alert, Dimensions, Linking, Pressable, SafeAreaView, ScrollView, Text, View } from "react-native";
 import { useTailwind } from "tailwind-rn";
 import CustomerCard from "../components/CustomerCard";
-import { GET_CUSTOMERS } from "../graphql/queries";
+import { CustomerMap } from "../components/CustomerMap";
 import { useCustomerStore } from "../hooks/stores/customerStore";
 import { useUserStore } from "../hooks/stores/userStore";
 import { RootStackParamList } from "../navigator/RootNavigator";
@@ -23,10 +23,12 @@ const CustomersScreen = () => {
 
 	const navigation = useNavigation<CustomerScreenNavigationProp>();
 	const [input, setInput] = useState<string>("");
-	const { loading, error, data } = useQuery(GET_CUSTOMERS);
 	const { selectedUser } = useUserStore();
-	const [loadingCustomers, setLoadingCustomers] = useState(true);
-	const { customers } = useCustomerStore();
+	const [loading, setLoading] = useState(true);
+	const { customers, initCustomers } = useCustomerStore();
+
+	const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
+
 	useLayoutEffect(() => {
 		navigation.setOptions({
 			headerShown: false,
@@ -34,8 +36,8 @@ const CustomersScreen = () => {
 	}, []);
 	useEffect(() => {
 		if (customers.length > 0 && selectedUser?.selectedOrganisationId) {
-			setLoadingCustomers(false);
-			console.log("Customers", customers);
+			console.log(customers);
+			setLoading(false);
 		}
 	}, [customers, selectedUser]);
 
@@ -48,30 +50,77 @@ const CustomersScreen = () => {
 		>
 			<ScrollView style={tw("")}>
 				<SafeAreaView>
-					<View>
-						<View style={tw("p-5")}>
-							<Input
-								placeholder="Search..."
-								value={input}
-								onChangeText={(text) => setInput(text)}
-								style={tw("text-sm rounded")}
-								containerStyle={tw("pt-5 pb-0 px-5 bg-white rounded")}
-							/>
+					<View style={tw("flex-row justify-between px-5 py-10")}>
+						<View style={tw("flex-1 ")}>
+							<View style={tw("p-5")}>
+								<Input
+									placeholder="Search..."
+									value={input}
+									onChangeText={(text) => setInput(text)}
+									style={tw("text-sm rounded")}
+									containerStyle={tw("pt-5 pb-0 px-5 bg-white rounded")}
+								/>
+							</View>
+
+							{!loading ? (
+								customers
+									?.filter(
+										(customer: Customer) =>
+											customer.name.toLowerCase().includes(input.toLowerCase()) ||
+											customer.code.toLowerCase().includes(input.toLowerCase())
+									)
+									.map((customer: Customer) => (
+										<CustomerCard
+											{...customer}
+											key={customer.name}
+											customer={customer}
+											onPress={() => {
+												const screenWidth = Dimensions.get("window").width;
+												if (screenWidth < 1000) {
+													navigation.navigate("CustomerModal", {
+														customer: customer,
+													});
+												} else {
+													setSelectedCustomer(customer);
+												}
+											}}
+										/>
+									))
+							) : (
+								<View>
+									<Text>No customers found</Text>
+								</View>
+							)}
 						</View>
 
-						{!loadingCustomers ? (
-							customers
-								?.filter(
-									(customer: Customer) =>
-										customer.name.toLowerCase().includes(input.toLowerCase()) ||
-										customer.code.toLowerCase().includes(input.toLowerCase())
-								)
-								.map((customer: Customer) => <CustomerCard {...customer} key={customer.name} />)
-						) : (
-							<View>
-								<Text>No customers found</Text>
-							</View>
-						)}
+						<View style={tw("hidden lg:block lg:flex-1 lg:p-5")}>
+							{selectedCustomer && (
+								<View style={[{ elevation: 2 }, tw("w-full h-full bg-white rounded min-h-[400px]")]}>
+									<View style={[tw("p-5 h-full")]}>
+										<Text style={[tw("text-center text-xl font-bold text-gray-600")]}>
+											{selectedCustomer.name}
+										</Text>
+										<Text style={[tw("text-center italic text-sm mb-5")]}>
+											Code: {selectedCustomer.code}
+										</Text>
+										<View style={tw("max-h-[300px] mb-5")}>
+											<CustomerMap customer={selectedCustomer} />
+										</View>
+
+										<Pressable
+											style={tw("bg-gray-500 px-5 py-2  my-3 rounded")}
+											onPress={() =>
+												Linking.openURL(
+													`http://maps.google.com/maps?daddr=${selectedCustomer.lat},${selectedCustomer.lng}`
+												)
+											}
+										>
+											<Text style={tw("text-white text-center")}>Navigate with Google Maps</Text>
+										</Pressable>
+									</View>
+								</View>
+							)}
+						</View>
 					</View>
 				</SafeAreaView>
 			</ScrollView>

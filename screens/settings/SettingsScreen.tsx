@@ -41,7 +41,7 @@ const SettingsScreen = () => {
 	};
 
 	const handleSignOut = () => {
-		signOut(auth).then(() => console.log("User signed out!"));
+		signOut(auth);
 	};
 
 	return (

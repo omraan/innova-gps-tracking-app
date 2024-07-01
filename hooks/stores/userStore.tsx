@@ -2,21 +2,10 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { set as dbSet, push, ref, remove, update } from "firebase/database";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { db } from "../../firebase";
-import { GET_USERS } from "../../graphql/queries";
+import { auth, db } from "../../firebase";
+import { GET_USERS, GET_USER_BY_ID, GET_USER_ORGANISATIONS_BY_ORGANISATION_ID } from "../../graphql/queries";
 import { asyncStorageAdapter } from "../../lib/asyncStorageAdapter"; // adjust the path as needed
 import { client } from "../../lib/client";
-
-type UserInit = {
-	name: string;
-	value: {
-		name: string;
-		email: string;
-		isAdmin: boolean;
-		status?: string;
-		selectedOrganisationId?: string;
-	};
-};
 
 type UserStore = {
 	users: User[];
@@ -24,6 +13,7 @@ type UserStore = {
 	setUsers: (users: User[]) => void;
 	setSelectedUser: (user: User) => void;
 	initUsers: () => Promise<boolean>;
+	initSelectedUser: () => Promise<boolean>;
 	updateUser: (user: Partial<User>) => Promise<boolean>;
 	error?: null | {
 		message?: string;
@@ -41,19 +31,52 @@ export const useUserStore = create<UserStore>()(
 			setSelectedUser: (user) => set(() => ({ selectedUser: user })),
 			initUsers: async () => {
 				try {
-					const { data } = await client.query({ query: GET_USERS });
-					const users: UserInit[] = data.getUsers;
+					const { selectedUser } = useUserStore.getState();
 
-					// Here we flatten the Users object to single list per User.
-					const result = users.map((user) => {
-						return {
-							id: user.name,
-							...user.value,
-						};
+					if (!selectedUser) return false;
+
+					const { data } = await client.query({
+						query: GET_USER_ORGANISATIONS_BY_ORGANISATION_ID,
+						variables: { organisationId: selectedUser.selectedOrganisationId },
 					});
-					set({ users: result || [] });
+
+					set({
+						users: data.getUserOrganisationsByOrganisationId.map((x: any) => x.value.user) || [],
+					});
 					return true;
 				} catch (error: unknown) {
+					console.log(error);
+					set({
+						users: [],
+						error: {
+							message: "Failed to fetch Users from the server.",
+							details: error instanceof Error ? error.message : "",
+						},
+					});
+					return false;
+				}
+			},
+			initSelectedUser: async () => {
+				try {
+					const user = auth.currentUser;
+
+					if (!user) {
+						throw new Error("You are not logged in");
+					}
+					const { data } = await client.query({
+						query: GET_USER_BY_ID,
+						variables: { id: user.uid },
+					});
+
+					set({
+						selectedUser: {
+							...data.getUserById,
+							id: user.uid,
+						},
+					});
+					return true;
+				} catch (error: unknown) {
+					console.log(error);
 					set({
 						users: [],
 						error: {

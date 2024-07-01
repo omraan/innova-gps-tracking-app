@@ -46,27 +46,23 @@ export const useCustomerStore = create<CustomerStore>()(
 			initCustomers: async () => {
 				try {
 					const { selectedUser } = useUserStore.getState();
-					if (selectedUser) {
-						const { data } = await client.query({ query: GET_CUSTOMERS });
-						const customers: CustomerInit[] = data.getCustomers;
 
-						// Here we flatten the customers object to single list per customer.
-						const result = customers.map((customer) => {
-							return {
-								id: customer.name,
-								...customer.value,
-							};
-						});
+					if (!selectedUser) return false;
 
-						set({
-							customers:
-								result.filter(
-									(row: any) => row.organisationId === selectedUser.selectedOrganisationId
-								) || [],
-						});
-						return true;
-					}
-					return false;
+					const { data } = await client.query({
+						query: GET_CUSTOMERS,
+						variables: { organisationId: selectedUser.selectedOrganisationId },
+					});
+					set({
+						customers:
+							data.getCustomers.map((customer: CustomerInit) => {
+								return {
+									id: customer.name,
+									...customer.value,
+								};
+							}) || [],
+					});
+					return true;
 				} catch (error: unknown) {
 					set({
 						customers: [],

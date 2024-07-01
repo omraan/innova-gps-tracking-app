@@ -24,26 +24,30 @@ const OrderCard = ({ order, orderId }: OrderCardProps) => {
 				})
 			}
 		>
-			<Card containerStyle={tw("px-5 rounded w-full mx-auto py-3")}>
+			<Card containerStyle={tw("px-5 rounded w-full mx-auto py-2 lg:py-3")}>
 				<View style={tw("flex-row justify-between items-center")}>
 					<View>
 						<Icon
 							name="truck-delivery"
 							type="material-community"
 							color={colors.secondary}
-							style={tw("mb-1")}
+							style={tw("lg:mb-1 hidden lg:inline-block")}
 						/>
-						<Text style={{ fontSize: 10 }}>
+						<Text style={tw("")}>
 							{order.expectedDeliveryDate !== undefined
 								? new Date(Number(order.expectedDeliveryDate)).toLocaleDateString()
 								: "No date available"}
 						</Text>
 					</View>
-					<View style={tw("flex-1 ml-5")}>
-						<Text style={[tw("text-gray-400 text-lg font-bold ")]}>{order.customer.name}</Text>
-						<Text style={tw("text-gray-500 text-sm")}>{order.customer.code}</Text>
+					<View style={tw("lg:flex-1 ml-5")}>
+						<Text style={[tw("text-gray-400 text-lg font-bold ")]}>
+							{order.customer?.name || "Geen Naam"}
+						</Text>
+						<Text style={tw("text-gray-500 text-sm hidden lg:inline-block")}>
+							{order.customer?.code || "Geen Code"}
+						</Text>
 					</View>
-					<View style={tw("flex-row items-center")}>
+					<View style={tw("flex-row items-center hidden lg:inline-block")}>
 						<Icon style={tw("ml-2")} name="box" type="feather" color={colors.primary} />
 					</View>
 				</View>

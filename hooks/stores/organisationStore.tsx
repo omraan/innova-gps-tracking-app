@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { GET_ORGANISATIONS } from "../../graphql/queries";
+import { GET_ORGANISATIONS, GET_ORGANISATION_BY_ID, GET_USER_ORGANISATIONS_BY_USER_ID } from "../../graphql/queries";
 import { asyncStorageAdapter } from "../../lib/asyncStorageAdapter";
 import { client } from "../../lib/client";
 import { useUserStore } from "./userStore";
@@ -15,6 +15,14 @@ type OrganisationInit = {
 	value: {
 		name: string;
 		address: string;
+		settings: {
+			country: string;
+			lat: number;
+			lng: number;
+			order: {
+				categories: string[];
+			};
+		};
 	};
 };
 
@@ -41,45 +49,60 @@ export const useOrganisationStore = create<OrganisationStore>()(
 			setSelectedOrganisation: (organisation) => set(() => ({ selectedOrganisation: organisation })),
 			initOrganisations: async () => {
 				try {
-					const { data } = await client.query({ query: GET_ORGANISATIONS });
-					const organisations: OrganisationInit[] = data.getOrganisations;
+					const { selectedUser } = useUserStore.getState();
 
-					// Here we flatten the Organisations object to single list per Organisation.
-					const result = organisations.map((org) => {
-						return {
-							id: org.name,
-							...org.value,
-						};
-					});
-					set({ organisations: result || [] });
-					return true;
+					if (!selectedUser) return false;
+
+					if (selectedUser.isAdmin) {
+						const { data } = await client.query({
+							query: GET_ORGANISATIONS,
+						});
+
+						set({
+							organisations:
+								data.getOrganisations.map((org: OrganisationInit) => {
+									return {
+										id: org.name,
+										...org.value,
+									};
+								}) || [],
+						});
+						return true;
+					} else {
+						const { data } = await client.query({
+							query: GET_USER_ORGANISATIONS_BY_USER_ID,
+						});
+
+						set({
+							organisations:
+								data.getUserOrganisationsByUserId.map((x: any) => x.value.organisation) || [],
+						});
+
+						return true;
+					}
 				} catch (error: unknown) {
+					console.log(error);
 					return false;
 				}
 			},
 			initSelectedOrganisation: async () => {
 				try {
 					const { selectedUser } = useUserStore.getState();
-					if (selectedUser?.selectedOrganisationId) {
-						const { data } = await client.query({ query: GET_ORGANISATIONS });
-						const organisations: OrganisationInit[] = data.getOrganisations;
 
-						// Here we flatten the Organisations object to single list per Organisation.
-						const result = organisations.map((org) => {
-							return {
-								id: org.name,
-								...org.value,
-							};
-						});
+					if (!selectedUser) return false;
 
-						set({
-							selectedOrganisation: result.find(
-								(organisation) => organisation.id === selectedUser.selectedOrganisationId
-							),
-						});
-					}
+					const { data } = await client.query({
+						query: GET_ORGANISATION_BY_ID,
+						variables: { id: selectedUser.selectedOrganisationId },
+					});
+
+					set({
+						selectedOrganisation: { id: selectedUser.selectedOrganisationId, ...data.getOrganisationById },
+					});
+
 					return true;
 				} catch (error: unknown) {
+					console.log(error);
 					return false;
 				}
 			},

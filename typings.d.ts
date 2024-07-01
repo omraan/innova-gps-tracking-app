@@ -25,11 +25,10 @@ type OrderList = {
 };
 
 interface RegisterOrder {
-	organisationId: string;
 	driverId?: string;
 	vehicleId?: string;
 	customerId?: string;
-	expectedDeliveryDate?: number;
+	expectedDeliveryDate: number;
 	orderCategory: string;
 	events?: OrderEvent[];
 	status?: string;
@@ -40,11 +39,11 @@ interface Order extends RegisterOrder {
 }
 
 interface OrderExtended extends Order {
-	driver: {
+	driver?: {
 		name: string;
 		email: string;
 	};
-	vehicle: {
+	vehicle?: {
 		licensePlate: string;
 		name: string;
 	};
@@ -110,7 +109,6 @@ interface User extends RegisterUser {
 interface RegisterVehicle {
 	name: string;
 	licensePlate: string;
-	organisationId?: string;
 }
 
 interface Vehicle extends RegisterVehicle {
@@ -120,10 +118,13 @@ interface Vehicle extends RegisterVehicle {
 interface RegisterOrganisation {
 	name: string;
 	address: string;
-	settings?: {
+	settings: {
 		order: {
 			categories: string[];
 		};
+		country: string;
+		lat: number;
+		lng: number;
 	};
 }
 

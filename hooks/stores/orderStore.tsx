@@ -4,23 +4,19 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { db } from "../../firebase";
 import { GET_ORDERS, GET_ORDER_BY_ID } from "../../graphql/queries";
+import { asyncStorageAdapter } from "../../lib/asyncStorageAdapter";
 import { client } from "../../lib/client";
 import { useCustomerStore } from "./customerStore";
 import { useUserStore } from "./userStore";
 import { useVehicleStore } from "./vehicleStore";
-// We use GraphQL for gathering information about Orders
-// For mutations we need to use Firebase Realtime Database directly
-// The reason is that Firebase is object-oriented and doesn't fit well with GraphQL queries/mutations
-// Therefore we need to flatten the query result to match the structure of the type Order
 
 type OrderInit = {
 	name: string;
 	value: {
-		organisationId: string;
 		driverId?: string;
 		vehicleId?: string;
 		customerId: string;
-		expectedDeliveryDate?: number;
+		expectedDeliveryDate: number;
 		orderCategory: string;
 		events: OrderEvent[];
 		driver: {
@@ -69,27 +65,25 @@ export const useOrderStore = create<OrderState>()(
 			initOrders: async () => {
 				try {
 					const { selectedUser } = useUserStore.getState();
-					if (selectedUser) {
-						const { data } = await client.query({ query: GET_ORDERS });
-						const orders: OrderInit[] = data.getOrders;
-
-						// Here we flatten the Orders object to single list per Order.
-						const result = orders.map((order) => {
-							return {
-								id: order.name,
-								...order.value,
-							};
-						});
-
-						set({
-							orders:
-								result.filter(
-									(row: any) => row.organisationId === selectedUser.selectedOrganisationId
-								) || [],
-						});
-						return true;
+					if (!selectedUser) {
+						return false;
 					}
-					return false;
+
+					const { data } = await client.query({
+						query: GET_ORDERS,
+						variables: { organisationId: selectedUser.selectedOrganisationId },
+					});
+
+					set({
+						orders:
+							data.getOrders.map((order: OrderInit) => {
+								return {
+									id: order.name,
+									...order.value,
+								};
+							}) || [],
+					});
+					return true;
 				} catch (error: unknown) {
 					set({
 						orders: [],
@@ -108,6 +102,8 @@ export const useOrderStore = create<OrderState>()(
 					const { vehicles } = useVehicleStore.getState();
 					const { customers } = useCustomerStore.getState();
 
+					if (!selectedUser) return false;
+
 					const currentDate = new Date();
 
 					const orderEvent: RegisterOrderEvent = {
@@ -119,7 +115,7 @@ export const useOrderStore = create<OrderState>()(
 					};
 
 					// Create a new Order in the firebase realtime database
-					const newOrderRef = push(ref(db, "orders"), {
+					const newOrderRef = push(ref(db, `organisations/${selectedUser.selectedOrganisationId}/orders`), {
 						...formData,
 						organisationId: selectedUser!.selectedOrganisationId,
 						events: [orderEvent],
@@ -190,6 +186,9 @@ export const useOrderStore = create<OrderState>()(
 			modifyOrder: async (formData) => {
 				try {
 					const state = get();
+					const { selectedUser } = useUserStore.getState();
+
+					if (!selectedUser) return false;
 
 					// Trying to get a Order by id.
 					const existingOrder = state.orders.find((order: Order) => order.id === formData.id);
@@ -203,7 +202,10 @@ export const useOrderStore = create<OrderState>()(
 					const { id, ...formDataWithoutId } = formData;
 
 					// Set Order in the firebase realtime database
-					dbSet(ref(db, "orders/" + id), formDataWithoutId);
+					dbSet(
+						ref(db, `organisations/${selectedUser.selectedOrganisationId}/orders/${id}`),
+						formDataWithoutId
+					);
 
 					const fullNewOrder = await client.query({ query: GET_ORDER_BY_ID, variables: { id: id } });
 					const fullNewOrderConverted = {
@@ -231,13 +233,15 @@ export const useOrderStore = create<OrderState>()(
 			},
 			removeOrder: async (id) => {
 				try {
+					const { selectedUser } = useUserStore.getState();
+
+					if (!selectedUser) return false;
+
 					// If the id is null or undefined, throw an error
 					if (!id) {
 						throw new Error("ID is required to remove a Order");
 					}
-					// const newOrders = [...state.orders]
-
-					await remove(ref(db, `orders/${id}`));
+					await remove(ref(db, `organisations/${selectedUser.selectedOrganisationId}/orders/${id}`));
 
 					const orderToRemove = get().orders.findIndex((order) => order.id === id);
 					set((state) => {
@@ -263,6 +267,7 @@ export const useOrderStore = create<OrderState>()(
 		}),
 		{
 			name: "order-storage",
+			storage: asyncStorageAdapter,
 		}
 	)
 );

@@ -36,4 +36,8 @@ yarn-error.*
 
 
 ios/
-.env
+.env*
+firebaseConfig.*
+android
+
+eas.json
