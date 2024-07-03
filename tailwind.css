@@ -243,6 +243,10 @@
   width: 300px
 }
 
+.min-w-\[200px\] {
+  min-width: 200px
+}
+
 .max-w-\[50\%\] {
   max-width: 50%
 }

@@ -1,13 +1,17 @@
 import { BottomTabNavigationProp } from "@react-navigation/bottom-tabs";
 import { CompositeNavigationProp, RouteProp, useNavigation, useRoute } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { Icon } from "@rneui/themed";
+import { Icon as ThIcon } from "@rneui/themed";
+import Icon from "react-native-vector-icons/FontAwesome";
+
+import { update } from "firebase/database";
 import React, { useEffect, useRef, useState } from "react";
 import { Alert, Button, Linking, Modal, Pressable, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import MapView, { Callout, CalloutSubview, Marker, PROVIDER_GOOGLE } from "react-native-maps";
 import { useTailwind } from "tailwind-rn";
 import { db, push, ref, set } from "../firebase";
 import { useOrderStore } from "../hooks/stores/orderStore";
+import { useOrganisationStore } from "../hooks/stores/organisationStore";
 import { useUserStore } from "../hooks/stores/userStore";
 import { RootStackParamList } from "../navigator/RootNavigator";
 import { TabStackParamList } from "../navigator/TabNavigator";
@@ -19,10 +23,18 @@ type ModalScreenNavigationProp = CompositeNavigationProp<
 
 type ModalScreenRoutProp = RouteProp<RootStackParamList, "OrderModal">;
 
+interface OrderEventExtended extends OrderEvent {
+	oldLat?: number;
+	oldLng?: number;
+	newLat?: number;
+	newLng?: number;
+}
+
 const OrderModalScreen = () => {
 	const tw = useTailwind();
 	const [modalVisible, setModalVisible] = useState(false);
 	const { selectedUser } = useUserStore();
+	const { selectedOrganisation } = useOrganisationStore();
 	const { orders, setOrders } = useOrderStore();
 	const navigation = useNavigation<ModalScreenNavigationProp>();
 	const {
@@ -31,7 +43,11 @@ const OrderModalScreen = () => {
 
 	const mapRef = useRef<MapView>(null);
 
-	const [status, setStatus] = useState<string>(order?.status ?? "open");
+	const [status, setStatus] = useState<{ name: string; color: string }>(
+		selectedOrganisation?.settings.statusCategories.find(
+			(status) => order.status && status.name.toLocaleLowerCase() === order.status.toLocaleLowerCase()
+		) || { name: "Unknown", color: "#000000" }
+	);
 	const [changingLocation, setChangingLocation] = useState(false);
 	const [marker, setMarker] = useState<{ latitude: number; longitude: number }>({
 		latitude: order.customer.lat,
@@ -40,8 +56,9 @@ const OrderModalScreen = () => {
 	const [newMarker, setNewMarker] = useState<{ latitude: number; longitude: number } | null>(null);
 	const [refresh, setRefresh] = useState(false);
 
+	const [currentOrder, setCurrentOrder] = useState<OrderExtended>(order);
+
 	useEffect(() => {
-		console.log("order", order);
 		navigation.setOptions({
 			headerRight: () => {
 				return (
@@ -60,47 +77,67 @@ const OrderModalScreen = () => {
 		Linking.openURL(url);
 	};
 
-	const onMarkerSubmit = () => {
-		const newStatus = status === "open" ? "completed" : "open";
+	const onMarkerSubmit = (newStatus: { name: string; color: string }) => {
 		const newDate = new Date();
 		setStatus(newStatus);
 		if (!selectedUser) return false;
 		// Create a new customer in the firebase realtime database
-		set(ref(db, `organisations/${selectedUser.selectedOrganisationId}/orders/${orderId}/status`), newStatus);
+		set(ref(db, `/organisations/${selectedUser.selectedOrganisationId}/orders/${orderId}/status`), newStatus.name);
 
-		const newEventRef = push(
-			ref(db, `organisations/${selectedUser.selectedOrganisationId}/orders/${orderId}/events`),
-			{
-				createdBy: selectedUser!.id,
-				status: newStatus,
-				timestamp: Number(newDate),
-				name: "Status Changed",
-			}
-		);
+		const updates: { [key: string]: unknown } = {};
+		const nextEventIndex = order.events ? order.events.length : 0;
+
+		const orderEvent: OrderEvent = {
+			name: "Order changed",
+			createdAt: new Date().getTime(),
+			createdBy: selectedUser.id,
+			status: newStatus.name,
+		};
+		updates[`/organisations/${selectedUser.selectedOrganisationId}/orders/${orderId}/events/${nextEventIndex}`] =
+			orderEvent;
+
+		const updateOrder = update(ref(db), updates);
 	};
 
 	const onChangingLocationSubmit = (newLocation: { latitude: number; longitude: number } | null) => {
 		try {
 			if (!selectedUser) return false;
 			set(
-				ref(db, `organisations/${selectedUser.selectedOrganisationId}/orders/${orderId}/lat`),
+				ref(db, `organisations/${selectedUser.selectedOrganisationId}/customers/${order.customerId}/lat`),
 				newLocation!.latitude
 			);
 			set(
-				ref(db, `organisations/${selectedUser.selectedOrganisationId}/orders/${orderId}/lng`),
+				ref(db, `organisations/${selectedUser.selectedOrganisationId}/customers/${order.customerId}/lng`),
 				newLocation!.longitude
 			);
-			setOrders([
-				...orders.filter((o) => o.id !== order.id),
-				{
-					...order,
-					customer: {
-						...order.customer,
-						lat: newLocation!.latitude,
-						lng: newLocation!.longitude,
-					},
+			const orderEvent: OrderEventExtended = {
+				name: "Location Customer Changed",
+				createdAt: new Date().getTime(),
+				createdBy: selectedUser.id,
+				oldLat: currentOrder.customer.lat,
+				oldLng: currentOrder.customer.lng,
+				newLat: newLocation!.latitude,
+				newLng: newLocation!.longitude,
+			};
+			const updates: { [key: string]: unknown } = {};
+			const nextEventIndex = currentOrder.events ? currentOrder.events.length : 0;
+			updates[
+				`/organisations/${selectedUser.selectedOrganisationId}/orders/${orderId}/events/${nextEventIndex}`
+			] = orderEvent;
+			const updateOrder = update(ref(db), updates);
+
+			const newOrder = {
+				...currentOrder,
+				customer: {
+					...currentOrder.customer,
+					lat: newLocation!.latitude,
+					lng: newLocation!.longitude,
 				},
-			]);
+				events: [...currentOrder.events!, orderEvent],
+			};
+
+			setOrders([...orders.filter((o) => o.id !== order.id), newOrder]);
+			setCurrentOrder(newOrder);
 			setMarker(newLocation!);
 		} catch (error: any) {
 			Alert.alert("Error", error.message);
@@ -114,7 +151,7 @@ const OrderModalScreen = () => {
 	return (
 		<View style={{ flex: 1 }}>
 			<TouchableOpacity onPress={navigation.goBack} style={tw("absolute right-5 top-5 z-10")}>
-				<Icon name="close" type="MaterialIcons" />
+				<ThIcon name="close" type="MaterialIcons" />
 			</TouchableOpacity>
 
 			<View style={{ marginTop: 10 }}>
@@ -185,18 +222,16 @@ const OrderModalScreen = () => {
 					showsUserLocation={true}
 					// style={[tw("w-full"), { flexGrow: 1, height: 400 }]}
 				>
-					{order.customer.lat && order.customer.lng && (
-						<Marker
-							key={status}
-							coordinate={marker}
-							title={order.customer.name || "Geen naam"}
-							description={order.customer.city}
-							identifier="destination"
-							opacity={changingLocation ? 0.67 : 1}
-							pinColor={status === "open" ? "red" : "green"}
-							onPress={() => setModalVisible(true)}
-						/>
-					)}
+					<Marker
+						key={order.id}
+						coordinate={marker}
+						title={order.customer?.name || "Geen naam"}
+						description={`${order.status}`}
+						identifier="destination"
+						onPress={() => setModalVisible(true)}
+					>
+						<Icon name="map-marker" size={50} color={status.color} />
+					</Marker>
 					{newMarker && changingLocation && <Marker coordinate={newMarker} />}
 				</MapView>
 				<Modal
@@ -207,12 +242,15 @@ const OrderModalScreen = () => {
 						setModalVisible(!modalVisible);
 					}}
 				>
-					<View
+					<Pressable
 						style={{
 							flex: 1,
 							justifyContent: "center",
 							alignItems: "center",
 							backgroundColor: "rgba(0, 0, 0, 0.5)", // Optional: adds a semi-transparent background
+						}}
+						onPress={() => {
+							setModalVisible(false);
 						}}
 					>
 						<View
@@ -229,27 +267,44 @@ const OrderModalScreen = () => {
 							}}
 						>
 							<Text style={tw("text-center mb-4")}>Do you want to change the status of this order?</Text>
+							<View style={tw("flex-row justify-between items-center mb-5")}>
+								{selectedOrganisation?.settings.statusCategories &&
+									selectedOrganisation?.settings.statusCategories.length > 0 &&
+									selectedOrganisation?.settings.statusCategories.map((status) => {
+										if (
+											order?.status &&
+											status.name.toLocaleLowerCase() === order.status.toLocaleLowerCase()
+										)
+											return;
+										return (
+											<Pressable
+												key={status.name}
+												onPress={() => {
+													setModalVisible(false);
+													onMarkerSubmit(status);
+												}}
+												style={[
+													{ backgroundColor: status.color },
+													tw("flex-1 rounded py-4 mr-1"),
+												]}
+											>
+												<Text style={tw("text-center text-white")}>{status.name}</Text>
+											</Pressable>
+										);
+									})}
+							</View>
 							<View style={tw("flex-row justify-between items-center")}>
 								<Pressable
 									onPress={() => {
 										setModalVisible(false);
-										onMarkerSubmit();
 									}}
-									style={tw("flex-1 bg-green-500 rounded py-4 mr-1")}
+									style={tw("flex-1 rounded py-4 ml-1")}
 								>
-									<Text style={tw("text-center text-white")}>Yes</Text>
-								</Pressable>
-								<Pressable
-									onPress={() => {
-										setModalVisible(false);
-									}}
-									style={tw("flex-1 bg-red-500 rounded py-4 ml-1")}
-								>
-									<Text style={tw("text-center text-white")}>No</Text>
+									<Text style={tw("text-center")}>No changes, close window</Text>
 								</Pressable>
 							</View>
 						</View>
-					</View>
+					</Pressable>
 				</Modal>
 			</View>
 		</View>

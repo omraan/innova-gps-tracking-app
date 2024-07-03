@@ -60,18 +60,17 @@ const OrderCreateScreen = () => {
 			try {
 				const newOrder = {
 					expectedDeliveryDate: Number(date),
-					status: "open",
 					vehicleId: "",
 					customerId: selectedCustomer.id,
 					driverId: "",
-					orderCategory: "Open",
+					status: "Open",
 				};
 				const newOrderRef = await push(ref(db, `orders`), newOrder);
-				const newOrderEvent: RegisterOrderEvent = {
+				const newOrderEvent: OrderEvent = {
 					createdBy: selectedUser.id,
-					status: "open",
-					timestamp: Number(new Date()),
+					createdAt: Number(new Date()),
 					name: "Initialized Order",
+					...newOrder,
 				};
 				if (newOrderRef.key) {
 					const newOrderEventRef = await push(
@@ -88,7 +87,7 @@ const OrderCreateScreen = () => {
 								...newOrder,
 								id: newOrderRef.key,
 								customer: selectedCustomer,
-								orderCategory: "Open",
+								status: "Open",
 							},
 						]);
 						alert(`Order (${selectedCustomer.code}) has been created successfully`);

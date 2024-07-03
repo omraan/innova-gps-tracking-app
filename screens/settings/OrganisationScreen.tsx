@@ -61,9 +61,9 @@ const OrganisationScreen = () => {
 							style={{ ...pickerSelectStyles }}
 							value={organisations.find((org) => org.id === selectedUser?.selectedOrganisationId)?.id}
 						/>
-						<View style={[tw("absolute"), { zIndex: 10, top: "25%", right: 20 }]}>
+						{/* <View style={[tw("absolute"), { zIndex: 10, top: "25%", right: 20 }]}>
 							<Icon name="chevron-down" type="feather" size={20} color="gray" />
-						</View>
+						</View> */}
 					</View>
 				</View>
 			)}

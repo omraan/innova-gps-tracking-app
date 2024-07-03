@@ -20,7 +20,8 @@ import { TabStackParamList } from "../navigator/TabNavigator";
 
 import { endOfMonth, endOfWeek, format, startOfMonth, startOfWeek } from "date-fns";
 import * as Location from "expo-location";
-import { push, ref, set } from "firebase/database";
+import { push, ref, set, update } from "firebase/database";
+import Icon from "react-native-vector-icons/FontAwesome";
 import { db } from "../firebase";
 
 export type OrdersScreenNavigationProp = CompositeNavigationProp<
@@ -32,12 +33,12 @@ const OrdersScreen = () => {
 	const navigation = useNavigation<OrdersScreenNavigationProp>();
 	// const { loading, error, data } = useQuery(GET_ORDERS);
 	const [loading, setLoading] = useState(true);
-	const { orders, setOrders } = useOrderStore();
+	const { orders, setOrders, initOrders } = useOrderStore();
 	const { selectedUser } = useUserStore();
 	const { selectedOrganisation } = useOrganisationStore();
 
 	const [selectedDate, setSelectedDate] = useState(new Date());
-	const [dateRange, setDateRange] = useState<String>("Week");
+	const [dateRange, setDateRange] = useState<String>("Day");
 	const mapRef = useRef<MapView>(null);
 	const insets = useSafeAreaInsets();
 	const safeAreaHeight = Dimensions.get("window").height - insets.top - insets.bottom - 25;
@@ -48,7 +49,6 @@ const OrdersScreen = () => {
 	const [selectedOrder, setSelectedOrder] = useState<OrderExtended | null>(null);
 	const [refresh, setRefresh] = useState(false);
 	useEffect(() => {
-		console.log("order", orders);
 		if (orders.length > 0 && selectedUser?.selectedOrganisationId && selectedOrganisation?.id) {
 			setLoading(false);
 			setRefresh(!refresh);
@@ -57,7 +57,7 @@ const OrdersScreen = () => {
 
 	useEffect(() => {
 		const filtered = orders.filter((order) => {
-			const orderDate = new Date(order.expectedDeliveryDate);
+			const orderDate = new Date(Number(order.expectedDeliveryDate));
 			switch (dateRange) {
 				case "Day":
 					return format(orderDate, "yyyy-MM-dd") === format(selectedDate, "yyyy-MM-dd");
@@ -71,10 +71,6 @@ const OrdersScreen = () => {
 		});
 		setFilteredOrders(filtered);
 	}, [refresh]);
-
-	useEffect(() => {
-		console.log(filteredOrders);
-	}, [filteredOrders]);
 
 	useLayoutEffect(() => {
 		navigation.setOptions({
@@ -104,11 +100,11 @@ const OrdersScreen = () => {
 	};
 
 	useEffect(() => {
+		initOrders();
 		getLocation();
 	}, []);
 
-	const onMarkerSubmit = () => {
-		const newStatus = selectedOrder?.status === "open" ? "completed" : "open";
+	const onMarkerSubmit = (newStatus: string) => {
 		const newDate = new Date();
 		if (!selectedOrder || !selectedOrder.customer || !selectedUser) {
 			// Handle the case where selectedOrder or selectedOrder.customer is undefined
@@ -127,15 +123,20 @@ const OrdersScreen = () => {
 			setRefresh(!refresh);
 		});
 
-		const newEventRef = push(
-			ref(db, `organisations/${selectedUser.selectedOrganisationId}/orders/${selectedOrder?.id}/events`),
-			{
-				createdBy: selectedUser!.id,
-				status: newStatus,
-				timestamp: Number(newDate),
-				name: "Status Changed",
-			}
-		);
+		const updates: { [key: string]: unknown } = {};
+		const nextEventIndex = selectedOrder.events ? selectedOrder.events.length : 0;
+
+		const orderEvent: OrderEvent = {
+			name: "Order changed",
+			createdAt: new Date().getTime(),
+			createdBy: selectedUser.id,
+			status: newStatus,
+		};
+		updates[
+			`/organisations/${selectedUser.selectedOrganisationId}/orders/${selectedOrder?.id}/events/${nextEventIndex}`
+		] = orderEvent;
+
+		const updateOrder = update(ref(db), updates);
 	};
 
 	return (
@@ -230,88 +231,116 @@ const OrdersScreen = () => {
 											/>
 										)}
 
-										{filteredOrders.map((order: OrderExtended) => (
-											<Marker
-												key={order.id}
-												coordinate={{
-													latitude: order.customer?.lat || 0,
-													longitude: order.customer?.lng || 0,
-												}}
-												title={order.customer?.name || "Geen naam"}
-												description={`${order.status}`}
-												identifier="destination"
-												pinColor={order.status === "open" ? "red" : "green"}
-												onPress={() => {
-													setSelectedOrder(order);
-													setModalVisible(true);
-												}}
-											/>
-										))}
+										{filteredOrders.map((order: OrderExtended) => {
+											const pinColor =
+												selectedOrganisation.settings.statusCategories.find(
+													(status) =>
+														order.status &&
+														status.name.toLocaleLowerCase() ===
+															order.status.toLocaleLowerCase()
+												)?.color || "#000000";
+
+											return (
+												<Marker
+													key={order.id}
+													coordinate={{
+														latitude: order.customer?.lat || 0,
+														longitude: order.customer?.lng || 0,
+													}}
+													title={order.customer?.name || "Geen naam"}
+													description={`${order.status}`}
+													identifier="destination"
+													onPress={() => {
+														setSelectedOrder(order);
+														setModalVisible(true);
+													}}
+												>
+													<Icon name="map-marker" size={35} color={pinColor} />
+												</Marker>
+											);
+										})}
 									</MapView>
 								)}
 						</View>
 					</View>
-					<Modal
-						animationType="slide"
-						transparent={true}
-						visible={modalVisible}
-						onRequestClose={() => {
-							setModalVisible(!modalVisible);
-						}}
-					>
-						<View
-							style={[
-								{
-									flex: 1,
-									justifyContent: "center",
-									alignItems: "center",
-									backgroundColor: "rgba(0, 0, 0, 0.5)", // Optional: adds a semi-transparent background
-								},
-							]}
-						>
-							<View
-								style={[
-									{
-										margin: 20,
-										backgroundColor: "white",
-										padding: 35,
-										alignItems: "center",
-										shadowColor: "#000",
-										shadowOffset: { width: 0, height: 2 },
-										shadowOpacity: 0.25,
-										shadowRadius: 4,
-										elevation: 5,
-									},
-									tw("max-w-[50%] mx-auto"),
-								]}
-							>
-								<Text style={tw("text-center mb-4")}>
-									Do you want to change the status of this order for {selectedOrder?.customer.name}?
-								</Text>
-								<View style={tw("flex-row justify-between items-center")}>
-									<Pressable
-										onPress={() => {
-											setModalVisible(false);
-											onMarkerSubmit();
-										}}
-										style={tw("flex-1 bg-green-500 rounded py-4 mr-1")}
-									>
-										<Text style={tw("text-center text-white")}>Yes</Text>
-									</Pressable>
-									<Pressable
-										onPress={() => {
-											setModalVisible(false);
-										}}
-										style={tw("flex-1 bg-red-500 rounded py-4 ml-1")}
-									>
-										<Text style={tw("text-center text-white")}>No</Text>
-									</Pressable>
-								</View>
-							</View>
-						</View>
-					</Modal>
 				</SafeAreaView>
 			</ScrollView>
+			<Modal
+				animationType="none"
+				transparent={true}
+				visible={modalVisible}
+				onRequestClose={() => {
+					setModalVisible(!modalVisible);
+				}}
+			>
+				<Pressable
+					style={[
+						{
+							flex: 1,
+							justifyContent: "center",
+							alignItems: "center",
+							backgroundColor: "rgba(0, 0, 0, 0.5)", // Optional: adds a semi-transparent background
+						},
+					]}
+					onPress={() => {
+						setModalVisible(false);
+					}}
+				>
+					<View
+						style={[
+							{
+								backgroundColor: "white",
+								padding: 35,
+								alignItems: "center",
+								shadowColor: "#000",
+								shadowOffset: { width: 0, height: 2 },
+								shadowOpacity: 0.25,
+								shadowRadius: 4,
+								elevation: 5,
+							},
+							tw("max-w-[50%] mx-auto"),
+						]}
+					>
+						<Text style={tw("text-center mb-4")}>
+							Do you want to change the status of this order for {selectedOrder?.customer.name}?
+						</Text>
+
+						<View style={tw("flex-row justify-between items-center mb-5")}>
+							{selectedOrganisation?.settings.statusCategories &&
+								selectedOrganisation?.settings.statusCategories.length > 0 &&
+								selectedOrganisation?.settings.statusCategories.map((status) => {
+									if (
+										selectedOrder?.status &&
+										status.name.toLocaleLowerCase() === selectedOrder.status.toLocaleLowerCase()
+									)
+										return;
+									return (
+										<Pressable
+											key={status.name}
+											onPress={() => {
+												setModalVisible(false);
+												onMarkerSubmit(status.name);
+											}}
+											style={[{ backgroundColor: status.color }, tw("flex-1 rounded py-4 mr-1")]}
+										>
+											<Text style={tw("text-center text-white")}>{status.name}</Text>
+										</Pressable>
+									);
+								})}
+						</View>
+						<View style={tw("flex-row justify-between items-center")}>
+							<Pressable
+								onPress={() => {
+									setModalVisible(false);
+								}}
+								style={tw("flex-1 rounded py-4 ml-1")}
+							>
+								<Text style={tw("text-center")}>No changes, close window</Text>
+							</Pressable>
+						</View>
+					</View>
+				</Pressable>
+			</Modal>
 		</LinearGradient>
 	);
 };

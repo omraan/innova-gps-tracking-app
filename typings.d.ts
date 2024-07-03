@@ -1,5 +1,47 @@
-type Customer = {
+type RegisterUser = {
+	name: string;
+	email: string;
+	isAdmin: boolean;
+	status?: string;
+	selectedOrganisationId?: string;
+};
+
+interface User extends RegisterUser {
 	id: string;
+	token?: string;
+	location?: {
+		longitude?: number;
+		latitude?: number;
+		timestamp?: number;
+	};
+}
+
+type UserOrganisation = {
+	userId: string;
+	organisationId: string;
+	status: string;
+	role: string;
+};
+
+interface RegisterOrganisation {
+	name: string;
+	settings: {
+		address: string;
+		statusCategories: {
+			name: string;
+			color: string;
+		}[];
+		country: string;
+		lat: number;
+		lng: number;
+	};
+}
+
+interface Organisation extends RegisterOrganisation {
+	id: string;
+}
+
+interface RegisterCustomer {
 	name: string;
 	email?: string;
 	lat: number;
@@ -12,32 +54,33 @@ type Customer = {
 	phone_number?: string;
 	phone_number_2?: string;
 	phone_number_3?: string;
-};
+}
 
-type CustomerList = {
-	name: ID;
-	value: Customer;
-};
+interface Customer extends RegisterCustomer {
+	id: string;
+}
 
-type OrderList = {
+interface RegisterVehicle {
 	name: string;
-	value: OrderExtended;
-};
+	licensePlate: string;
+}
+
+interface Vehicle extends RegisterVehicle {
+	id: string;
+}
 
 interface RegisterOrder {
 	driverId?: string;
 	vehicleId?: string;
 	customerId?: string;
-	expectedDeliveryDate: number;
-	orderCategory: string;
-	events?: OrderEvent[];
+	expectedDeliveryDate?: number;
 	status?: string;
 }
 
 interface Order extends RegisterOrder {
 	id: string;
+	events?: OrderEvent[];
 }
-
 interface OrderExtended extends Order {
 	driver?: {
 		name: string;
@@ -62,72 +105,18 @@ interface OrderExtended extends Order {
 	};
 }
 
-interface RegisterOrderEvent {
-	date?: number;
-	timestamp?: number;
-	status: string;
-	createdBy: string;
-	name: string;
-	currentIndicator?: string;
-}
 interface OrderEvent extends RegisterOrder {
-	id: string;
-}
-
-type TrackingItem = {
-	customer_id: ID;
-	customer: Customer;
-	items: Item[];
-};
-
-type Item = {
-	item_id: ID;
+	createdBy: string;
+	createdAt: number;
 	name: string;
-	price: number;
-	quantity: number;
-};
+	description?: string;
+}
 
-type OrderResponse = {
-	value: Order;
-};
+interface RegisterCountry {
+	lat: number;
+	lng: number;
+}
 
-type CustomerResponse = {
-	name: ID;
-	value: Customer;
-};
-type RegisterUser = {
+interface Country extends RegisterCountry {
 	name: string;
-	email: string;
-	isAdmin: boolean;
-	status?: string;
-	selectedOrganisationId?: string;
-};
-
-interface User extends RegisterUser {
-	id: string;
-}
-interface RegisterVehicle {
-	name: string;
-	licensePlate: string;
-}
-
-interface Vehicle extends RegisterVehicle {
-	id: string;
-}
-
-interface RegisterOrganisation {
-	name: string;
-	address: string;
-	settings: {
-		order: {
-			categories: string[];
-		};
-		country: string;
-		lat: number;
-		lng: number;
-	};
-}
-
-interface Organisation extends RegisterOrganisation {
-	id: string;
 }

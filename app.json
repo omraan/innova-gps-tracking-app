@@ -2,6 +2,7 @@
 	"expo": {
 		"name": "Innova GPS Tracking",
 		"slug": "gps-tracking",
+		"owner": "innova-aruba",
 		"version": "1.0.0",
 		"orientation": "default",
 		"icon": "./assets/icon.png",

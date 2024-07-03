@@ -22,5 +22,6 @@ export const pickerSelectStyles = StyleSheet.create({
 		borderRadius: 4,
 		color: "#444444",
 		textAlign: "left",
+		width: "100%",
 	},
 });

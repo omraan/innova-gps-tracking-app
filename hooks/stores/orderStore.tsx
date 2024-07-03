@@ -1,5 +1,5 @@
 import { DocumentNode } from "@apollo/client";
-import { set as dbSet, push, ref, remove } from "firebase/database";
+import { set as dbSet, push, ref, remove, update } from "firebase/database";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { db } from "../../firebase";
@@ -56,6 +56,21 @@ type OrderState = {
 	};
 	resetError: () => void;
 };
+function getDifferences(existingOrder: Record<string, any>, formData: Record<string, any>): Record<string, any> {
+	const differences: Record<string, any> = {};
+
+	Object.keys(formData).forEach((key) => {
+		// Negeer 'events'
+		if (key === "events") return;
+
+		// Voeg toe aan 'differences' als het attribuut niet bestaat in 'existingOrder' of als de waarden niet overeenkomen
+		if (!(key in existingOrder) || existingOrder[key] !== formData[key]) {
+			differences[key] = formData[key];
+		}
+	});
+
+	return differences;
+}
 
 export const useOrderStore = create<OrderState>()(
 	persist(
@@ -106,20 +121,21 @@ export const useOrderStore = create<OrderState>()(
 
 					const currentDate = new Date();
 
-					const orderEvent: RegisterOrderEvent = {
+					const orderEvent: OrderEvent = {
 						name: "Order created",
-						date: currentDate.getTime(),
-						createdBy: selectedUser!.id,
-						status: "open",
-						currentIndicator: "true",
+						createdAt: new Date().getTime(),
+						createdBy: selectedUser.id,
+						...formData,
 					};
 
 					// Create a new Order in the firebase realtime database
-					const newOrderRef = push(ref(db, `organisations/${selectedUser.selectedOrganisationId}/orders`), {
-						...formData,
-						organisationId: selectedUser!.selectedOrganisationId,
-						events: [orderEvent],
-					});
+					const newOrderRef = await push(
+						ref(db, `organisations/${selectedUser.selectedOrganisationId}/orders`),
+						{
+							...formData,
+							events: [orderEvent],
+						}
+					);
 
 					// And retrieve new Order's id
 					const newOrderId = newOrderRef.key;
@@ -198,25 +214,41 @@ export const useOrderStore = create<OrderState>()(
 						throw new Error("Order not found.");
 					}
 
-					// Destructure the id from the formData so we can update firebase realtime database
-					const { id, ...formDataWithoutId } = formData;
+					const differences = getDifferences(existingOrder, formData);
+					const updates: { [key: string]: unknown } = {};
 
-					// Set Order in the firebase realtime database
-					dbSet(
-						ref(db, `organisations/${selectedUser.selectedOrganisationId}/orders/${id}`),
-						formDataWithoutId
-					);
+					Object.keys(differences).forEach((key) => {
+						updates[
+							`/organisations/${selectedUser.selectedOrganisationId}/orders/${existingOrder.id}/${key}`
+						] = (differences as any)[key];
+					});
+					const nextEventIndex = existingOrder.events ? existingOrder.events.length : 0;
+					const orderEvent: OrderEvent = {
+						name: "Order changed",
+						createdAt: new Date().getTime(),
+						createdBy: selectedUser.id,
+						...differences,
+					};
+					updates[
+						`/organisations/${selectedUser.selectedOrganisationId}/orders/${existingOrder.id}/events/${nextEventIndex}`
+					] = orderEvent;
 
-					const fullNewOrder = await client.query({ query: GET_ORDER_BY_ID, variables: { id: id } });
+					const updateOrder = await update(ref(db), updates);
+
+					const fullNewOrder = await client.query({
+						query: GET_ORDER_BY_ID,
+						variables: { organisationId: selectedUser.selectedOrganisationId, id: existingOrder.id },
+						fetchPolicy: "network-only",
+					});
 					const fullNewOrderConverted = {
-						id: fullNewOrder.data.id,
-						...fullNewOrder.data.value,
+						id: existingOrder.id,
+						...fullNewOrder.data.getOrderById,
 					};
 
 					// Modify Order in the state
 					set((state: { orders: OrderExtended[] }) => ({
 						orders: state.orders.map((order: OrderExtended) =>
-							order.id === id ? fullNewOrderConverted : order
+							order.id === fullNewOrderConverted.id ? fullNewOrderConverted : order
 						),
 					}));
 
