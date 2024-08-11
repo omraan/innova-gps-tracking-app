@@ -1,37 +1,43 @@
-import { Tabs } from 'expo-router';
-import React from 'react';
+import { loadDevMessages, loadErrorMessages } from "@apollo/client/dev";
+import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
+import { Tabs } from "expo-router";
+import Icon from "react-native-vector-icons/Ionicons";
+import Orders from ".";
+import Settings from "./settings";
 
-import { TabBarIcon } from '@/components/navigation/TabBarIcon';
-import { Colors } from '@/constants/Colors';
-import { useColorScheme } from '@/hooks/useColorScheme';
+const Tab = createBottomTabNavigator();
 
-export default function TabLayout() {
-  const colorScheme = useColorScheme();
+export default function Layout() {
+	if (__DEV__) {
+		// Adds messages only in a dev environment
+		loadDevMessages();
+		loadErrorMessages();
+	}
 
-  return (
-    <Tabs
-      screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
-        headerShown: false,
-      }}>
-      <Tabs.Screen
-        name="index"
-        options={{
-          title: 'Home',
-          tabBarIcon: ({ color, focused }) => (
-            <TabBarIcon name={focused ? 'home' : 'home-outline'} color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="explore"
-        options={{
-          title: 'Explore',
-          tabBarIcon: ({ color, focused }) => (
-            <TabBarIcon name={focused ? 'code-slash' : 'code-slash-outline'} color={color} />
-          ),
-        }}
-      />
-    </Tabs>
-  );
+	return (
+		<Tabs screenOptions={{ tabBarActiveTintColor: "blue" }}>
+			<Tabs.Screen
+				name="index"
+				options={{
+					title: "Orders",
+					headerShown: false,
+					tabBarIcon: ({ focused, color }) => (
+						<Icon size={28} name={focused ? "navigate" : "navigate-outline"} color={color} />
+					),
+					tabBarLabel: () => null,
+				}}
+			/>
+			<Tabs.Screen
+				name="settings"
+				options={{
+					title: "Settings",
+					headerShown: true,
+					tabBarIcon: ({ focused, color }) => (
+						<Icon size={28} name={focused ? "settings" : "settings-outline"} color={color} />
+					),
+					tabBarLabel: () => null,
+				}}
+			/>
+		</Tabs>
+	);
 }

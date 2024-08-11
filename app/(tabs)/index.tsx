@@ -1,70 +1,232 @@
-import { Image, StyleSheet, Platform } from 'react-native';
+import LoadingScreen from "@/components/LoadingScreen";
+import MapOrders from "@/components/MapOrders";
+import ModalOrderChangeStatus from "@/components/ModalOrderChangeStatus";
+import { ModalPicker } from "@/components/ModalPicker";
+import OrderList from "@/components/OrderList";
+import { UPDATE_ORDER } from "@/graphql/mutations";
+import { GET_ORDERS_BY_DATE, GET_VEHICLES } from "@/graphql/queries";
+import { getRelatedOrders } from "@/lib/getRelatedOrders";
+import { useMutation, useQuery } from "@apollo/client";
+import { SignedIn, useAuth, useOrganization } from "@clerk/clerk-expo";
+import RNDateTimePicker from "@react-native-community/datetimepicker";
+import moment from "moment-timezone";
+import React, { useEffect, useState } from "react";
+import { SafeAreaView, ScrollView, Text, TextInput, View } from "react-native";
+import { useTailwind } from "tailwind-rn";
 
-import { HelloWave } from '@/components/HelloWave';
-import ParallaxScrollView from '@/components/ParallaxScrollView';
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
+export default function Page() {
+	const tw = useTailwind();
+	const { organization } = useOrganization();
+	const { userId, orgId } = useAuth();
 
-export default function HomeScreen() {
-  return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({ ios: 'cmd + d', android: 'cmd + m' })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-        <ThemedText>
-          Tap the Explore tab to learn more about what's included in this starter app.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          When you're ready, run{' '}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
-  );
+	const [date, setDate] = useState<Date>(new Date());
+	const dateString = moment(date).format("yyyy-MM-DD");
+
+	const [input, setInput] = useState<string>("");
+	const [loading, setLoading] = useState<boolean>(false);
+	const [modalVisible, setModalVisible] = useState<boolean>(false);
+
+	const [customerOrders, setCustomerOrders] = useState<CustomerOrders[] | undefined>(undefined);
+	const [filteredOrders, setFilteredOrders] = useState<CustomerOrders[]>([]);
+
+	const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | undefined>(undefined);
+	const [selectedCustomerOrders, setSelectedCustomerOrders] = useState<CustomerOrders | undefined>(undefined);
+
+	const {
+		data: orders,
+		loading: loadingOrders,
+		error,
+		refetch: refetchOrders,
+	} = useQuery(GET_ORDERS_BY_DATE, {
+		variables: {
+			date: dateString,
+		},
+		fetchPolicy: "no-cache",
+	});
+	const { data: vehicles } = useQuery(GET_VEHICLES);
+
+	const [UpdateOrder] = useMutation(UPDATE_ORDER, {
+		refetchQueries: [GET_ORDERS_BY_DATE],
+		awaitRefetchQueries: true,
+	});
+
+	useEffect(() => {
+		if (orders) {
+			setCustomerOrders(getRelatedOrders(orders));
+		}
+	}, [orders]);
+
+	useEffect(() => {
+		if (vehicles && vehicles.length > 0) {
+			if (!selectedVehicle) {
+				const firstVehicle = Object.keys(vehicles)[0];
+				setSelectedVehicle(vehicles[firstVehicle]);
+			}
+		} else {
+			setSelectedVehicle(undefined);
+		}
+	}, [vehicles]);
+
+	useEffect(() => {
+		if (vehicles && selectedVehicle) {
+			setSelectedVehicle(undefined);
+		}
+	}, [orgId]);
+
+	useEffect(() => {
+		try {
+			if (customerOrders && selectedVehicle) {
+				setFilteredOrders(
+					customerOrders.filter((order: CustomerOrders) => order.vehicleId === selectedVehicle.id) || []
+				);
+			} else {
+				setFilteredOrders([]);
+			}
+		} catch (error) {
+			console.log("Error: ", error);
+		}
+	}, [date, customerOrders, selectedVehicle]);
+
+	const handlePickerChange = (value: string) => {
+		const newVehicle = vehicles.find((v: any) => v.licensePlate === value);
+		if (newVehicle) setSelectedVehicle(newVehicle);
+	};
+
+	async function onMarkerSubmit(status: StatusCategory) {
+		setLoading(true);
+		if (selectedCustomerOrders) {
+			await selectedCustomerOrders.orderIds.forEach((orderId: string) => {
+				UpdateOrder({
+					variables: {
+						id: orderId,
+						modifiedBy: userId!,
+						modifiedAt: Number(new Date()),
+						status: status.name,
+					},
+					refetchQueries: [GET_ORDERS_BY_DATE],
+					awaitRefetchQueries: true,
+					update: (cache) => {
+						// Handmatig de cache bijwerken als dat nodig is
+						const existingOrders: OrderExtended[] = cache.readQuery({ query: GET_ORDERS_BY_DATE }) || [];
+						if (existingOrders) {
+							const newOrders = existingOrders.map((existingOrder) =>
+								existingOrder.id === orderId
+									? {
+											...existingOrder,
+											modifiedBy: userId!,
+											modifiedAt: Number(new Date()),
+											status: status.name,
+									  }
+									: existingOrder
+							);
+							cache.writeQuery({
+								query: GET_ORDERS_BY_DATE,
+								data: { orders: newOrders },
+							});
+						}
+					},
+				});
+			});
+		}
+		setLoading(false);
+		setModalVisible(false);
+	}
+
+	const filteredOrdersWithInput = filteredOrders.filter((order: CustomerOrders) => {
+		if (!input || input !== "") {
+			return (
+				order.customer.name.toLowerCase().includes(input.toLowerCase()) ||
+				order.customer.code.toLowerCase().includes(input.toLowerCase())
+			);
+		}
+	});
+
+	const handleRefresh = async () => {
+		setLoading(true);
+		try {
+			await refetchOrders({
+				fetchPolicy: "network-only",
+			});
+			await new Promise((resolve) => setTimeout(resolve, 2000));
+		} catch (error) {
+			console.error(error);
+		}
+		setLoading(false);
+	};
+
+	const handleSelection = (order: CustomerOrders) => {
+		setSelectedCustomerOrders(order);
+		setModalVisible(true);
+	};
+
+	return (
+		<SafeAreaView>
+			<LoadingScreen loading={loading ? loading : loadingOrders} />
+			<ScrollView>
+				<SignedIn>
+					<MapOrders
+						orders={filteredOrders}
+						handleRefresh={handleRefresh}
+						handleSelection={handleSelection}
+					/>
+
+					<View style={tw("bg-white rounded px-5 pt-5 pb-2 flex flex-row justify-between")}>
+						{vehicles && selectedVehicle?.id && (
+							<ModalPicker
+								key={organization?.slug}
+								list={vehicles.map((v: any) => {
+									return {
+										value: v.licensePlate,
+										label: v.licensePlate,
+									};
+								})}
+								onChange={handlePickerChange}
+							/>
+						)}
+						<RNDateTimePicker
+							display="compact"
+							value={date}
+							mode="date"
+							onChange={(event: any, value: any) =>
+								setDate(moment.tz(new Date(value), "America/New_York").startOf("day").toDate())
+							}
+						/>
+					</View>
+
+					<View style={[tw("pb-2 p-5 rounded bg-white")]}>
+						<TextInput
+							placeholder="Search..."
+							placeholderTextColor="#999"
+							value={input}
+							onChangeText={setInput}
+							style={tw("text-sm rounded text-gray-700 border-b pb-2 border-gray-300")}
+						/>
+					</View>
+
+					<ScrollView>
+						<View style={tw("p-0")}>
+							{loadingOrders ? (
+								<Text>Loading...</Text>
+							) : error ? (
+								<Text>Error! ${error.message}</Text>
+							) : (
+								customerOrders && (
+									<OrderList orders={filteredOrdersWithInput} handleSelection={handleSelection} />
+								)
+							)}
+						</View>
+					</ScrollView>
+					{selectedCustomerOrders && (
+						<ModalOrderChangeStatus
+							selectedCustomerOrders={selectedCustomerOrders}
+							dateString={dateString}
+							modalVisible={modalVisible}
+							setModalVisible={setModalVisible}
+							onMarkerSubmit={onMarkerSubmit}
+						/>
+					)}
+				</SignedIn>
+			</ScrollView>
+		</SafeAreaView>
+	);
 }
-
-const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
-  },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
-  },
-});

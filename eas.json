@@ -1,0 +1,109 @@
+{
+	"cli": {
+		"version": ">= 7.8.4"
+	},
+	"build": {
+		"development": {
+			"developmentClient": true,
+			"distribution": "internal",
+
+			"env": {
+				"ENVIRONMENT": "dev",
+				"EXPO_PUBLIC_STEPZEN_ACCOUNT": "myzakumna",
+				"EXPO_PUBLIC_STEPZEN_ENDPOINT": "api/innova-dev",
+				"EXPO_PUBLIC_STEPZEN_API_KEY": "4ed9ff395055685a7ca258d669b89724a02b722c6fc25e939c2070250ef7ee5d",
+				"EXPO_PUBLIC_STEPZEN_FIREBASE_DATABASE_URL": "https://innova-gps-tracking-dev-default-rtdb.firebaseio.com",
+				"EXPO_PUBLIC_FIREBASE_API_KEY": "AIzaSyCsuRE5SM_yBawBZKVQxA9_9B6dTdFB2lQ",
+				"EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN": "innova-gps-tracking-dev.firebaseapp.com",
+				"EXPO_PUBLIC_FIREBASE_PROJECT_ID": "innova-gps-tracking-dev",
+				"EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET": "innova-gps-tracking-dev.appspot.com",
+				"EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID": "543494384373",
+				"EXPO_PUBLIC_FIREBASE_APP_ID": "1:543494384373:web:ca80f298ddda982b87b3bc",
+				"EXPO_PUBLIC_FIREBASE_DATABASE_URL": "https://innova-gps-tracking-dev-default-rtdb.firebaseio.com",
+				"NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY": "pk_test_YWRhcHRlZC1idWNrLTM5LmNsZXJrLmFjY291bnRzLmRldiQ",
+				"CLERK_SECRET_KEY": "sk_test_UgvXOSp4CoHFNCod8fI1ReFFwUkuBjmhOdoKw5syWV"
+			}
+		},
+		"development-simulator": {
+			"extends": "development",
+			"ios": {
+				"simulator": true
+			}
+		},
+		"preview": {
+			// "android": {
+			// 	"buildType": "apk"
+			// },
+			"distribution": "internal",
+			// "env": {
+			// 	"ENVIRONMENT": "test",
+			// 	"EXPO_PUBLIC_STEPZEN_ACCOUNT": "zemamra",
+			// 	"EXPO_PUBLIC_STEPZEN_ENDPOINT": "api/innova-tracking-test",
+			// 	"EXPO_PUBLIC_STEPZEN_API_KEY": "5888f4119f6e057b620f65c732d83d88a0076c9fb1ddc0a5d6df320a785123dc",
+			// 	"EXPO_PUBLIC_STEPZEN_FIREBASE_DATABASE_URL": "https://innova-gps-tracking-test-default-rtdb.firebaseio.com",
+			// 	"EXPO_PUBLIC_FIREBASE_API_KEY": "AIzaSyDNB01c790FYzdZ1oy0klOvP_ezHO8MvUo",
+			// 	"EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN": "innova-gps-tracking-test.firebaseapp.com",
+			// 	"EXPO_PUBLIC_FIREBASE_PROJECT_ID": "innova-gps-tracking-test",
+			// 	"EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET": "innova-gps-tracking-test.appspot.com",
+			// 	"EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID": "274657209734",
+			// 	"EXPO_PUBLIC_FIREBASE_APP_ID": "1:274657209734:web:2f25167a44b5d91b915007",
+			// 	"EXPO_PUBLIC_FIREBASE_DATABASE_URL": "https://innova-gps-tracking-test-default-rtdb.firebaseio.com"
+			// }
+			"env": {
+				"ENVIRONMENT": "test",
+				"EXPO_PUBLIC_STEPZEN_ACCOUNT": "myzakumna",
+				"EXPO_PUBLIC_STEPZEN_ENDPOINT": "api/innova-dev",
+				"EXPO_PUBLIC_STEPZEN_API_KEY": "4ed9ff395055685a7ca258d669b89724a02b722c6fc25e939c2070250ef7ee5d",
+				"EXPO_PUBLIC_STEPZEN_FIREBASE_DATABASE_URL": "https://innova-gps-tracking-dev-default-rtdb.firebaseio.com",
+				"EXPO_PUBLIC_FIREBASE_API_KEY": "AIzaSyCsuRE5SM_yBawBZKVQxA9_9B6dTdFB2lQ",
+				"EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN": "innova-gps-tracking-dev.firebaseapp.com",
+				"EXPO_PUBLIC_FIREBASE_PROJECT_ID": "innova-gps-tracking-dev",
+				"EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET": "innova-gps-tracking-dev.appspot.com",
+				"EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID": "543494384373",
+				"EXPO_PUBLIC_FIREBASE_APP_ID": "1:543494384373:web:ca80f298ddda982b87b3bc",
+				"EXPO_PUBLIC_FIREBASE_DATABASE_URL": "https://innova-gps-tracking-dev-default-rtdb.firebaseio.com",
+				"NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY": "pk_test_YWRhcHRlZC1idWNrLTM5LmNsZXJrLmFjY291bnRzLmRldiQ",
+				"CLERK_SECRET_KEY": "sk_test_UgvXOSp4CoHFNCod8fI1ReFFwUkuBjmhOdoKw5syWV"
+			}
+		},
+		"production": {
+			"android": {
+				"buildType": "apk"
+			},
+			"distribution": "store",
+			// "env": {
+			// 	"ENVIRONMENT": "prod",
+			// 	"EXPO_PUBLIC_STEPZEN_ACCOUNT": "zemamra",
+			// 	"EXPO_PUBLIC_STEPZEN_ENDPOINT": "api/innova-tracking",
+			// 	"EXPO_PUBLIC_STEPZEN_API_KEY": "5888f4119f6e057b620f65c732d83d88a0076c9fb1ddc0a5d6df320a785123dc",
+			// 	"EXPO_PUBLIC_STEPZEN_FIREBASE_DATABASE_URL": "https://innova-gps-tracking-default-rtdb.firebaseio.com",
+			// 	"EXPO_PUBLIC_FIREBASE_API_KEY": "AIzaSyBnR0kXdNPHlgTMIpJRwlGfBgZNszzLB1I",
+			// 	"EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN": "innova-gps-tracking.firebaseapp.com",
+			// 	"EXPO_PUBLIC_FIREBASE_PROJECT_ID": "innova-gps-tracking",
+			// 	"EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET": "innova-gps-tracking.appspot.com",
+			// 	"EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID": "64834178261",
+			// 	"EXPO_PUBLIC_FIREBASE_APP_ID": "1:64834178261:web:a39af3d28001cbddd8a65c",
+			// 	"EXPO_PUBLIC_FIREBASE_DATABASE_URL": "https://innova-gps-tracking-default-rtdb.firebaseio.com"
+			// }
+			"env": {
+				"ENVIRONMENT": "prod",
+				"EXPO_PUBLIC_STEPZEN_ACCOUNT": "myzakumna",
+				"EXPO_PUBLIC_STEPZEN_ENDPOINT": "api/innova-dev",
+				"EXPO_PUBLIC_STEPZEN_API_KEY": "4ed9ff395055685a7ca258d669b89724a02b722c6fc25e939c2070250ef7ee5d",
+				"EXPO_PUBLIC_STEPZEN_FIREBASE_DATABASE_URL": "https://innova-gps-tracking-dev-default-rtdb.firebaseio.com",
+				"EXPO_PUBLIC_FIREBASE_API_KEY": "AIzaSyCsuRE5SM_yBawBZKVQxA9_9B6dTdFB2lQ",
+				"EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN": "innova-gps-tracking-dev.firebaseapp.com",
+				"EXPO_PUBLIC_FIREBASE_PROJECT_ID": "innova-gps-tracking-dev",
+				"EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET": "innova-gps-tracking-dev.appspot.com",
+				"EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID": "543494384373",
+				"EXPO_PUBLIC_FIREBASE_APP_ID": "1:543494384373:web:ca80f298ddda982b87b3bc",
+				"EXPO_PUBLIC_FIREBASE_DATABASE_URL": "https://innova-gps-tracking-dev-default-rtdb.firebaseio.com",
+				"NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY": "pk_test_YWRhcHRlZC1idWNrLTM5LmNsZXJrLmFjY291bnRzLmRldiQ",
+				"CLERK_SECRET_KEY": "sk_test_UgvXOSp4CoHFNCod8fI1ReFFwUkuBjmhOdoKw5syWV"
+			}
+		}
+	},
+	"submit": {
+		"production": {}
+	}
+}
