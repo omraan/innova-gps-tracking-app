@@ -12,7 +12,7 @@ const addVariableMiddleware = new ApolloLink((operation, forward) => {
 				return { operation, token, organizationId };
 			})
 			.then(({ operation, token, organizationId }) => {
-				console.log("Variables >>> ", operation.variables);
+				// console.log("Variables >>> ", operation.variables);
 				operation.variables = {
 					...operation.variables,
 					token,
@@ -31,7 +31,7 @@ const addVariableMiddleware = new ApolloLink((operation, forward) => {
 							const key = Object.keys(response.data)[0];
 							response.data = response.data[key];
 							if (response.data.length === 0) return response;
-							console.log("Response Length: ", response.data.length);
+							// console.log("Response Length: ", response.data.length);
 							if (response.data[0] && Object.keys(response.data[0]).find((k) => k === "value")) {
 								response.data = response.data.map((item) => {
 									const { name: id, value, ...rest } = item;

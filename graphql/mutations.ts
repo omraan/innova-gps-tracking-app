@@ -121,6 +121,8 @@ export const CREATE_ORDER = gql`
 		$customerId: String!
 		$expectedDeliveryDate: String
 		$status: String
+		$category: String
+		$routeIndex: Int
 	) {
 		insertOrder(
 			organizationId: $organizationId
@@ -132,6 +134,8 @@ export const CREATE_ORDER = gql`
 			customerId: $customerId
 			expectedDeliveryDate: $expectedDeliveryDate
 			status: $status
+			category: $category
+			routeIndex: $routeIndex
 		) {
 			name
 		}
@@ -150,6 +154,8 @@ export const UPDATE_ORDER = gql`
 		$customerId: String
 		$expectedDeliveryDate: String
 		$status: String
+		$category: String
+		$routeIndex: Int
 	) {
 		updateOrder(
 			id: $id
@@ -162,6 +168,8 @@ export const UPDATE_ORDER = gql`
 			customerId: $customerId
 			expectedDeliveryDate: $expectedDeliveryDate
 			status: $status
+			category: $category
+			routeIndex: $routeIndex
 		) {
 			name
 		}

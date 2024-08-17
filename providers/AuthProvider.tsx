@@ -1,7 +1,9 @@
-import { auth } from "@/firebase";
+import { auth, db, push, ref, set } from "@/firebase";
 import { client } from "@/graphql/client";
 import { GET_ORDER_BY_ID, GET_ORDERS_BY_DATE, GET_VEHICLES } from "@/graphql/queries";
 import { useAuth } from "@clerk/clerk-expo";
+import { format } from "date-fns-tz";
+import * as Location from "expo-location";
 import * as SecureStore from "expo-secure-store";
 import { onIdTokenChanged, signInWithCustomToken } from "firebase/auth";
 import React, { createContext, useEffect, useState } from "react";
@@ -21,7 +23,7 @@ const saveOrgId = async (orgId: string) => {
 };
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
-	const { isSignedIn, getToken, orgId } = useAuth();
+	const { isSignedIn, getToken, orgId, userId } = useAuth();
 	const [isLoading, setIsLoading] = useState<boolean>(false);
 
 	useEffect(() => {
@@ -57,6 +59,42 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 		});
 		return () => unsubscribe();
 	}, []);
+
+	useEffect(() => {
+		const watchUserPosition = async () => {
+			let { status } = await Location.requestForegroundPermissionsAsync();
+			if (status !== "granted") {
+				console.error("Permission to access location was denied");
+				return;
+			}
+			if (userId) {
+				const locationSubscription = await Location.watchPositionAsync(
+					{
+						accuracy: Location.Accuracy.High,
+						timeInterval: 5000, // Update location every 5 seconds
+						distanceInterval: 25, // Update location every 25 meters
+					},
+					(location) => {
+						const { latitude, longitude, speed, heading } = location.coords;
+						const speedInKmh = (speed || 0) * 3.6;
+						push(ref(db, `users/${userId}/${format(new Date(), "yyyy-MM-dd")}`), {
+							latitude,
+							longitude,
+							speed,
+							speedInKmh,
+							timestamp: format(new Date(), "yyyy-MM-dd HH:mm:ss"),
+						});
+					}
+				);
+
+				return () => {
+					locationSubscription.remove();
+				};
+			}
+		};
+
+		watchUserPosition();
+	}, [userId]);
 
 	if (isLoading) {
 		return (

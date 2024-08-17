@@ -2,29 +2,32 @@ import { isColorDark } from "@/lib/styles";
 import { useOrganization } from "@clerk/clerk-expo";
 import { router } from "expo-router";
 import React, { useState } from "react";
-import { Modal, Pressable, Text, View } from "react-native";
+import { Modal, Pressable, Text, TextInput, View } from "react-native";
 import FontAwesome from "react-native-vector-icons/FontAwesome";
 import { useTailwind } from "tailwind-rn";
 
 export default function ModalOrderChangeStatus({
 	selectedCustomerOrders,
+	showLink,
 	dateString,
 	modalVisible,
 	setModalVisible,
 	onMarkerSubmit,
 }: {
 	selectedCustomerOrders: CustomerOrders;
+	showLink?: boolean;
 	dateString?: string;
 	modalVisible: boolean;
 	setModalVisible: (visible: boolean) => void;
-	onMarkerSubmit: (status: StatusCategory) => void;
+	onMarkerSubmit: (status: StatusCategory, notes: string) => void;
 }) {
 	const tw = useTailwind();
 
 	const { organization } = useOrganization();
 	const statusCategories: StatusCategory[] = Array.isArray(organization?.publicMetadata.statusCategories)
 		? organization.publicMetadata.statusCategories.filter(
-				(statusCategory) => statusCategory.name !== selectedCustomerOrders.status
+				(statusCategory) =>
+					statusCategory.name !== selectedCustomerOrders.status && statusCategory.name !== "No Location"
 		  )
 		: [
 				{
@@ -35,6 +38,8 @@ export default function ModalOrderChangeStatus({
 
 	const singleOrderId = selectedCustomerOrders.orderIds[0];
 	const { orderNumbers, customer } = selectedCustomerOrders;
+
+	const [notes, setNotes] = useState<string>("");
 
 	return (
 		<Modal
@@ -56,16 +61,20 @@ export default function ModalOrderChangeStatus({
 					setModalVisible(false);
 				}}
 			>
-				<View style={[tw("rounded-lg bg-white m-5 px-8 py-10 max-w-[90%]")]}>
+				<View style={[tw("rounded-lg bg-white m-5 px-8 py-10 max-w-[90%] min-w-[325px]")]}>
 					{customer && (
 						<View style={tw("mb-5 bg-gray-100 rounded-lg p-5")}>
 							<Text style={tw("text-center text-sm text-gray-400 mb-3")}>Client Information</Text>
 							<Text style={tw("text-center font-semibold mb-2")}>{customer.name}</Text>
 							<Text style={tw("text-center font-semibold mb-2")}>{`${
 								customer.streetName && customer.streetName
-							} ${customer.streetNumber}`}</Text>
-							<Text style={tw(`${!customer.city && "hidden"}`)}>{customer.city && customer.city}</Text>
-							{singleOrderId && (
+							} ${customer.streetNumber && customer.streetNumber}`}</Text>
+							{customer.city && <Text>{customer.city}</Text>}
+							{customer.phone_number && <Text>{customer.phone_number}</Text>}
+							{customer.phone_number_2 && <Text>{customer.phone_number_2}</Text>}
+							{customer.phone_number_3 && <Text>{customer.phone_number_3}</Text>}
+
+							{singleOrderId && showLink && (
 								<View style={tw("flex-row justify-between items-center mt-3")}>
 									<Pressable
 										onPress={() => {
@@ -90,10 +99,7 @@ export default function ModalOrderChangeStatus({
 							)}
 						</View>
 					)}
-					<Text style={tw("text-center mb-4")}>
-						Do you want to change the status of{" "}
-						{orderNumbers && orderNumbers.length > 1 ? "these orders" : "this order"}?
-					</Text>
+
 					{orderNumbers && orderNumbers.length > 0 && (
 						<View style={tw("flex flex-row justify-center items-center mb-5 flex-wrap")}>
 							{orderNumbers.map((orderNumber: number) => (
@@ -108,6 +114,16 @@ export default function ModalOrderChangeStatus({
 							))}
 						</View>
 					)}
+					<View style={tw("mb-5")}>
+						<TextInput
+							placeholder="Type notes"
+							placeholderTextColor="#999"
+							value={notes}
+							onChangeText={setNotes}
+							style={tw("text-sm rounded text-gray-700 border-b pb-2 border-gray-300")}
+						/>
+					</View>
+
 					<View style={tw("flex-row justify-between items-center mb-5")}>
 						{statusCategories &&
 							statusCategories.length > 0 &&
@@ -116,20 +132,20 @@ export default function ModalOrderChangeStatus({
 									key={status.name}
 									onPress={() => {
 										setModalVisible(false);
-										onMarkerSubmit(status);
+										onMarkerSubmit(status, notes);
 									}}
 									style={[
 										{ backgroundColor: status.color },
 										tw(
-											`flex-1 rounded py-4 mr-1 ${
-												!isColorDark(status.color) && "border border-gray-200"
+											`flex-1 rounded py-4 mx-1 ${
+												!isColorDark(status.color) ? "border border-gray-200" : ""
 											}`
 										),
 									]}
 								>
 									<Text
 										style={[
-											tw(`text-center text-${isColorDark(status.color) ? "white" : "black"}`),
+											tw(`text-center text-${isColorDark(status.color) ? "white" : "gray-700"}`),
 										]}
 									>
 										{status.name}
@@ -142,7 +158,7 @@ export default function ModalOrderChangeStatus({
 							onPress={() => {
 								setModalVisible(false);
 							}}
-							style={tw("flex-1 rounded py-4 ml-1 border border-gray-200 bg-gray-100")}
+							style={tw("flex-1 rounded py-4 mx-1 border border-gray-200 bg-gray-100")}
 						>
 							<Text style={tw("text-center")}>No changes, close window</Text>
 						</Pressable>

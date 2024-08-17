@@ -10,34 +10,39 @@ type ListItem = {
 };
 
 type ModalPickerProps = {
-	currentItem?: string;
 	list: ListItem[];
-	onChange: (value: string) => void;
+	options?: {
+		defaultValue?: string;
+		displayAll?: boolean;
+		displayAllLabel?: string;
+	};
+	onSelect: (value: string) => void;
 };
 
-export const ModalPicker = ({ currentItem, list, onChange }: ModalPickerProps) => {
+export const ModalPicker = ({ list, onSelect, options }: ModalPickerProps) => {
 	const [modalVisible, setModalVisible] = useState(false);
-	const [selectedItem, setSelectedItem] = useState<ListItem>(
-		list.find((item) => item.value === currentItem) || list[0]
+	const [selectedItem, setSelectedItem] = useState<ListItem | null>(
+		list.find((item) => item.value === options?.defaultValue) || null
 	);
 
 	const pickerRef = useRef<any>(null);
 	const tw = useTailwind();
 
 	const handleSelectItem = (value: string) => {
-		const newSelectedItem = list.find((item) => item.value === value);
-		if (newSelectedItem) {
-			setSelectedItem(newSelectedItem);
-			onChange(value);
+		if (value === "all") {
+			setSelectedItem(null);
+		} else {
+			const item = list.find((item) => item.value === value) || null;
+			setSelectedItem(item);
 		}
-		setModalVisible(false);
+		onSelect(value);
 	};
 
 	return (
 		<View>
 			<Pressable onPress={() => setModalVisible(true)}>
 				<View style={tw("rounded px-2 py-2 border border-gray-300 flex flex-row justify-between")}>
-					<Text style={tw("mr-5")}>{selectedItem?.label}</Text>
+					<Text style={tw("mr-5")}>{selectedItem?.label || options?.displayAllLabel || "Choose option"}</Text>
 					<Icon name="chevron-down" size={15} />
 				</View>
 			</Pressable>
@@ -56,8 +61,13 @@ export const ModalPicker = ({ currentItem, list, onChange }: ModalPickerProps) =
 							<Picker
 								ref={pickerRef}
 								onValueChange={handleSelectItem}
-								selectedValue={selectedItem?.value || list[0].value}
+								selectedValue={selectedItem?.value || options?.displayAllLabel}
 							>
+								{options?.displayAll ? (
+									<Picker.Item label={options?.displayAllLabel || "All"} value={"all"} />
+								) : (
+									!selectedItem && <Picker.Item label="Choose option" />
+								)}
 								{list.map((item) => (
 									<Picker.Item key={item.value} label={item.label} value={item.value} />
 								))}

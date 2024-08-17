@@ -1,8 +1,19 @@
 import { useSignIn } from "@clerk/clerk-expo";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { LinearGradient } from "expo-linear-gradient";
 import { Link, useNavigation, useRouter } from "expo-router";
-import React, { useCallback, useLayoutEffect, useState } from "react";
-import { Button, KeyboardAvoidingView, Platform, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import React, { useCallback, useEffect, useLayoutEffect, useState } from "react";
+import {
+	Button,
+	KeyboardAvoidingView,
+	Platform,
+	Pressable,
+	ScrollView,
+	StyleSheet,
+	Text,
+	TextInput,
+	View,
+} from "react-native";
 import { useTailwind } from "tailwind-rn";
 
 export default function Page() {
@@ -10,8 +21,8 @@ export default function Page() {
 	const router = useRouter();
 	const tw = useTailwind();
 
-	const [emailAddress, setEmailAddress] = useState("omraan93@gmail.com");
-	const [password, setPassword] = useState("OTinnova01!");
+	const [emailAddress, setEmailAddress] = useState<string>("");
+	const [password, setPassword] = useState<string>("");
 	const navigation = useNavigation();
 
 	useLayoutEffect(() => {
@@ -20,11 +31,24 @@ export default function Page() {
 		});
 	}, [navigation]);
 
+	useEffect(() => {
+		// Haal het e-mailadres op uit AsyncStorage bij het laden van de component
+		const loadEmailAddress = async () => {
+			const storedEmail = await AsyncStorage.getItem("emailAddress");
+			if (storedEmail) {
+				setEmailAddress(storedEmail);
+			}
+		};
+		loadEmailAddress();
+	}, []);
+
 	const onSignInPress = useCallback(async () => {
 		if (!isLoaded) {
 			return;
 		}
-
+		if (!emailAddress || !emailAddress) {
+			return;
+		}
 		try {
 			const signInAttempt = await signIn.create({
 				identifier: emailAddress,
@@ -33,10 +57,9 @@ export default function Page() {
 
 			if (signInAttempt.status === "complete") {
 				await setActive({ session: signInAttempt.createdSessionId });
+				await AsyncStorage.setItem("emailAddress", emailAddress);
 				router.replace("/");
 			} else {
-				// See https://clerk.com/docs/custom-flows/error-handling
-				// for more info on error handling
 				console.error(JSON.stringify(signInAttempt, null, 2));
 			}
 		} catch (err: any) {
@@ -66,72 +89,59 @@ export default function Page() {
 			style={tw("flex-1 justify-center")}
 			behavior={Platform.OS === "ios" ? "padding" : "height"}
 		>
-			<View style={tw("bg-gray-100 lg:flex-row")}>
-				<LinearGradient
-					style={tw("h-[60%] lg:h-[100%] lg:w-[60%] justify-center items-center")}
-					colors={["rgba(120, 50, 180, 1)", "rgba(120, 50, 180, 0.7)", "rgba(120, 50, 180, 1)"]}
-					start={[0, 0]}
-					end={[1, 1]}
-				>
-					<View style={tw(`rounded-full w-60 h-60 border-8 border-white flex justify-center items-center `)}>
-						<Text style={tw(`text-4xl font-bold text-center text-white`)}>Innova</Text>
-					</View>
-				</LinearGradient>
-				<View style={tw(`h-[40%] w-full lg:h-[100%] lg:w-[40%]`)}>
-					<View style={[stylesBox.shadow, stylesBox.container]}>
-						<View style={tw(`m-auto w-full`)}>
-							<Text style={tw("mb-2 text-gray-700")}>Email</Text>
-							<TextInput
-								style={tw(
-									`px-4 pt-3 h-16 pb-4 border border-gray-300 rounded-lg text-gray-600 text-lg mb-10 w-full mx-auto tracking-wider`
-								)}
-								value={emailAddress}
-								onChangeText={setEmailAddress}
-								placeholder="Email"
-								autoCapitalize="none"
-								keyboardType="email-address"
-							/>
-							<Text style={tw("mb-2 text-gray-700")}>Password</Text>
-							<TextInput
-								style={tw(
-									`px-4 pt-3 h-16 pb-4 border border-gray-300 rounded-lg text-gray-600 text-lg mb-10 w-full mx-auto tracking-wider`
-								)}
-								value={password}
-								onChangeText={setPassword}
-								placeholder="Password"
-								secureTextEntry
-							/>
+			<ScrollView contentContainerStyle={{ flexGrow: 1 }}>
+				<View style={tw("bg-gray-100 lg:flex-row")}>
+					<LinearGradient
+						style={tw("h-[60%] lg:h-[100%] lg:w-[60%] justify-center items-center")}
+						colors={["rgba(120, 50, 180, 1)", "rgba(120, 50, 180, 0.7)", "rgba(120, 50, 180, 1)"]}
+						start={[0, 0]}
+						end={[1, 1]}
+					>
+						<View
+							style={tw(`rounded-full w-60 h-60 border-8 border-white flex justify-center items-center `)}
+						>
+							<Text style={tw(`text-4xl font-bold text-center text-white`)}>Innova</Text>
 						</View>
-						<View>
-							<Pressable
-								style={tw(
-									`py-3 border border-gray-300 rounded-lg bg-primary flex-row justify-center items-center text-lg mb-5 w-full mx-auto`
-								)}
-								onPress={onSignInPress}
-							>
-								<Text style={tw("text-lg text-white font-bold tracking-wider")}>Log in</Text>
-							</Pressable>
+					</LinearGradient>
+					<View style={tw(`h-[40%] w-full lg:h-[100%] lg:w-[40%]`)}>
+						<View style={[stylesBox.shadow, stylesBox.container]}>
+							<View style={tw(`m-auto w-full`)}>
+								<Text style={tw("mb-2 text-gray-700")}>Email</Text>
+								<TextInput
+									style={tw(
+										`px-4 pt-3 h-16 pb-4 border border-gray-300 rounded-lg text-gray-600 text-lg mb-10 w-full mx-auto tracking-wider`
+									)}
+									value={emailAddress}
+									onChangeText={setEmailAddress}
+									placeholder="Email"
+									autoCapitalize="none"
+									keyboardType="email-address"
+								/>
+								<Text style={tw("mb-2 text-gray-700")}>Password</Text>
+								<TextInput
+									style={tw(
+										`px-4 pt-3 h-16 pb-4 border border-gray-300 rounded-lg text-gray-600 text-lg mb-10 w-full mx-auto tracking-wider`
+									)}
+									value={password}
+									onChangeText={setPassword}
+									placeholder="Password"
+									secureTextEntry
+								/>
+							</View>
+							<View>
+								<Pressable
+									style={tw(
+										`py-3 border border-gray-300 rounded-lg bg-primary flex-row justify-center items-center text-lg mb-5 w-full mx-auto`
+									)}
+									onPress={onSignInPress}
+								>
+									<Text style={tw("text-lg text-white font-bold tracking-wider")}>Log in</Text>
+								</Pressable>
+							</View>
 						</View>
 					</View>
 				</View>
-			</View>
+			</ScrollView>
 		</KeyboardAvoidingView>
-		// <View style={tw("flex-1 justify-center items-center p-4")}>
-		// 	<TextInput
-		// 		style={tw("border border-gray-300 p-2 rounded-lg w-full mb-4")}
-		// 		autoCapitalize="none"
-		// 		value={emailAddress}
-		// 		placeholder="Email..."
-		// 		onChangeText={(emailAddress) => setEmailAddress(emailAddress)}
-		// 	/>
-		// 	<TextInput
-		// 		style={tw("border border-gray-300 p-2 rounded-lg w-full mb-4")}
-		// 		value={password}
-		// 		placeholder="Password..."
-		// 		secureTextEntry={true}
-		// 		onChangeText={(password) => setPassword(password)}
-		// 	/>
-		// 	<Button title="Sign In" onPress={onSignInPress} />
-		// </View>
 	);
 }

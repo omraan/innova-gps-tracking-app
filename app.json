@@ -3,9 +3,9 @@
 		"name": "Innova",
 		"slug": "innova-gps-tracking",
 		"description": "Innova GPS Tracking",
-		"version": "1.0.9",
-		"orientation": "portrait",
-
+		"version": "1.0.12",
+		"orientation": "default",
+		"owner": "innova-aruba",
 		"icon": "./assets/images/icon.png",
 		"scheme": "myapp",
 		"userInterfaceStyle": "automatic",
@@ -36,11 +36,6 @@
 				}
 			},
 			"package": "com.innova.gpstracking"
-		},
-		"web": {
-			"bundler": "metro",
-			"output": "static",
-			"favicon": "./assets/images/favicon.png"
 		},
 		"plugins": ["expo-router"],
 		"experiments": {

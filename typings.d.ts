@@ -1,3 +1,21 @@
+declare global {
+	interface OrganizationPublicMetadata {
+		address: string;
+		statusCategories: {
+			name: string;
+			color: string;
+		}[];
+		orderCategories: {
+			name: string;
+			color: string;
+		}[];
+
+		country: string;
+		lat: number;
+		lng: number;
+	}
+}
+
 interface RegisterCustomer {
 	name: string;
 	email?: string;
@@ -29,10 +47,12 @@ interface RegisterOrder {
 	driverId?: string;
 	vehicleId?: string;
 	customerId?: string;
-	expectedDeliveryDate?: number;
+	expectedDeliveryDate?: string;
 	status?: string;
 	orderNumber?: string;
 	notes?: string;
+	category?: string;
+	routeOrderIndex?: number;
 }
 
 interface Order extends RegisterOrder {
@@ -59,6 +79,7 @@ interface OrderExtended extends Order {
 		streetNumber?: string;
 		phone_number?: string;
 		phone_number_2?: string;
+		phone_number_3?: string;
 	};
 }
 interface CustomerOrders extends OrderExtended {
