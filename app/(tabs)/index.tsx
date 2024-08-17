@@ -33,11 +33,11 @@ export default function Page() {
 	const [customerOrders, setCustomerOrders] = useState<CustomerOrders[] | undefined>(undefined);
 	const [filteredOrders, setFilteredOrders] = useState<CustomerOrders[]>([]);
 
-	const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | undefined>(undefined);
+	const [selectedVehicle, setSelectedVehicle] = useState<{ name: string; value: Vehicle } | undefined>(undefined);
 	const [selectedCustomerOrders, setSelectedCustomerOrders] = useState<CustomerOrders | undefined>(undefined);
 
 	const {
-		data: orders,
+		data: dataOrders,
 		loading: loadingOrders,
 		error,
 		refetch: refetchOrders,
@@ -45,26 +45,45 @@ export default function Page() {
 		variables: {
 			date: dateString,
 		},
-		fetchPolicy: "no-cache",
+		fetchPolicy: "network-only",
 	});
-	const { data: vehicles, refetch: refetchVehicles } = useQuery(GET_VEHICLES);
+	const orders = dataOrders?.getOrdersByDate || [];
+	const { data: dataVehicles, refetch: refetchVehicles } = useQuery(GET_VEHICLES);
+	const vehicles = dataVehicles?.getVehicles || [];
 
-	const [UpdateOrder] = useMutation(UPDATE_ORDER, {
-		refetchQueries: [GET_ORDERS_BY_DATE],
-		awaitRefetchQueries: true,
+	const [updateOrder] = useMutation(UPDATE_ORDER, {
+		onCompleted: () => {},
+		onError: (error) => {
+			console.error(error);
+		},
 	});
 
 	useEffect(() => {
 		if (orders && orders.length > 0) {
 			setCustomerOrders(getRelatedOrders(orders));
+			if (liveLocation) {
+				setCurrentLocation(liveLocation);
+			}
 		}
 	}, [orders]);
 
 	useEffect(() => {
-		if (orgId && user && user?.unsafeMetadata?.organizations && user.unsafeMetadata.organizations[orgId]) {
-			const metaData = user.unsafeMetadata.organizations[orgId] as UserUnsafeMetadata;
-			if (vehicles && vehicles.length > 0 && metaData && metaData.vehicleId) {
-				setSelectedVehicle(vehicles.find((vehicle: Vehicle) => vehicle.id === metaData.vehicleId));
+		Location.requestForegroundPermissionsAsync().then(({ status }) => {
+			if (status !== "granted") {
+				console.error("Permission to access location was denied");
+				return;
+			}
+			Location.getCurrentPositionAsync({}).then(({ coords }) => {
+				setCurrentLocation([coords.latitude, coords.longitude]);
+			});
+		});
+	}, []);
+
+	useEffect(() => {
+		if (orgId && user) {
+			const metaData = user?.unsafeMetadata?.organizations?.[orgId];
+			if (vehicles?.length > 0 && metaData?.vehicleId) {
+				setSelectedVehicle(vehicles.find((v: Vehicle) => v.id === metaData.vehicleId)?.value);
 			}
 		}
 	}, [vehicles, user, orgId]);
@@ -74,7 +93,7 @@ export default function Page() {
 			if (customerOrders) {
 				if (selectedVehicle) {
 					setFilteredOrders(
-						customerOrders.filter((order: CustomerOrders) => order.vehicleId === selectedVehicle.id) || []
+						customerOrders.filter((order: CustomerOrders) => order.vehicleId === selectedVehicle.name) || []
 					);
 				} else {
 					setFilteredOrders(customerOrders);
@@ -88,7 +107,7 @@ export default function Page() {
 	}, [date, customerOrders, selectedVehicle]);
 
 	const handlePickerChange = (value: string) => {
-		setSelectedVehicle(vehicles.find((v: any) => v.licensePlate === value));
+		setSelectedVehicle(vehicles.find((v: any) => v.value.licensePlate === value));
 	};
 
 	async function onMarkerSubmit(status: StatusCategory, notes?: string) {
@@ -105,33 +124,61 @@ export default function Page() {
 				if (notes && notes !== "") {
 					variables.notes = notes;
 				}
-				UpdateOrder({
+				updateOrder({
 					variables,
+					onCompleted: () => {
+						setLoading(false);
+						setModalVisible(false);
+					},
 					update: (cache) => {
 						// Handmatig de cache bijwerken als dat nodig is
-						const existingOrders: OrderExtended[] = cache.readQuery({ query: GET_ORDERS_BY_DATE }) || [];
+						const existingOrders = cache.readQuery<{
+							getOrdersByDate: { name: string; value: OrderExtended }[];
+						}>({
+							query: GET_ORDERS_BY_DATE,
+							variables: {
+								date: dateString,
+							},
+						})?.getOrdersByDate;
+
 						if (existingOrders) {
-							const newOrders = existingOrders.map((existingOrder) =>
-								existingOrder.id === orderId
-									? {
-											...existingOrder,
+							const newOrders = existingOrders.map((existingOrder) => {
+								if (existingOrder.name === orderId) {
+									const newOrder = {
+										name: existingOrder.name,
+										value: {
+											...existingOrder.value,
 											modifiedBy: userId!,
 											modifiedAt: Number(new Date()),
 											status: status.name,
-									  }
-									: existingOrder
-							);
+											events: [
+												...existingOrder.value.events!,
+												{
+													name: "",
+													createdBy: "",
+													createdAt: "",
+													status: status.name,
+													modifiedAt: Number(new Date()),
+												},
+											],
+										},
+									};
+									return newOrder;
+								}
+								return existingOrder;
+							});
 							cache.writeQuery({
 								query: GET_ORDERS_BY_DATE,
-								data: { orders: newOrders },
+								variables: {
+									date: dateString,
+								},
+								data: { getOrdersByDate: newOrders },
 							});
 						}
 					},
 				});
 			});
 		}
-		setLoading(false);
-		setModalVisible(false);
 	}
 
 	const filteredOrdersWithInput = filteredOrders.filter((order: CustomerOrders) => {
@@ -186,24 +233,6 @@ export default function Page() {
 		(organization?.publicMetadata.lng as number) || 0,
 	]);
 
-	// useEffect(() => {
-	// 	if (orders && liveLocation) {
-	// 		setCurrentLocation(liveLocation);
-	// 	}
-	// }, [orders]);
-
-	// useEffect(() => {
-	// 	Location.requestForegroundPermissionsAsync().then(({ status }) => {
-	// 		if (status !== "granted") {
-	// 			console.error("Permission to access location was denied");
-	// 			return;
-	// 		}
-	// 		Location.getCurrentPositionAsync({}).then(({ coords }) => {
-	// 			setCurrentLocation([coords.latitude, coords.longitude]);
-	// 		});
-	// 	});
-	// }, []);
-
 	useEffect(() => {
 		const watchUserPosition = async () => {
 			let { status } = await Location.requestForegroundPermissionsAsync();
@@ -241,11 +270,14 @@ export default function Page() {
 	const sortedOrders =
 		orders && orders.length > 0
 			? orders
-					.filter((order: CustomerOrders) => order.status !== "Completed" && order.status !== "Failed")
-					.map((order: CustomerOrders) => {
+					.filter(
+						({ name, value }: { name: string; value: CustomerOrders }) =>
+							value.status !== "Completed" && value.status !== "Failed"
+					)
+					.map(({ name, value }: { name: string; value: CustomerOrders }) => {
 						const orderCoords = {
-							latitude: order.customer?.lat || 0,
-							longitude: order.customer?.lng || 0,
+							latitude: value.customer?.lat || 0,
+							longitude: value.customer?.lng || 0,
 						};
 						const distance = getDistance(
 							{
@@ -254,7 +286,7 @@ export default function Page() {
 							},
 							orderCoords
 						);
-						return { ...order, distance };
+						return { ...value, distance };
 					})
 					.sort((a: any, b: any) => a.distance - b.distance)
 			: [];
@@ -300,34 +332,36 @@ export default function Page() {
 									<View style={[tw("bg-white rounded px-5 pt-5 pb-2 flex flex-row justify-between")]}>
 										{vehicles && vehicles.length > 0 && (
 											<ModalPicker
-												key={selectedVehicle?.id}
+												key={selectedVehicle?.name}
 												list={vehicles.map((v: any) => {
 													return {
-														value: v.licensePlate,
-														label: v.licensePlate,
+														value: v.value.licensePlate,
+														label: v.value.licensePlate,
 													};
 												})}
 												options={{
-													defaultValue: selectedVehicle?.licensePlate,
+													defaultValue: selectedVehicle?.value.licensePlate,
 													displayAll: true,
 													displayAllLabel: "All Vehicles",
 												}}
 												onSelect={handlePickerChange}
 											/>
 										)}
-										<RNDateTimePicker
-											display="compact"
-											value={date}
-											mode="date"
-											onChange={(event: any, value: any) =>
-												setDate(
-													moment
-														.tz(new Date(value), "America/New_York")
-														.startOf("day")
-														.toDate()
-												)
-											}
-										/>
+										{orgRole !== "org:viewer" && (
+											<RNDateTimePicker
+												display="compact"
+												value={date}
+												mode="date"
+												onChange={(event: any, value: any) =>
+													setDate(
+														moment
+															.tz(new Date(value), "America/New_York")
+															.startOf("day")
+															.toDate()
+													)
+												}
+											/>
+										)}
 									</View>
 								)}
 

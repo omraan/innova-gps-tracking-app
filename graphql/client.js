@@ -21,38 +21,37 @@ const addVariableMiddleware = new ApolloLink((operation, forward) => {
 				return operation;
 			})
 			.then((operation) => {
-				// console.log("Operation: ", operation.variables);
 				handle = forward(operation)
 					.map((response) => {
-						try {
-							console.log("Response: ", response);
-							if (!response.data || response.data.length === 0) return response;
+						const queryName = Object.keys(response.data || {})[0];
 
-							const key = Object.keys(response.data)[0];
-							response.data = response.data[key];
-							if (response.data.length === 0) return response;
-							// console.log("Response Length: ", response.data.length);
-							if (response.data[0] && Object.keys(response.data[0]).find((k) => k === "value")) {
-								response.data = response.data.map((item) => {
-									const { name: id, value, ...rest } = item;
+						if (!response.data || !queryName) {
+							// console.log("response: ", response);
+							return response;
+						}
+						const valueExists = response.data[queryName][0]?.value;
 
-									return {
-										id,
-										...rest,
-										...value,
-									};
-								});
-							} else {
-								response.data = {
-									...response.data,
+						if (valueExists) {
+							response.data[queryName] = response.data[queryName].map((item) => {
+								const itemWithId = {
+									name: item.name,
+									id: item.name,
+									value: {
+										id: item.name,
+										...item.value,
+									},
+								};
+								return itemWithId;
+							});
+						} else {
+							if (operation.variables.id) {
+								response.data[queryName] = {
+									...response.data[queryName],
 									id: operation.variables.id,
 								};
 							}
-							return response;
-						} catch (err) {
-							console.error("StepZen error:", err);
-							throw err;
 						}
+						return response;
 					})
 					.subscribe({
 						next: observer.next.bind(observer),

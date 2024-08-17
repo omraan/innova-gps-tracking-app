@@ -75,6 +75,9 @@
 			},
 			"releaseChannel": "production",
 			"distribution": "store",
+			"ios": {
+				"cocoapods": "1.15.2"
+			},
 			// "env": {
 			// 	"ENVIRONMENT": "prod",
 			// 	"EXPO_PUBLIC_STEPZEN_ACCOUNT": "zemamra",

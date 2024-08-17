@@ -88,6 +88,12 @@
 			"marginBottom": 12
 		}
 	},
+	"my-5": {
+		"style": {
+			"marginTop": 20,
+			"marginBottom": 20
+		}
+	},
 	"-mt-20": {
 		"style": {
 			"marginTop": -80
@@ -148,6 +154,31 @@
 			"marginTop": 20
 		}
 	},
+	"mt-2": {
+		"style": {
+			"marginTop": 8
+		}
+	},
+	"ml-2": {
+		"style": {
+			"marginLeft": 8
+		}
+	},
+	"mr-3": {
+		"style": {
+			"marginRight": 12
+		}
+	},
+	"mb-20": {
+		"style": {
+			"marginBottom": 80
+		}
+	},
+	"block": {
+		"style": {
+			"display": "block"
+		}
+	},
 	"inline": {
 		"style": {
 			"display": "inline"
@@ -156,6 +187,21 @@
 	"flex": {
 		"style": {
 			"display": "flex"
+		}
+	},
+	"table": {
+		"style": {
+			"display": "table"
+		}
+	},
+	"grid": {
+		"style": {
+			"display": "grid"
+		}
+	},
+	"contents": {
+		"style": {
+			"display": "contents"
 		}
 	},
 	"hidden": {
@@ -191,6 +237,21 @@
 	"h-full": {
 		"style": {
 			"height": "100%"
+		}
+	},
+	"h-10": {
+		"style": {
+			"height": 40
+		}
+	},
+	"h-9": {
+		"style": {
+			"height": 36
+		}
+	},
+	"h-40": {
+		"style": {
+			"height": 160
 		}
 	},
 	"w-60": {
@@ -268,6 +329,11 @@
 	"items-center": {
 		"style": {
 			"alignItems": "center"
+		}
+	},
+	"justify-start": {
+		"style": {
+			"justifyContent": "flex-start"
 		}
 	},
 	"justify-end": {
@@ -450,6 +516,28 @@
 			"backgroundColor": "rgb(255 255 255 / 0.8)"
 		}
 	},
+	"bg-gray-200": {
+		"style": {
+			"--tw-bg-opacity": 1,
+			"backgroundColor": "rgb(229 231 235 / var(--tw-bg-opacity))"
+		}
+	},
+	"bg-black": {
+		"style": {
+			"--tw-bg-opacity": 1,
+			"backgroundColor": "rgb(0 0 0 / var(--tw-bg-opacity))"
+		}
+	},
+	"bg-black/50": {
+		"style": {
+			"backgroundColor": "rgb(0 0 0 / 0.5)"
+		}
+	},
+	"bg-black/80": {
+		"style": {
+			"backgroundColor": "rgb(0 0 0 / 0.8)"
+		}
+	},
 	"p-0": {
 		"style": {
 			"paddingTop": 0,
@@ -605,6 +693,12 @@
 			"lineHeight": 20
 		}
 	},
+	"text-xs": {
+		"style": {
+			"fontSize": 12,
+			"lineHeight": 16
+		}
+	},
 	"font-bold": {
 		"style": {
 			"fontWeight": "700"
@@ -620,6 +714,11 @@
 			"textTransform": "uppercase"
 		}
 	},
+	"lowercase": {
+		"style": {
+			"textTransform": "lowercase"
+		}
+	},
 	"capitalize": {
 		"style": {
 			"textTransform": "capitalize"
@@ -628,6 +727,36 @@
 	"italic": {
 		"style": {
 			"fontStyle": "italic"
+		}
+	},
+	"ordinal": {
+		"style": {
+			"--tw-ordinal": "ordinal",
+			"fontVariantNumeric": "var(--tw-ordinal) var(--tw-slashed-zero) var(--tw-numeric-figure) var(--tw-numeric-spacing) var(--tw-numeric-fraction)"
+		}
+	},
+	"lining-nums": {
+		"style": {
+			"--tw-numeric-figure": "lining-nums",
+			"fontVariantNumeric": "var(--tw-ordinal) var(--tw-slashed-zero) var(--tw-numeric-figure) var(--tw-numeric-spacing) var(--tw-numeric-fraction)"
+		}
+	},
+	"oldstyle-nums": {
+		"style": {
+			"--tw-numeric-figure": "oldstyle-nums",
+			"fontVariantNumeric": "var(--tw-ordinal) var(--tw-slashed-zero) var(--tw-numeric-figure) var(--tw-numeric-spacing) var(--tw-numeric-fraction)"
+		}
+	},
+	"proportional-nums": {
+		"style": {
+			"--tw-numeric-spacing": "proportional-nums",
+			"fontVariantNumeric": "var(--tw-ordinal) var(--tw-slashed-zero) var(--tw-numeric-figure) var(--tw-numeric-spacing) var(--tw-numeric-fraction)"
+		}
+	},
+	"tabular-nums": {
+		"style": {
+			"--tw-numeric-spacing": "tabular-nums",
+			"fontVariantNumeric": "var(--tw-ordinal) var(--tw-slashed-zero) var(--tw-numeric-figure) var(--tw-numeric-spacing) var(--tw-numeric-fraction)"
 		}
 	},
 	"tracking-wider": {
@@ -676,9 +805,28 @@
 			"textDecorationLine": "underline"
 		}
 	},
+	"line-through": {
+		"style": {
+			"textDecorationLine": "line-through"
+		}
+	},
 	"md:w-[50%]": {
 		"style": {
 			"width": "50%"
+		},
+		"media": "(min-width: 768px)"
+	},
+	"md:flex-1": {
+		"style": {
+			"flexGrow": 1,
+			"flexShrink": 1,
+			"flexBasis": "0%"
+		},
+		"media": "(min-width: 768px)"
+	},
+	"md:flex-row": {
+		"style": {
+			"flexDirection": "row"
 		},
 		"media": "(min-width: 768px)"
 	},
@@ -724,9 +872,23 @@
 		},
 		"media": "(min-width: 1024px)"
 	},
+	"lg:flex-initial": {
+		"style": {
+			"flexGrow": 0,
+			"flexShrink": 1,
+			"flexBasis": "auto"
+		},
+		"media": "(min-width: 1024px)"
+	},
 	"lg:flex-row": {
 		"style": {
 			"flexDirection": "row"
+		},
+		"media": "(min-width: 1024px)"
+	},
+	"lg:flex-col": {
+		"style": {
+			"flexDirection": "column"
 		},
 		"media": "(min-width: 1024px)"
 	}

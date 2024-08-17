@@ -25,9 +25,9 @@ interface RegisterCustomer {
 	city?: string;
 	streetName?: string;
 	streetNumber?: string;
-	phone_number?: string;
-	phone_number_2?: string;
-	phone_number_3?: string;
+	phoneNumber?: string;
+	phoneNumber2?: string;
+	phoneNumber3?: string;
 }
 
 interface Customer extends RegisterCustomer {
@@ -52,7 +52,7 @@ interface RegisterOrder {
 	orderNumber?: string;
 	notes?: string;
 	category?: string;
-	routeOrderIndex?: number;
+	routeIndex?: number;
 }
 
 interface Order extends RegisterOrder {
@@ -77,9 +77,9 @@ interface OrderExtended extends Order {
 		city?: string;
 		streetName?: string;
 		streetNumber?: string;
-		phone_number?: string;
-		phone_number_2?: string;
-		phone_number_3?: string;
+		phoneNumber?: string;
+		phoneNumber2?: string;
+		phoneNumber3?: string;
 	};
 }
 interface CustomerOrders extends OrderExtended {

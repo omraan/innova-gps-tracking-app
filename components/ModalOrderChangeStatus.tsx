@@ -1,5 +1,5 @@
 import { isColorDark } from "@/lib/styles";
-import { useOrganization } from "@clerk/clerk-expo";
+import { useAuth, useOrganization } from "@clerk/clerk-expo";
 import { router } from "expo-router";
 import React, { useState } from "react";
 import { Modal, Pressable, Text, TextInput, View } from "react-native";
@@ -22,6 +22,8 @@ export default function ModalOrderChangeStatus({
 	onMarkerSubmit: (status: StatusCategory, notes: string) => void;
 }) {
 	const tw = useTailwind();
+
+	const { orgRole } = useAuth();
 
 	const { organization } = useOrganization();
 	const statusCategories: StatusCategory[] = Array.isArray(organization?.publicMetadata.statusCategories)
@@ -69,10 +71,16 @@ export default function ModalOrderChangeStatus({
 							<Text style={tw("text-center font-semibold mb-2")}>{`${
 								customer.streetName && customer.streetName
 							} ${customer.streetNumber && customer.streetNumber}`}</Text>
-							{customer.city && <Text>{customer.city}</Text>}
-							{customer.phone_number && <Text>{customer.phone_number}</Text>}
-							{customer.phone_number_2 && <Text>{customer.phone_number_2}</Text>}
-							{customer.phone_number_3 && <Text>{customer.phone_number_3}</Text>}
+							{customer.city && <Text style={tw("text-center font-semibold mb-2")}>{customer.city}</Text>}
+							{customer.phoneNumber && (
+								<Text style={tw("text-center font-semibold mb-2")}>{customer.phoneNumber}</Text>
+							)}
+							{customer.phoneNumber2 && (
+								<Text style={tw("text-center font-semibold mb-2")}>{customer.phoneNumber2}</Text>
+							)}
+							{customer.phoneNumber3 && (
+								<Text style={tw("text-center font-semibold mb-2")}>{customer.phoneNumber3}</Text>
+							)}
 
 							{singleOrderId && showLink && (
 								<View style={tw("flex-row justify-between items-center mt-3")}>
@@ -80,8 +88,8 @@ export default function ModalOrderChangeStatus({
 										onPress={() => {
 											setModalVisible(false);
 											router.push({
-												pathname: `/orders/${selectedCustomerOrders.customerId}`,
-												params: { dateString },
+												pathname: `/orders/[customerId]`,
+												params: { customerId: selectedCustomerOrders.customerId!, dateString },
 											});
 										}}
 										style={tw("flex-1 max-w-[200px] mx-auto")}
@@ -116,43 +124,50 @@ export default function ModalOrderChangeStatus({
 					)}
 					<View style={tw("mb-5")}>
 						<TextInput
-							placeholder="Type notes"
+							placeholder={orgRole !== "org:viewer" ? "Type Notes" : "No notes"}
 							placeholderTextColor="#999"
 							value={notes}
 							onChangeText={setNotes}
 							style={tw("text-sm rounded text-gray-700 border-b pb-2 border-gray-300")}
+							editable={orgRole !== "org:viewer"}
 						/>
 					</View>
-
-					<View style={tw("flex-row justify-between items-center mb-5")}>
-						{statusCategories &&
-							statusCategories.length > 0 &&
-							statusCategories.map((status) => (
-								<Pressable
-									key={status.name}
-									onPress={() => {
-										setModalVisible(false);
-										onMarkerSubmit(status, notes);
-									}}
-									style={[
-										{ backgroundColor: status.color },
-										tw(
-											`flex-1 rounded py-4 mx-1 ${
-												!isColorDark(status.color) ? "border border-gray-200" : ""
-											}`
-										),
-									]}
-								>
-									<Text
+					{orgRole !== "org:viewer" && (
+						<View style={tw("flex-row justify-between items-center mb-5")}>
+							{statusCategories &&
+								statusCategories.length > 0 &&
+								statusCategories.map((status) => (
+									<Pressable
+										key={status.name}
+										onPress={() => {
+											setModalVisible(false);
+											onMarkerSubmit(status, notes);
+										}}
 										style={[
-											tw(`text-center text-${isColorDark(status.color) ? "white" : "gray-700"}`),
+											{ backgroundColor: status.color },
+											tw(
+												`flex-1 rounded py-4 mx-1 ${
+													!isColorDark(status.color) ? "border border-gray-200" : ""
+												}`
+											),
 										]}
 									>
-										{status.name}
-									</Text>
-								</Pressable>
-							))}
-					</View>
+										<Text
+											style={[
+												tw(
+													`text-center text-${
+														isColorDark(status.color) ? "white" : "gray-700"
+													}`
+												),
+											]}
+										>
+											{status.name}
+										</Text>
+									</Pressable>
+								))}
+						</View>
+					)}
+
 					<View style={tw("flex-row justify-between items-center")}>
 						<Pressable
 							onPress={() => {
@@ -160,7 +175,9 @@ export default function ModalOrderChangeStatus({
 							}}
 							style={tw("flex-1 rounded py-4 mx-1 border border-gray-200 bg-gray-100")}
 						>
-							<Text style={tw("text-center")}>No changes, close window</Text>
+							<Text style={tw("text-center")}>
+								{orgRole !== "org:viewer" && "No changes. "}Close window
+							</Text>
 						</Pressable>
 					</View>
 				</View>

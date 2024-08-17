@@ -37,7 +37,7 @@ export default function MapOrders({
 }) {
 	const tw = useTailwind();
 	const { organization } = useOrganization();
-	const { userId } = useAuth();
+	const { userId, orgRole } = useAuth();
 	const { user } = useUser();
 
 	const mapRef = useRef<MapView>(null);
@@ -133,7 +133,6 @@ export default function MapOrders({
 
 	// const routeOrders = sortedOrders?.slice(0, 24) || [];
 	const routeExists = orders && orders[0] && orders[0].routeIndex !== undefined;
-
 	return (
 		<View style={tw("h-full")}>
 			{currentLocation[0] !== 0 && (
@@ -151,7 +150,7 @@ export default function MapOrders({
 					ref={mapRef}
 					showsUserLocation={true}
 				>
-					{showDirections && sortedOrders && sortedOrders.length > 0 && currentLocation[0] > 0 && (
+					{sortedOrders && sortedOrders.length > 0 && currentLocation[0] > 0 && orgRole === "org:driver" && (
 						<MapViewDirections
 							origin={{
 								latitude: currentLocation[0],
@@ -168,55 +167,51 @@ export default function MapOrders({
 								longitude: sortedOrders[sortedOrders.length - 1].customer?.lng || 0,
 							}}
 							splitWaypoints={true}
-							optimizeWaypoints={!routeExists}
+							optimizeWaypoints={true}
 							apikey="AIzaSyCsuRE5SM_yBawBZKVQxA9_9B6dTdFB2lQ"
 							strokeWidth={5}
 							strokeColor="blue"
-							onReady={(result) => {
-								// Sla de volgorde van de route op
-								// console.log("hello world", result.coordinates);
-								if (
-									!routeExists &&
-									result.waypointOrder &&
-									result.waypointOrder[0] &&
-									result.waypointOrder[0].length > 0
-								) {
-									result.waypointOrder[0].forEach((routeIndex: number) => {
-										const variables: any = {
-											id: sortedOrders[routeIndex].id,
-											routeIndex,
-										};
-										console.log("variables", variables);
+							// onReady={(result) => {
+							// 	if (
+							// 		!routeExists &&
+							// 		result.waypointOrder &&
+							// 		result.waypointOrder[0] &&
+							// 		result.waypointOrder[0].length > 0
+							// 	) {
+							// 		result.waypointOrder[0].forEach((routeIndex: number) => {
+							// 			const variables: any = {
+							// 				id: sortedOrders[routeIndex].id,
+							// 				routeIndex,
+							// 			};
 
-										UpdateOrder({
-											variables,
-											refetchQueries: [GET_ORDERS_BY_DATE],
-											awaitRefetchQueries: true,
-											update: (cache) => {
-												// Handmatig de cache bijwerken als dat nodig is
-												const existingOrders: OrderExtended[] =
-													cache.readQuery({ query: GET_ORDERS_BY_DATE }) || [];
-												if (existingOrders) {
-													const newOrders = existingOrders.map((existingOrder) =>
-														existingOrder.id === sortedOrders[routeIndex].id
-															? {
-																	...existingOrder,
-																	routeIndex,
-															  }
-															: existingOrder
-													);
-													cache.writeQuery({
-														query: GET_ORDERS_BY_DATE,
-														data: { orders: newOrders },
-													});
-												}
-											},
-										});
-									});
-								}
-								console.log("hello world", result.waypointOrder);
-								setOrdersIndex(...result.waypointOrder);
-							}}
+							// 			UpdateOrder({
+							// 				variables,
+							// 				refetchQueries: [GET_ORDERS_BY_DATE],
+							// 				awaitRefetchQueries: true,
+							// 				update: (cache) => {
+							// 					// Handmatig de cache bijwerken als dat nodig is
+							// 					const existingOrders: OrderExtended[] =
+							// 						cache.readQuery({ query: GET_ORDERS_BY_DATE }) || [];
+							// 					if (existingOrders) {
+							// 						const newOrders = existingOrders.map((existingOrder) =>
+							// 							existingOrder.id === sortedOrders[routeIndex].id
+							// 								? {
+							// 										...existingOrder,
+							// 										routeIndex,
+							// 								  }
+							// 								: existingOrder
+							// 						);
+							// 						cache.writeQuery({
+							// 							query: GET_ORDERS_BY_DATE,
+							// 							data: { orders: newOrders },
+							// 						});
+							// 					}
+							// 				},
+							// 			});
+							// 		});
+							// 	}
+							// 	setOrdersIndex(...result.waypointOrder);
+							// }}
 						/>
 					)}
 

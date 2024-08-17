@@ -54,7 +54,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 			if (user) {
 				const firebaseToken = await user.getIdToken();
 				await SecureStore.setItemAsync("firebaseToken", firebaseToken);
-				console.log("Firebase Token is refreshed:", firebaseToken);
 			}
 		});
 		return () => unsubscribe();

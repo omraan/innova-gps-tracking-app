@@ -13,7 +13,7 @@ export default function Settings() {
 
 	useEffect(() => {
 		if (!isSignedIn) {
-			router.navigate("sign-in");
+			router.navigate("/sign-in");
 		}
 	}, [isSignedIn]);
 
@@ -24,10 +24,10 @@ export default function Settings() {
 	];
 	const handleItemPress = (item: string) => {
 		if (item === "Organisation") {
-			router.push("settings/organisation");
+			router.push({ pathname: "/settings/organisation" });
 		}
 		if (item === "Account") {
-			router.push("settings/account");
+			router.push({ pathname: "/settings/account" });
 		}
 	};
 

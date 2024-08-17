@@ -17,7 +17,7 @@ const CustomerColumns = gql`
 `;
 // Since Order and OrderEvent share the same columns, we can use the same fragment for both
 const baseOrderColumns =
-	"expectedDeliveryDate vehicleId driverId customerId status category orderNumber notes routeIndex";
+	"expectedDeliveryDate vehicleId driverId customerId status category orderNumber notes routeIndex modifiedAt";
 const OrderColumns = gql`fragment OrderColumns on Order { ${baseOrderColumns} }`;
 const OrderEventColumns = gql`fragment OrderEventColumns on OrderEvent { ${baseOrderColumns} }`;
 

@@ -2,6 +2,7 @@ import { isColorDark } from "@/lib/styles";
 import { isArray } from "@apollo/client/utilities";
 import { useAuth, useOrganization, useUser } from "@clerk/clerk-expo";
 import { Card } from "@rneui/themed";
+import { format } from "date-fns";
 import React, { useEffect, useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import { useTailwind } from "tailwind-rn";
@@ -124,7 +125,6 @@ export default function OrderList({
 		});
 	};
 
-	// console.log("Orders", orders);
 	const publicMetadataOrder = organization?.publicMetadata?.order as publicMetadata;
 	return (
 		<View>
@@ -135,8 +135,9 @@ export default function OrderList({
 				</Text>
 
 				<View style={tw("flex flex-row flex-wrap items-center justify-center")}>
-					{statusCategories.map((status) => (
+					{statusCategories.map((status, index) => (
 						<Pressable
+							key={index}
 							onPress={() => {
 								const newStatusCategories = statusCategories.map((category) =>
 									category.name === status.name ? { ...category, active: !category.active } : category
@@ -250,22 +251,19 @@ export default function OrderList({
 			{orders &&
 				labels &&
 				sortOrders(orders)
-					// .filter((order: OrderExtendedWithLabels) => {
-					// 	const orderNoLocation = Number(order.customer.lat) === 0;
-					// 	if (
-					// 		orderNoLocation &&
-					// 		order.status?.toLowerCase() === "open" &&
-					// 		statusCategories.find((status) => status.active && status.name === "No Location")
-					// 	) {
-					// 		return true;
-					// 	}
-					// 	const status = statusCategories.find((s) => s.name === order.status);
-					// 	return status?.active ?? false;
-					// })
-					.map((order: any, index: number) => {
-						if (ordersIndex && !ordersIndex.includes(index)) {
-							// console.log("Order not in route", index, order.customer.name);
+					.filter((order: OrderExtendedWithLabels) => {
+						const orderNoLocation = Number(order.customer.lat) === 0;
+						if (
+							orderNoLocation &&
+							order.status?.toLowerCase() === "open" &&
+							statusCategories.find((status) => status.active && status.name === "No Location")
+						) {
+							return true;
 						}
+						const status = statusCategories.find((s) => s.name === order.status);
+						return status?.active ?? false;
+					})
+					.map((order: any, index: number) => {
 						return (
 							<Pressable key={order.id} onPress={() => handleSelection(order)}>
 								<Card
@@ -290,22 +288,51 @@ export default function OrderList({
 									key={order.id}
 								>
 									<View key={order.id} style={tw("flex flex-row justify-between items-center")}>
-										<Text>{order.label}</Text>
-										<View
-											style={{
-												width: 24,
-												height: 24,
-												borderRadius: 12,
-												backgroundColor:
-													publicMetadataOrder?.categories?.find(
-														(category: any) => category.name === order.category
-													)?.color || "gray",
-												justifyContent: "center",
-												alignItems: "center",
-												marginLeft: 8,
-											}}
-										>
-											<Text style={{ color: "white" }}>{order.amountOrders}</Text>
+										<View style={tw("flex-row flex-wrap")}>
+											<Text>{order.label}</Text>
+										</View>
+
+										<View style={tw("flex-row items-center")}>
+											{order.status.toLowerCase() !== "open" && (
+												<View style={tw("bg-gray-200 rounded px-3 py-2 mr-2")}>
+													<Text>
+														{format(
+															order.events.reduce(
+																(latestEvent: any, currentEvent: any) => {
+																	if (
+																		currentEvent.status &&
+																		(!latestEvent ||
+																			new Date(currentEvent.modifiedAt) >
+																				new Date(latestEvent.modifiedAt))
+																	) {
+																		return currentEvent;
+																	}
+																	return latestEvent;
+																},
+																null
+															)?.modifiedAt || null,
+															"HH:mm"
+														)}
+													</Text>
+												</View>
+											)}
+											<View
+												style={{
+													width: 24,
+													height: 24,
+													borderRadius: 12,
+													backgroundColor:
+														publicMetadataOrder?.categories?.find(
+															(category: any) => category.name === order.category
+														)?.color || "gray",
+													justifyContent: "center",
+													alignItems: "center",
+													marginLeft: 8,
+													marginRight: 8,
+												}}
+											>
+												<Text style={{ color: "white" }}>{order.amountOrders}</Text>
+											</View>
 										</View>
 									</View>
 								</Card>

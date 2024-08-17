@@ -1,7 +1,7 @@
-export function getRelatedOrders(orders: OrderExtended[]): CustomerOrders[] {
+export function getRelatedOrders(orders: any): CustomerOrders[] {
 	return Object.values(
 		orders.reduce((acc: any, order: any) => {
-			const { customerId, id: orderId, orderNumber, ...rest } = order;
+			const { customerId, orderNumber, ...rest } = order.value;
 
 			if (!acc[customerId!]) {
 				acc[customerId!] = {
@@ -14,7 +14,7 @@ export function getRelatedOrders(orders: OrderExtended[]): CustomerOrders[] {
 			}
 
 			acc[customerId!].amountOrders += 1;
-			acc[customerId!].orderIds.push(orderId);
+			acc[customerId!].orderIds.push(order.name);
 			acc[customerId!].orderNumbers.push(orderNumber);
 
 			return acc;

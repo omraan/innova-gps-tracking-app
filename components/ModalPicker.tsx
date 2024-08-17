@@ -68,8 +68,8 @@ export const ModalPicker = ({ list, onSelect, options }: ModalPickerProps) => {
 								) : (
 									!selectedItem && <Picker.Item label="Choose option" />
 								)}
-								{list.map((item) => (
-									<Picker.Item key={item.value} label={item.label} value={item.value} />
+								{list.map((item, index) => (
+									<Picker.Item key={index} label={item.label} value={item.value} />
 								))}
 							</Picker>
 						</View>

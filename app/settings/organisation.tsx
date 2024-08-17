@@ -29,13 +29,14 @@ function Organisation() {
 		revalidate: true,
 	});
 
-	const { data: vehicles } = useQuery(GET_VEHICLES);
+	const { data: dataVehicles } = useQuery(GET_VEHICLES);
+	const vehicles = dataVehicles?.getVehicles || [];
 
 	const organizations: any = userMemberships.data || [];
 
 	const { orgId } = useAuth();
 	const { user } = useUser();
-	const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | undefined>(undefined);
+	const [selectedVehicle, setSelectedVehicle] = useState<{ name: string; value: Vehicle } | undefined>(undefined);
 	const [labels, setLabels] = useState<string[]>([]);
 
 	useLayoutEffect(() => {
@@ -97,7 +98,9 @@ function Organisation() {
 		if (vehicles && vehicles.length > 0 && orgId && user && user.unsafeMetadata.organizations) {
 			const metaData = user.unsafeMetadata.organizations[orgId];
 			if (!selectedVehicle && metaData?.vehicleId) {
-				const vehicle = vehicles.find((vehicle: Vehicle) => vehicle.id === metaData.vehicleId);
+				const vehicle = vehicles.find(
+					(vehicle: { name: string; value: Vehicle }) => vehicle.name === metaData.vehicleId
+				);
 				if (vehicle) {
 					setSelectedVehicle(vehicle);
 				}
@@ -116,7 +119,7 @@ function Organisation() {
 							...(user.unsafeMetadata.organizations
 								? user.unsafeMetadata.organizations[orgId!]
 								: undefined),
-							vehicleId: selectedVehicle.id,
+							vehicleId: selectedVehicle.name,
 						},
 					},
 				},
@@ -192,7 +195,6 @@ function Organisation() {
 		});
 		setLabels(data);
 	};
-
 	return (
 		<GestureHandlerRootView style={{ flex: 1 }}>
 			<SafeAreaView style={tw("h-full bg-white")}>
@@ -217,20 +219,25 @@ function Organisation() {
 					<Text style={tw("mb-2 text-gray-600")}>Selected Vehicle</Text>
 					{vehicles && vehicles.length > 0 && (
 						<ModalPicker
-							key={selectedVehicle?.licensePlate}
+							key={selectedVehicle?.name}
 							list={
-								vehicles.map((vehicle: Vehicle) => {
+								vehicles.map((vehicle: { name: string; value: Vehicle }) => {
 									return {
-										value: vehicle.licensePlate,
-										label: vehicle.name,
+										value: vehicle.value.licensePlate,
+										label: vehicle.value.name,
 									};
 								}) || []
 							}
 							options={{
-								defaultValue: selectedVehicle?.licensePlate,
+								defaultValue: selectedVehicle?.value.licensePlate,
 							}}
 							onSelect={(value) =>
-								setSelectedVehicle(vehicles.find((v: Vehicle) => v.licensePlate === value))
+								setSelectedVehicle(
+									vehicles.find(
+										(vehicle: { name: string; value: Vehicle }) =>
+											vehicle.value.licensePlate === value
+									)
+								)
 							}
 						/>
 					)}
