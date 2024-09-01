@@ -1,6 +1,6 @@
 import { GET_ORDERS_BY_DATE } from "@/graphql/queries";
 import { useMutation, useQuery } from "@apollo/client";
-import { useAuth, useOrganization } from "@clerk/clerk-expo";
+import { useAuth, useOrganization, useUser } from "@clerk/clerk-expo";
 import Icon from "react-native-vector-icons/FontAwesome";
 import IonIcon from "react-native-vector-icons/Ionicons";
 import McIcon from "react-native-vector-icons/MaterialCommunityIcons";
@@ -69,9 +69,14 @@ function Page() {
 	const tw = useTailwind();
 	const navigation = useNavigation();
 	const mapRef = useRef<MapView>(null);
-
-	const { userId, orgRole } = useAuth();
-	const [mapType, setMapType] = useState<MapTypes>("hybrid");
+	const { user } = useUser();
+	const { userId, orgId, orgRole: authRole } = useAuth();
+	const [mapType, setMapType] = useState<MapTypes>("standard");
+	useEffect(() => {
+		if (user) {
+			setMapType(user.unsafeMetadata.defaultMapView as MapTypes);
+		}
+	}, [user]);
 
 	const [customerOrders, setCustomerOrders] = useState<CustomerOrders>();
 
@@ -109,6 +114,7 @@ function Page() {
 			try {
 				for (const order of relatedOrders) {
 					const variables: any = {
+						date: dateString,
 						modifiedBy: userId!,
 						modifiedAt: Number(new Date()),
 						status: status.name,
@@ -302,7 +308,23 @@ function Page() {
 	];
 	const insets = useSafeAreaInsets();
 	const safeAreaHeight = Dimensions.get("window").height - insets.top - insets.bottom - 25;
+	const [orgRole, setOrgRole] = useState<string | undefined>();
 
+	useEffect(() => {
+		const metaDataLabels = user?.publicMetadata as UserPublicMetadata;
+		if (authRole === "org:admin") {
+			setOrgRole("org:admin");
+		} else {
+			if (
+				orgId &&
+				metaDataLabels &&
+				metaDataLabels.organizations &&
+				metaDataLabels.organizations[orgId]?.orgRole
+			) {
+				setOrgRole(metaDataLabels.organizations[orgId].orgRole);
+			}
+		}
+	}, [user?.publicMetadata, orgId]);
 	return (
 		<SafeAreaView style={{ flex: 1 }}>
 			<KeyboardAvoidingView
@@ -373,28 +395,33 @@ function Page() {
 									</View>
 								</View>
 
-								<View style={[tw("lg:w-[40%] "), { height: safeAreaHeight }]}>
-									<View style={tw("flex-row justify-between")}>
-										<Pressable
-											style={tw("px-3 flex-1")}
-											onPress={() =>
-												Linking.openURL(
-													`http://maps.google.com/maps?daddr=${customerOrders.customer.lat},${customerOrders.customer.lng}`
-												)
-											}
-										>
-											<View
-												style={tw(
-													"bg-gray-500 h-10 items-center flex-row justify-center my-3 rounded"
-												)}
+								<View style={[tw("lg:w-[40%]"), { height: safeAreaHeight }]}>
+									<View style={tw("px-3")}>
+										{customerOrders &&
+										customerOrders.customer.lat &&
+										customerOrders.customer.lat != 0 ? (
+											<Pressable
+												onPress={() =>
+													Linking.openURL(
+														`http://maps.google.com/maps?daddr=${customerOrders.customer.lat},${customerOrders.customer.lng}`
+													)
+												}
 											>
-												<Text style={tw("text-white text-center text-xs")}>
-													Navigate with Google Maps
-												</Text>
-											</View>
-										</Pressable>
+												<View
+													style={tw(
+														"bg-gray-500 h-10 items-center flex-row justify-center my-3 rounded w-full"
+													)}
+												>
+													<Text style={tw("text-white text-center text-xs")}>
+														Navigate with Google Maps
+													</Text>
+												</View>
+											</Pressable>
+										) : (
+											<></>
+										)}
 									</View>
-									{orgRole !== "org:viewer" && (
+									{orgRole && orgRole !== "org:viewer" && (
 										<View style={tw("px-3 mb-5 ")}>
 											{changingLocation ? (
 												<View>
@@ -457,29 +484,43 @@ function Page() {
 															{customerOrders.customer.streetName}{" "}
 															{customerOrders.customer.streetNumber}
 														</Text>
-														{customerOrders.customer.email && (
+														{customerOrders.customer.email ? (
 															<Text>{customerOrders.customer.email}</Text>
+														) : (
+															<></>
 														)}
-														{customerOrders.customer.phoneNumber && (
+														{customerOrders.customer.phoneNumber ? (
 															<Text>{customerOrders.customer.phoneNumber}</Text>
+														) : (
+															<></>
 														)}
-														{customerOrders.customer.phoneNumber2 && (
+														{customerOrders.customer.phoneNumber2 ? (
 															<Text>{customerOrders.customer.phoneNumber2}</Text>
+														) : (
+															<></>
 														)}
-														{customerOrders.customer.phoneNumber3 && (
+														{customerOrders.customer.phoneNumber3 ? (
 															<Text>{customerOrders.customer.phoneNumber3}</Text>
+														) : (
+															<></>
 														)}
-														{customerOrders.notes && <Text>{customerOrders.notes}</Text>}
+														{customerOrders.notes ? (
+															<Text>{customerOrders.notes}</Text>
+														) : (
+															<></>
+														)}
 
-														{customerOrders.customer.lat && (
-															<>
+														{customerOrders.customer.lat ? (
+															<View>
 																<Text style={tw("mt-2")}>
 																	Latitude: {customerOrders.customer.lat}
 																</Text>
 																<Text style={tw("")}>
 																	Longitude: {customerOrders.customer.lng}
 																</Text>
-															</>
+															</View>
+														) : (
+															<></>
 														)}
 													</View>
 												)}
@@ -490,9 +531,12 @@ function Page() {
 											<View style={tw("bg-gray-200 border border-gray-300 rounded px-3")}>
 												{relatedOrders &&
 													relatedOrders.map(
-														(order: { name: string; value: OrderExtended }) => (
+														(
+															order: { name: string; value: OrderExtended },
+															index: number
+														) => (
 															<View
-																key={order.value.id}
+																key={index}
 																style={tw(
 																	"px-2 py-4 flex-row justify-between items-center"
 																)}

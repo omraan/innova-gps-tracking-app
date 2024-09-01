@@ -3,6 +3,7 @@ import { isArray } from "@apollo/client/utilities";
 import { useAuth, useOrganization, useUser } from "@clerk/clerk-expo";
 import { Card } from "@rneui/themed";
 import { format } from "date-fns";
+import moment from "moment";
 import React, { useEffect, useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import { useTailwind } from "tailwind-rn";
@@ -58,8 +59,6 @@ export default function OrderList({
 	const [labels, setLabels] = useState<string[]>([]);
 	useEffect(() => {
 		if (user && orgId && user?.unsafeMetadata?.organizations && user?.unsafeMetadata?.organizations[orgId]) {
-			const l = user.unsafeMetadata.organizations[orgId].labels || ["customer.name"];
-
 			setLabels(user.unsafeMetadata.organizations[orgId].labels || ["customer.name"]);
 		}
 	}, [user, orgId]);
@@ -146,7 +145,6 @@ export default function OrderList({
 							}}
 						>
 							<View
-								key={status.name}
 								style={[
 									{
 										backgroundColor: status.color,
@@ -264,8 +262,22 @@ export default function OrderList({
 						return status?.active ?? false;
 					})
 					.map((order: any, index: number) => {
+						let latestEvent;
+						if (order.events && order.events.length > 0) {
+							latestEvent = order.events.reduce((latestEvent: any, currentEvent: any) => {
+								if (
+									currentEvent.status &&
+									(!latestEvent ||
+										new Date(currentEvent.modifiedAt) > new Date(latestEvent.modifiedAt))
+								) {
+									return currentEvent;
+								}
+								return latestEvent;
+							});
+						}
+
 						return (
-							<Pressable key={order.id} onPress={() => handleSelection(order)}>
+							<Pressable key={index} onPress={() => handleSelection(order)}>
 								<Card
 									containerStyle={[
 										{
@@ -285,9 +297,8 @@ export default function OrderList({
 										},
 										tw("border-l-4  p-4 bg-white rounded "),
 									]}
-									key={order.id}
 								>
-									<View key={order.id} style={tw("flex flex-row justify-between items-center")}>
+									<View style={tw("flex flex-row justify-between items-center")}>
 										<View style={tw("flex-row flex-wrap")}>
 											<Text>{order.label}</Text>
 										</View>
@@ -296,23 +307,10 @@ export default function OrderList({
 											{order.status.toLowerCase() !== "open" && (
 												<View style={tw("bg-gray-200 rounded px-3 py-2 mr-2")}>
 													<Text>
-														{format(
-															order.events.reduce(
-																(latestEvent: any, currentEvent: any) => {
-																	if (
-																		currentEvent.status &&
-																		(!latestEvent ||
-																			new Date(currentEvent.modifiedAt) >
-																				new Date(latestEvent.modifiedAt))
-																	) {
-																		return currentEvent;
-																	}
-																	return latestEvent;
-																},
-																null
-															)?.modifiedAt || null,
-															"HH:mm"
-														)}
+														{latestEvent &&
+															moment(latestEvent?.modifiedAt || "No time").format(
+																"HH:mm"
+															)}
 													</Text>
 												</View>
 											)}

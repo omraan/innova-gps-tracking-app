@@ -1,7 +1,7 @@
 import { isColorDark } from "@/lib/styles";
-import { useAuth, useOrganization } from "@clerk/clerk-expo";
+import { useAuth, useOrganization, useUser } from "@clerk/clerk-expo";
 import { router } from "expo-router";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Modal, Pressable, Text, TextInput, View } from "react-native";
 import FontAwesome from "react-native-vector-icons/FontAwesome";
 import { useTailwind } from "tailwind-rn";
@@ -22,8 +22,8 @@ export default function ModalOrderChangeStatus({
 	onMarkerSubmit: (status: StatusCategory, notes: string) => void;
 }) {
 	const tw = useTailwind();
-
-	const { orgRole } = useAuth();
+	const { user } = useUser();
+	const { orgId, orgRole: authRole } = useAuth();
 
 	const { organization } = useOrganization();
 	const statusCategories: StatusCategory[] = Array.isArray(organization?.publicMetadata.statusCategories)
@@ -42,6 +42,24 @@ export default function ModalOrderChangeStatus({
 	const { orderNumbers, customer } = selectedCustomerOrders;
 
 	const [notes, setNotes] = useState<string>("");
+
+	const [orgRole, setOrgRole] = useState<string | undefined>();
+
+	useEffect(() => {
+		const metaDataLabels = user?.publicMetadata as UserPublicMetadata;
+		if (authRole === "org:admin") {
+			setOrgRole("org:admin");
+		} else {
+			if (
+				orgId &&
+				metaDataLabels &&
+				metaDataLabels.organizations &&
+				metaDataLabels.organizations[orgId]?.orgRole
+			) {
+				setOrgRole(metaDataLabels.organizations[orgId].orgRole);
+			}
+		}
+	}, [user?.publicMetadata, orgId]);
 
 	return (
 		<Modal
@@ -110,9 +128,9 @@ export default function ModalOrderChangeStatus({
 
 					{orderNumbers && orderNumbers.length > 0 && (
 						<View style={tw("flex flex-row justify-center items-center mb-5 flex-wrap")}>
-							{orderNumbers.map((orderNumber: number) => (
+							{orderNumbers.map((orderNumber: number, index: number) => (
 								<View
-									key={orderNumber}
+									key={index}
 									style={tw("m-2 bg-gray-100 rounded-lg px-3 py-2 border border-gray-200")}
 								>
 									<Text style={tw("text-center text-sm text-gray-700")}>
@@ -124,15 +142,15 @@ export default function ModalOrderChangeStatus({
 					)}
 					<View style={tw("mb-5")}>
 						<TextInput
-							placeholder={orgRole !== "org:viewer" ? "Type Notes" : "No notes"}
+							placeholder={orgRole && orgRole !== "org:viewer" ? "Type Notes" : "No notes"}
 							placeholderTextColor="#999"
 							value={notes}
 							onChangeText={setNotes}
 							style={tw("text-sm rounded text-gray-700 border-b pb-2 border-gray-300")}
-							editable={orgRole !== "org:viewer"}
+							editable={orgRole && orgRole !== "org:viewer" ? true : false}
 						/>
 					</View>
-					{orgRole !== "org:viewer" && (
+					{orgRole && orgRole !== "org:viewer" && (
 						<View style={tw("flex-row justify-between items-center mb-5")}>
 							{statusCategories &&
 								statusCategories.length > 0 &&

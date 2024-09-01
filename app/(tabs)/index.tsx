@@ -8,12 +8,23 @@ import { GET_ORDERS_BY_DATE, GET_VEHICLES } from "@/graphql/queries";
 import { getRelatedOrders } from "@/lib/getRelatedOrders";
 import { useMutation, useQuery } from "@apollo/client";
 import { SignedIn, useAuth, useOrganization, useUser } from "@clerk/clerk-expo";
-import RNDateTimePicker from "@react-native-community/datetimepicker";
+import DateTimePicker from "@react-native-community/datetimepicker";
 import * as Location from "expo-location";
 import haversine from "haversine-distance";
 import moment from "moment-timezone";
 import React, { useEffect, useState } from "react";
-import { Dimensions, SafeAreaView, ScrollView, Text, TextInput, View } from "react-native";
+import {
+	Button,
+	Dimensions,
+	Platform,
+	Pressable,
+	SafeAreaView,
+	ScrollView,
+	StyleSheet,
+	Text,
+	TextInput,
+	View,
+} from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTailwind } from "tailwind-rn";
 
@@ -21,10 +32,11 @@ export default function Page() {
 	const tw = useTailwind();
 	const { organization } = useOrganization();
 	const { user } = useUser();
-	const { userId, orgId, orgRole } = useAuth();
+	const { userId, orgId, orgRole: authRole } = useAuth();
 
-	const [date, setDate] = useState<Date>(new Date());
-	const dateString = moment(date).format("yyyy-MM-DD");
+	const currentDate = new Date();
+
+	const [date, setDate] = useState<string>(moment(currentDate).format("yyyy-MM-DD"));
 
 	const [input, setInput] = useState<string>("");
 	const [loading, setLoading] = useState<boolean>(false);
@@ -43,13 +55,31 @@ export default function Page() {
 		refetch: refetchOrders,
 	} = useQuery(GET_ORDERS_BY_DATE, {
 		variables: {
-			date: dateString,
+			date,
 		},
 		fetchPolicy: "network-only",
 	});
 	const orders = dataOrders?.getOrdersByDate || [];
 	const { data: dataVehicles, refetch: refetchVehicles } = useQuery(GET_VEHICLES);
 	const vehicles = dataVehicles?.getVehicles || [];
+
+	const [orgRole, setOrgRole] = useState<string | undefined>();
+
+	useEffect(() => {
+		const metaDataLabels = user?.publicMetadata as UserPublicMetadata;
+		if (authRole === "org:admin") {
+			setOrgRole("org:admin");
+		} else {
+			if (
+				orgId &&
+				metaDataLabels &&
+				metaDataLabels.organizations &&
+				metaDataLabels.organizations[orgId]?.orgRole
+			) {
+				setOrgRole(metaDataLabels.organizations[orgId].orgRole);
+			}
+		}
+	}, [user?.publicMetadata, orgId]);
 
 	const [updateOrder] = useMutation(UPDATE_ORDER, {
 		onCompleted: () => {},
@@ -83,7 +113,7 @@ export default function Page() {
 		if (orgId && user) {
 			const metaData = user?.unsafeMetadata?.organizations?.[orgId];
 			if (vehicles?.length > 0 && metaData?.vehicleId) {
-				setSelectedVehicle(vehicles.find((v: Vehicle) => v.id === metaData.vehicleId)?.value);
+				setSelectedVehicle(vehicles.find((v: Vehicle) => v.name === metaData.vehicleId));
 			}
 		}
 	}, [vehicles, user, orgId]);
@@ -116,6 +146,7 @@ export default function Page() {
 			await selectedCustomerOrders.orderIds.forEach((orderId: string) => {
 				const variables: any = {
 					id: orderId,
+					date,
 					modifiedBy: userId!,
 					modifiedAt: Number(new Date()),
 					status: status.name,
@@ -137,7 +168,7 @@ export default function Page() {
 						}>({
 							query: GET_ORDERS_BY_DATE,
 							variables: {
-								date: dateString,
+								date,
 							},
 						})?.getOrdersByDate;
 
@@ -170,7 +201,7 @@ export default function Page() {
 							cache.writeQuery({
 								query: GET_ORDERS_BY_DATE,
 								variables: {
-									date: dateString,
+									date,
 								},
 								data: { getOrdersByDate: newOrders },
 							});
@@ -268,13 +299,10 @@ export default function Page() {
 	};
 
 	const sortedOrders =
-		orders && orders.length > 0
-			? orders
-					.filter(
-						({ name, value }: { name: string; value: CustomerOrders }) =>
-							value.status !== "Completed" && value.status !== "Failed"
-					)
-					.map(({ name, value }: { name: string; value: CustomerOrders }) => {
+		filteredOrders && filteredOrders.length > 0
+			? filteredOrders
+					.filter((value: CustomerOrders) => value.status !== "Completed" && value.status !== "Failed")
+					.map((value: CustomerOrders) => {
 						const orderCoords = {
 							latitude: value.customer?.lat || 0,
 							longitude: value.customer?.lng || 0,
@@ -289,48 +317,63 @@ export default function Page() {
 						return { ...value, distance };
 					})
 					.sort((a: any, b: any) => a.distance - b.distance)
+					.slice(0, 24)
 			: [];
 	const [ordersIndex, setOrdersIndex] = useState<number[]>([]);
+	const [show, setShow] = useState(false);
 
+	const onDateChange = (event: any, selectedDate: any) => {
+		const currentDate = selectedDate || date;
+		setShow(Platform.OS === "ios");
+		setDate(moment(currentDate).format("yyyy-MM-DD"));
+	};
+
+	useEffect(() => {
+		console.log("dateChange", date);
+	}, [date]);
+
+	const showMode = (currentMode: any) => {
+		setShow(true);
+	};
 	/** */
 	return (
-		<ScrollView>
-			<SafeAreaView>
-				<LoadingScreen loading={loading ? loading : loadingOrders} />
-				<SignedIn>
-					<View style={tw("lg:flex-row")}>
-						<View style={tw("z-[3]")}>
-							<View style={containerStyle}>
-								{currentLocation && (
-									<MapOrders
-										orders={filteredOrdersWithInput}
-										sortedOrders={sortedOrders}
-										setOrdersIndex={setOrdersIndex}
-										currentLocation={currentLocation}
-										liveLocation={liveLocation}
-										handleRefresh={handleRefresh}
-										handleSelection={handleSelection}
-										showDirections={selectedVehicle ? true : false}
-									/>
-								)}
-							</View>
+		<SafeAreaView>
+			<LoadingScreen loading={loading ? loading : loadingOrders} />
+			<SignedIn>
+				<View style={tw("lg:flex-row")}>
+					<View style={tw("z-[3]")}>
+						<View style={containerStyle}>
+							{currentLocation && (
+								<MapOrders
+									orders={filteredOrdersWithInput}
+									sortedOrders={sortedOrders}
+									setOrdersIndex={setOrdersIndex}
+									currentLocation={currentLocation}
+									liveLocation={liveLocation}
+									handleRefresh={handleRefresh}
+									handleSelection={handleSelection}
+									showDirections={selectedVehicle ? true : false}
+								/>
+							)}
 						</View>
-						<View style={[tw("lg:w-[40%]"), { height: safeAreaHeight }]}>
-							<View
-								style={[
-									tw("lg:fixed z-[2] bg-white"),
-									{
-										elevation: 2,
-										shadowColor: "#000",
-										shadowOffset: { width: 0, height: 4 },
-										shadowOpacity: 0.2,
-										shadowRadius: 5,
-									},
-								]}
-							>
-								{orgRole !== "org:driver" && (
-									<View style={[tw("bg-white rounded px-5 pt-5 pb-2 flex flex-row justify-between")]}>
-										{vehicles && vehicles.length > 0 && (
+					</View>
+					<View style={[tw("lg:w-[40%]"), { height: safeAreaHeight }]}>
+						<View
+							style={[
+								tw("lg:fixed z-[2] bg-white"),
+								{
+									elevation: 2,
+									shadowColor: "#000",
+									shadowOffset: { width: 0, height: 4 },
+									shadowOpacity: 0.2,
+									shadowRadius: 5,
+								},
+							]}
+						>
+							{orgRole && orgRole !== "org:driver" && (
+								<View style={[tw("bg-white rounded px-5 pt-5 pb-2 flex flex-row justify-between")]}>
+									{vehicles && vehicles.length > 0 && (
+										<View style={tw("min-w-[125px] md:min-w-[200px]")}>
 											<ModalPicker
 												key={selectedVehicle?.name}
 												list={vehicles.map((v: any) => {
@@ -346,67 +389,97 @@ export default function Page() {
 												}}
 												onSelect={handlePickerChange}
 											/>
-										)}
-										{orgRole !== "org:viewer" && (
-											<RNDateTimePicker
-												display="compact"
-												value={date}
-												mode="date"
-												onChange={(event: any, value: any) =>
-													setDate(
-														moment
-															.tz(new Date(value), "America/New_York")
-															.startOf("day")
-															.toDate()
-													)
-												}
-											/>
-										)}
-									</View>
-								)}
-
-								<View style={[tw("pb-2 p-5")]}>
-									<TextInput
-										placeholder="Search..."
-										placeholderTextColor="#999"
-										value={input}
-										onChangeText={setInput}
-										style={tw("text-sm rounded text-gray-700 border-b pb-2 border-gray-300")}
-									/>
-								</View>
-							</View>
-							<ScrollView>
-								<View style={tw("p-0")}>
-									{loadingOrders ? (
-										<Text>Loading...</Text>
-									) : error ? (
-										<Text>Error! ${error.message}</Text>
-									) : (
-										customerOrders && (
-											<OrderList
-												orders={filteredOrdersWithInput}
-												ordersIndex={ordersIndex}
-												handleSelection={handleSelection}
-											/>
-										)
+										</View>
+									)}
+									{orgRole && orgRole !== "org:viewer" && (
+										<View>
+											{Platform.OS === "android" ? (
+												<View>
+													<Pressable onPress={() => showMode("date")}>
+														<View
+															style={tw(
+																"px-5 bg-gray-200 text-gray-700 font-semibold py-2 rounded"
+															)}
+														>
+															<Text style={tw("text-gray-700 text-sm")}>
+																{moment(date).format("yyyy-MM-DD")}
+															</Text>
+														</View>
+													</Pressable>
+													{show && (
+														<DateTimePicker
+															testID="dateTimePicker"
+															display="default"
+															value={moment(date).toDate()}
+															mode="date"
+															onChange={onDateChange}
+														/>
+													)}
+												</View>
+											) : (
+												<DateTimePicker
+													testID="dateTimePicker"
+													display="default"
+													value={moment(date).toDate()}
+													mode="date"
+													onChange={onDateChange}
+												/>
+											)}
+										</View>
 									)}
 								</View>
+							)}
 
-								{selectedCustomerOrders && (
-									<ModalOrderChangeStatus
-										selectedCustomerOrders={selectedCustomerOrders}
-										showLink={true}
-										dateString={dateString}
-										modalVisible={modalVisible}
-										setModalVisible={setModalVisible}
-										onMarkerSubmit={onMarkerSubmit}
-									/>
-								)}
-							</ScrollView>
+							<View style={[tw("pb-2 p-5")]}>
+								<TextInput
+									placeholder="Search..."
+									placeholderTextColor="#999"
+									value={input}
+									onChangeText={setInput}
+									style={tw("text-sm rounded text-gray-700 border-b pb-2 border-gray-300")}
+								/>
+							</View>
 						</View>
+						<ScrollView contentContainerStyle={styles.scrollViewContent}>
+							<View style={tw("px-0 py-2")}>
+								{loadingOrders ? (
+									<Text>Loading...</Text>
+								) : error ? (
+									<Text>Error! ${error.message}</Text>
+								) : (
+									customerOrders && (
+										<OrderList
+											orders={filteredOrdersWithInput}
+											ordersIndex={ordersIndex}
+											handleSelection={handleSelection}
+										/>
+									)
+								)}
+							</View>
+
+							{selectedCustomerOrders && (
+								<ModalOrderChangeStatus
+									selectedCustomerOrders={selectedCustomerOrders}
+									showLink={true}
+									dateString={date}
+									modalVisible={modalVisible}
+									setModalVisible={setModalVisible}
+									onMarkerSubmit={onMarkerSubmit}
+								/>
+							)}
+						</ScrollView>
 					</View>
-				</SignedIn>
-			</SafeAreaView>
-		</ScrollView>
+				</View>
+			</SignedIn>
+		</SafeAreaView>
 	);
 }
+
+const styles = StyleSheet.create({
+	container: {
+		flex: 1,
+	},
+	scrollViewContent: {
+		flexGrow: 1,
+	},
+});

@@ -1,5 +1,6 @@
 import { useSignIn } from "@clerk/clerk-expo";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { Image } from "@rneui/themed/dist/Image";
 import { LinearGradient } from "expo-linear-gradient";
 import { Link, useNavigation, useRouter } from "expo-router";
 import React, { useCallback, useEffect, useLayoutEffect, useState } from "react";
@@ -24,6 +25,7 @@ export default function Page() {
 	const [emailAddress, setEmailAddress] = useState<string>("");
 	const [password, setPassword] = useState<string>("");
 	const navigation = useNavigation();
+	const [errorMessage, setErrorMessage] = useState<string | undefined>(undefined);
 
 	useLayoutEffect(() => {
 		navigation.setOptions({
@@ -43,10 +45,16 @@ export default function Page() {
 	}, []);
 
 	const onSignInPress = useCallback(async () => {
+		setErrorMessage(undefined);
 		if (!isLoaded) {
 			return;
 		}
-		if (!emailAddress || !emailAddress) {
+		if (!emailAddress) {
+			setErrorMessage("Please enter email.");
+			return;
+		}
+		if (!password) {
+			setErrorMessage("Please enter password.");
 			return;
 		}
 		try {
@@ -58,11 +66,9 @@ export default function Page() {
 			if (signInAttempt.status === "complete") {
 				await setActive({ session: signInAttempt.createdSessionId });
 				await AsyncStorage.setItem("emailAddress", emailAddress);
-				router.replace("/");
-			} else {
-				console.error(JSON.stringify(signInAttempt, null, 2));
 			}
 		} catch (err: any) {
+			setErrorMessage(err.errors[0].message);
 			console.error(JSON.stringify(err, null, 2));
 		}
 	}, [isLoaded, emailAddress, password]);
@@ -80,9 +86,7 @@ export default function Page() {
 				},
 			}),
 		},
-		container: tw(
-			`bg-white p-5 w-[90%] m-auto rounded-xl -mt-20 md:w-[50%] lg:min-w-[400px] lg:-ml-20 lg:mt-auto `
-		),
+		container: tw(`bg-white p-5 w-[90%] m-auto rounded-xl md:w-[50%] lg:min-w-[400px] `),
 	});
 	return (
 		<KeyboardAvoidingView
@@ -90,27 +94,36 @@ export default function Page() {
 			behavior={Platform.OS === "ios" ? "padding" : "height"}
 		>
 			<ScrollView contentContainerStyle={{ flexGrow: 1 }}>
-				<View style={tw("bg-gray-100 lg:flex-row")}>
-					<LinearGradient
-						style={tw("h-[60%] lg:h-[100%] lg:w-[60%] justify-center items-center")}
-						colors={["rgba(120, 50, 180, 1)", "rgba(120, 50, 180, 0.7)", "rgba(120, 50, 180, 1)"]}
-						start={[0, 0]}
-						end={[1, 1]}
-					>
-						<View
-							style={tw(`rounded-full w-60 h-60 border-8 border-white flex justify-center items-center `)}
-						>
-							<Text style={tw(`text-4xl font-bold text-center text-white`)}>Innova</Text>
-						</View>
-					</LinearGradient>
-					<View style={tw(`h-[40%] w-full lg:h-[100%] lg:w-[40%]`)}>
+				<LinearGradient
+					style={tw("h-full justify-center items-center")}
+					colors={["#711E92", "#A63058"]}
+					start={[0.5, 0]}
+					end={[0.5, 1]}
+				>
+					<View style={tw("mb-20 block")}>
+						<Image
+							source={require("@/assets/images/logo-transparant.png")}
+							style={tw("w-40 h-32 md:w-64 md:h-52 ")}
+						/>
+					</View>
+
+					<View style={tw(`w-full lg:h-[100%] lg:w-[40%]`)}>
 						<View style={[stylesBox.shadow, stylesBox.container]}>
+							{errorMessage ? (
+								<View style={tw("mb-5 bg-red-300 border border-red-600 w-full p-3 rounded")}>
+									<Text style={tw("text-red-700")}>{errorMessage}</Text>
+								</View>
+							) : null}
+
 							<View style={tw(`m-auto w-full`)}>
 								<Text style={tw("mb-2 text-gray-700")}>Email</Text>
 								<TextInput
-									style={tw(
-										`px-4 pt-3 h-16 pb-4 border border-gray-300 rounded-lg text-gray-600 text-lg mb-10 w-full mx-auto tracking-wider`
-									)}
+									style={[
+										tw(
+											`px-4 border border-gray-300 rounded-lg text-gray-600 text-lg mb-10 w-full mx-auto tracking-wider`
+										),
+										styles.textInput,
+									]}
 									value={emailAddress}
 									onChangeText={setEmailAddress}
 									placeholder="Email"
@@ -119,9 +132,12 @@ export default function Page() {
 								/>
 								<Text style={tw("mb-2 text-gray-700")}>Password</Text>
 								<TextInput
-									style={tw(
-										`px-4 pt-3 h-16 pb-4 border border-gray-300 rounded-lg text-gray-600 text-lg mb-10 w-full mx-auto tracking-wider`
-									)}
+									style={[
+										tw(
+											`px-4 border border-gray-300 rounded-lg text-gray-600 text-lg mb-10 w-full mx-auto tracking-wider`
+										),
+										styles.textInput,
+									]}
 									value={password}
 									onChangeText={setPassword}
 									placeholder="Password"
@@ -140,8 +156,17 @@ export default function Page() {
 							</View>
 						</View>
 					</View>
-				</View>
+				</LinearGradient>
 			</ScrollView>
 		</KeyboardAvoidingView>
 	);
 }
+
+const styles = StyleSheet.create({
+	textInput: {
+		height: 60, // Pas de hoogte aan naar wens
+		textAlign: "left", // Horizontaal centreren
+		textAlignVertical: "center", // Verticaal centreren (alleen voor Android)
+		lineHeight: 20, // Pas de regelhoogte aan naar wens
+	},
+});

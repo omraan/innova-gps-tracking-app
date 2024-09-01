@@ -1,14 +1,8 @@
-import { UPDATE_ORDER } from "@/graphql/mutations";
-import { GET_ORDERS_BY_DATE } from "@/graphql/queries";
-import { useMutation } from "@apollo/client";
 import { useAuth, useOrganization, useUser } from "@clerk/clerk-expo";
-import * as Location from "expo-location";
-import haversine from "haversine-distance";
 import { Dispatch, SetStateAction, useCallback, useEffect, useRef, useState } from "react";
-import { Animated, FlatList, Pressable, StyleSheet, Text, View } from "react-native";
+import { Animated, FlatList, Platform, Pressable, StyleSheet, Text, View } from "react-native";
 import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps";
 import MapViewDirections from "react-native-maps-directions";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import FontAwesomeIcon from "react-native-vector-icons/FontAwesome";
 import FontAwesome6Icon from "react-native-vector-icons/FontAwesome6";
 import IonIcon from "react-native-vector-icons/Ionicons";
@@ -37,7 +31,7 @@ export default function MapOrders({
 }) {
 	const tw = useTailwind();
 	const { organization } = useOrganization();
-	const { userId, orgRole } = useAuth();
+	const { userId, orgId, orgRole: authRole } = useAuth();
 	const { user } = useUser();
 
 	const mapRef = useRef<MapView>(null);
@@ -47,10 +41,7 @@ export default function MapOrders({
 
 	const scaleAnim = useRef(new Animated.Value(1)).current;
 	const colorAnim = useRef(new Animated.Value(0)).current;
-	const [UpdateOrder] = useMutation(UPDATE_ORDER, {
-		refetchQueries: [GET_ORDERS_BY_DATE],
-		awaitRefetchQueries: true,
-	});
+
 	useEffect(() => {
 		if (user) {
 			setMapType(user.unsafeMetadata.defaultMapView as MapTypes);
@@ -133,6 +124,29 @@ export default function MapOrders({
 
 	// const routeOrders = sortedOrders?.slice(0, 24) || [];
 	const routeExists = orders && orders[0] && orders[0].routeIndex !== undefined;
+
+	const [orgRole, setOrgRole] = useState<string | undefined>();
+
+	useEffect(() => {
+		const metaDataLabels = user?.publicMetadata as UserPublicMetadata;
+		if (authRole === "org:admin") {
+			setOrgRole("org:admin");
+		} else {
+			if (
+				orgId &&
+				metaDataLabels &&
+				metaDataLabels.organizations &&
+				metaDataLabels.organizations[orgId]?.orgRole
+			) {
+				setOrgRole(metaDataLabels.organizations[orgId].orgRole);
+			}
+		}
+	}, [user?.publicMetadata, orgId]);
+
+	useEffect(() => {
+		console.log(currentLocation);
+	}, [currentLocation]);
+
 	return (
 		<View style={tw("h-full")}>
 			{currentLocation[0] !== 0 && (
@@ -150,25 +164,27 @@ export default function MapOrders({
 					ref={mapRef}
 					showsUserLocation={true}
 				>
-					{sortedOrders && sortedOrders.length > 0 && currentLocation[0] > 0 && orgRole === "org:driver" && (
+					{sortedOrders && sortedOrders.length > 0 && currentLocation[0] > 0 && (
 						<MapViewDirections
 							origin={{
 								latitude: currentLocation[0],
 								longitude: currentLocation[1],
 							}}
 							waypoints={
-								sortedOrders.map((order: any) => ({
-									latitude: order.customer?.lat || 0,
-									longitude: order.customer?.lng || 0,
-								})) || []
+								sortedOrders
+									.map((order: any) => ({
+										latitude: order.customer?.lat || 0,
+										longitude: order.customer?.lng || 0,
+									}))
+									.slice(0, 24) || []
 							}
 							destination={{
 								latitude: sortedOrders[sortedOrders.length - 1].customer?.lat || 0,
 								longitude: sortedOrders[sortedOrders.length - 1].customer?.lng || 0,
 							}}
-							splitWaypoints={true}
+							// splitWaypoints={true}
 							optimizeWaypoints={true}
-							apikey="AIzaSyCsuRE5SM_yBawBZKVQxA9_9B6dTdFB2lQ"
+							apikey="AIzaSyBnR0kXdNPHlgTMIpJRwlGfBgZNszzLB1I"
 							strokeWidth={5}
 							strokeColor="blue"
 							// onReady={(result) => {
@@ -226,25 +242,22 @@ export default function MapOrders({
 							<Marker
 								key={index}
 								coordinate={{
-									latitude: order.customer?.lat || 0,
-									longitude: order.customer?.lng || 0,
+									latitude: order.customer?.lat,
+									longitude: order.customer?.lng,
 								}}
 								identifier="destination"
 								onPress={() => {
 									handleSelection(order);
 								}}
+								style={[tw("z-10"), styles.iconContainer]}
+								tracksViewChanges={false}
 							>
 								<FontAwesomeIcon
-									key={`icon-${order.id}-${order.status}`}
+									key={index}
 									name="map-marker"
 									size={35}
 									color={pinColor}
-									style={{
-										shadowColor: "#000",
-										shadowOffset: { width: 0, height: 2 },
-										shadowOpacity: 0.25,
-										shadowRadius: 5,
-									}}
+									style={[styles.iconContainer]}
 								/>
 							</Marker>
 						);
@@ -252,7 +265,7 @@ export default function MapOrders({
 				</MapView>
 			)}
 
-			<View style={tw("flex flex-row flex-wrap justify-end items-end")}>
+			<View style={tw("flex flex-row flex-wrap justify-end items-end pt-1")}>
 				<Pressable style={tw("mx-3 bg-gray-500 px-5 py-2  my-3 rounded")} onPress={handleRefresh}>
 					<IonIcon name="refresh" size={20} color="white" />
 				</Pressable>
@@ -290,3 +303,39 @@ export default function MapOrders({
 		</View>
 	);
 }
+const styles = StyleSheet.create({
+	iconContainer: {
+		...Platform.select({
+			ios: {
+				shadowColor: "#000",
+				shadowOffset: { width: 0, height: 2 },
+				shadowOpacity: 0.8,
+				shadowRadius: 2,
+			},
+			android: {
+				elevation: 5,
+				shadowColor: "#000",
+				shadowOffset: { width: 0, height: 2 },
+				shadowOpacity: 0.8,
+				shadowRadius: 2,
+			},
+		}),
+	},
+	shadow: {
+		...Platform.select({
+			ios: {
+				shadowColor: "#000",
+				shadowOffset: { width: 0, height: 2 },
+				shadowOpacity: 0.8,
+				shadowRadius: 2,
+			},
+			android: {
+				elevation: 5,
+				shadowColor: "#000",
+				shadowOffset: { width: 0, height: 2 },
+				shadowOpacity: 0.8,
+				shadowRadius: 2,
+			},
+		}),
+	},
+});

@@ -12,10 +12,18 @@ import { useTailwind } from "tailwind-rn";
 
 declare global {
 	interface UserUnsafeMetadata {
+		defaultMapView?: string;
 		organizations: {
 			[key: string]: {
 				vehicleId?: string;
 				labels?: string[];
+			};
+		};
+	}
+	interface UserPublicMetadata {
+		organizations: {
+			[key: string]: {
+				orgRole?: string;
 			};
 		};
 	}
@@ -30,6 +38,7 @@ function Organisation() {
 	});
 
 	const { data: dataVehicles } = useQuery(GET_VEHICLES);
+	// console.log(dataVehicles);
 	const vehicles = dataVehicles?.getVehicles || [];
 
 	const organizations: any = userMemberships.data || [];
@@ -60,11 +69,16 @@ function Organisation() {
 	}
 
 	useEffect(() => {
+		setLabels([]);
+		setSelectedVehicle(undefined);
+	}, [orgId]);
+
+	useEffect(() => {
 		const metaDataLabels = user?.unsafeMetadata as UserUnsafeMetadata;
 		if (orgId && metaDataLabels && metaDataLabels.organizations && metaDataLabels.organizations[orgId]?.labels) {
 			setLabels(metaDataLabels.organizations[orgId].labels);
 		}
-	}, [user?.unsafeMetadata]);
+	}, [user?.unsafeMetadata, orgId]);
 
 	const labelOptions = [
 		{
@@ -90,11 +104,6 @@ function Organisation() {
 	];
 
 	useEffect(() => {
-		setLabels([]);
-		setSelectedVehicle(undefined);
-	}, [orgId]);
-
-	useEffect(() => {
 		if (vehicles && vehicles.length > 0 && orgId && user && user.unsafeMetadata.organizations) {
 			const metaData = user.unsafeMetadata.organizations[orgId];
 			if (!selectedVehicle && metaData?.vehicleId) {
@@ -109,16 +118,14 @@ function Organisation() {
 	}, [vehicles]);
 
 	useEffect(() => {
-		if (selectedVehicle && user && orgId) {
+		if (selectedVehicle && user && orgId && user.publicMetadata.organizations) {
 			user.update({
 				unsafeMetadata: {
 					...user.unsafeMetadata,
 					organizations: {
 						...user.unsafeMetadata.organizations,
 						[orgId]: {
-							...(user.unsafeMetadata.organizations
-								? user.unsafeMetadata.organizations[orgId!]
-								: undefined),
+							...user.publicMetadata.organizations[orgId!],
 							vehicleId: selectedVehicle.name,
 						},
 					},
@@ -195,6 +202,7 @@ function Organisation() {
 		});
 		setLabels(data);
 	};
+
 	return (
 		<GestureHandlerRootView style={{ flex: 1 }}>
 			<SafeAreaView style={tw("h-full bg-white")}>
@@ -217,7 +225,7 @@ function Organisation() {
 				</View>
 				<View style={tw("p-5")}>
 					<Text style={tw("mb-2 text-gray-600")}>Selected Vehicle</Text>
-					{vehicles && vehicles.length > 0 && (
+					{vehicles && (
 						<ModalPicker
 							key={selectedVehicle?.name}
 							list={
@@ -229,7 +237,7 @@ function Organisation() {
 								}) || []
 							}
 							options={{
-								defaultValue: selectedVehicle?.value.licensePlate,
+								defaultValue: selectedVehicle?.value.licensePlate || undefined,
 							}}
 							onSelect={(value) =>
 								setSelectedVehicle(
@@ -245,11 +253,11 @@ function Organisation() {
 				<View style={tw("p-5")}>
 					<Text style={tw("mb-2 text-gray-600")}>Label</Text>
 					<ModalPicker
-						key={user?.unsafeMetadata.defaultMapView as string}
+						key={user?.publicMetadata.defaultMapView as string}
 						list={labelOptions}
 						onSelect={handleAddLabel}
 					/>
-					<View style={tw("flex flex-row flex-wrap mt-5")}>
+					<View style={tw("flex flex-row flex-wrap mt-5 py-3")}>
 						<DraggableFlatList
 							key={orgId}
 							data={labels}

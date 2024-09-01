@@ -57,14 +57,7 @@ export const GET_ORDERS = gql`
 				customer(token: $token, organizationId: $organizationId) {
 					...CustomerColumns
 				}
-				driver(token: $token) {
-					email
-					name
-				}
-				vehicle(token: $token, organizationId: $organizationId) {
-					licensePlate
-					name
-				}
+
 				events {
 					createdBy
 					createdAt
@@ -88,14 +81,6 @@ export const GET_ORDERS_BY_DATE = gql`
 				customer(token: $token, organizationId: $organizationId) {
 					...CustomerColumns
 				}
-				driver(token: $token) {
-					email
-					name
-				}
-				vehicle(token: $token, organizationId: $organizationId) {
-					licensePlate
-					name
-				}
 				events {
 					createdBy
 					createdAt
@@ -116,14 +101,6 @@ export const GET_ORDER_BY_ID = gql`
 			...OrderColumns
 			customer(token: $token, organizationId: $organizationId) {
 				...CustomerColumns
-			}
-			driver(token: $token) {
-				email
-				name
-			}
-			vehicle(token: $token, organizationId: $organizationId) {
-				licensePlate
-				name
 			}
 			events {
 				createdBy

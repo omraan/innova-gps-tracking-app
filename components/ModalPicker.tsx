@@ -1,6 +1,6 @@
 import { Picker } from "@react-native-picker/picker";
-import React, { useRef, useState } from "react";
-import { Button, Modal, Pressable, Text, TouchableOpacity, View } from "react-native";
+import React, { useEffect, useRef, useState } from "react";
+import { Button, Modal, Platform, Pressable, Text, TouchableOpacity, View } from "react-native";
 import Icon from "react-native-vector-icons/Ionicons";
 import { useTailwind } from "tailwind-rn";
 
@@ -38,44 +38,95 @@ export const ModalPicker = ({ list, onSelect, options }: ModalPickerProps) => {
 		onSelect(value);
 	};
 
+	// useEffect(() => {
+	// 	if (Platform.OS === "android" && modalVisible) {
+	// 		pickerRef.current?.focus();
+	// 	}
+	// }, [modalVisible]);
+
+	const handleOpenModal = () => {
+		// pickerRef.current?.focus();
+		setModalVisible(true);
+	};
+
+	const handleCloseModal = () => {
+		setModalVisible(false);
+	};
+	useEffect(() => {
+		if (Platform.OS === "android" && modalVisible) {
+			if (modalVisible) {
+				pickerRef.current?.focus();
+			}
+		}
+	}, [modalVisible]);
+
+	// useEffect(() => {
+	// 	if (Platform.OS === "android" && !modalVisible && selectedItem) {
+	// 		handleCloseModal();
+	// 	}
+	// }, [selectedItem]);
+
 	return (
 		<View>
-			<Pressable onPress={() => setModalVisible(true)}>
-				<View style={tw("rounded px-2 py-2 border border-gray-300 flex flex-row justify-between")}>
-					<Text style={tw("mr-5")}>{selectedItem?.label || options?.displayAllLabel || "Choose option"}</Text>
-					<Icon name="chevron-down" size={15} />
+			{Platform.OS === "android" ? (
+				<View style={tw("rounded border border-gray-300 w-full")}>
+					<Picker
+						ref={pickerRef}
+						onValueChange={handleSelectItem}
+						selectedValue={selectedItem?.value || options?.displayAllLabel}
+						// itemStyle={{ fontSize: 20 }}
+					>
+						{options?.displayAll ? (
+							<Picker.Item label={options?.displayAllLabel || "All"} value={"all"} />
+						) : (
+							!selectedItem && <Picker.Item label="Choose option" />
+						)}
+						{list.map((item, index) => (
+							<Picker.Item key={index} label={item.label} value={item.value} />
+						))}
+					</Picker>
 				</View>
-			</Pressable>
-			<Modal
-				animationType="slide"
-				transparent={true}
-				visible={modalVisible}
-				onRequestClose={(e) => {
-					e.preventDefault();
-					setModalVisible(false);
-				}}
-			>
-				<TouchableOpacity style={{ flex: 1 }} activeOpacity={1} onPressOut={() => setModalVisible(false)}>
-					<View style={{ flex: 1, justifyContent: "flex-end" }}>
-						<View style={{ backgroundColor: "white", padding: 20 }}>
-							<Picker
-								ref={pickerRef}
-								onValueChange={handleSelectItem}
-								selectedValue={selectedItem?.value || options?.displayAllLabel}
-							>
-								{options?.displayAll ? (
-									<Picker.Item label={options?.displayAllLabel || "All"} value={"all"} />
-								) : (
-									!selectedItem && <Picker.Item label="Choose option" />
-								)}
-								{list.map((item, index) => (
-									<Picker.Item key={index} label={item.label} value={item.value} />
-								))}
-							</Picker>
+			) : (
+				<View>
+					<Pressable onPress={handleOpenModal}>
+						<View style={tw("rounded px-2 py-2 border border-gray-300 flex flex-row justify-between")}>
+							<Text style={tw("mr-5")}>
+								{selectedItem?.label || options?.displayAllLabel || "Choose option"}
+							</Text>
+							<Icon name="chevron-down" size={15} />
 						</View>
-					</View>
-				</TouchableOpacity>
-			</Modal>
+					</Pressable>
+					<Modal
+						animationType="slide"
+						transparent={true}
+						visible={modalVisible}
+						onRequestClose={handleCloseModal}
+					>
+						<TouchableOpacity style={{ flex: 1 }} activeOpacity={1} onPressOut={handleCloseModal}>
+							<View style={{ flex: 1, justifyContent: "flex-end" }}>
+								<View style={{ backgroundColor: "#ffffff" }}>
+									<Picker
+										ref={pickerRef}
+										onValueChange={handleSelectItem}
+										selectedValue={selectedItem?.value || options?.displayAllLabel}
+										// itemStyle={{ fontSize: 20 }}
+										// style={{ display: Platform.OS === "android" ? "none" : "flex" }}
+									>
+										{options?.displayAll ? (
+											<Picker.Item label={options?.displayAllLabel || "All"} value={"all"} />
+										) : (
+											!selectedItem && <Picker.Item label="Choose option" />
+										)}
+										{list.map((item, index) => (
+											<Picker.Item key={index} label={item.label} value={item.value} />
+										))}
+									</Picker>
+								</View>
+							</View>
+						</TouchableOpacity>
+					</Modal>
+				</View>
+			)}
 		</View>
 	);
 };
