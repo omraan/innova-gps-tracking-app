@@ -79,3 +79,60 @@ export const REMOVE_ORDER = gql`
 		}
 	}
 `;
+
+export const CREATE_ROUTE_SESSION = gql`
+	mutation CreateRouteSession(
+		$organizationId: ID!
+		$token: String!
+		$date: String!
+		$driverId: String
+		$vehicleId: String
+		$startTime: Float
+		$endTime: Float
+	) {
+		insertRouteSession(
+			organizationId: $organizationId
+			token: $token
+			date: $date
+			driverId: $driverId
+			vehicleId: $vehicleId
+			startTime: $startTime
+			endTime: $endTime
+		) {
+			name
+		}
+	}
+`;
+
+export const UPDATE_ROUTE_SESSION = gql`
+	mutation UpdateRouteSession(
+		$id: ID!
+		$organizationId: ID!
+		$token: String!
+		$date: String!
+		$driverId: String
+		$vehicleId: String
+		$startTime: Float
+		$endTime: Float
+	) {
+		updateCustomer(
+			id: $id
+			organizationId: $organizationId
+			token: $token
+			date: $date
+			driverId: $driverId
+			vehicleId: $vehicleId
+			startTime: $startTime
+			endTime: $endTime
+		) {
+			name
+		}
+	}
+`;
+export const REMOVE_ROUTE_SESSION = gql`
+	mutation RemoveRouteSession($organizationId: ID!, $token: String!, $id: ID!, $date: String!) {
+		deleteRouteSession(organizationId: $organizationId, token: $token, id: $id, date: $date) {
+			name
+		}
+	}
+`;

@@ -46,7 +46,7 @@ declare global {
 	}
 }
 function Page() {
-	const { customerId, dateString } = useLocalSearchParams();
+	const { customerId, selectedDate } = useLocalSearchParams();
 
 	const {
 		data: dataOrders,
@@ -55,7 +55,7 @@ function Page() {
 		refetch: refetchOrders,
 	} = useQuery(GET_ORDERS_BY_DATE, {
 		variables: {
-			date: dateString,
+			date: selectedDate,
 		},
 	});
 	const orders = dataOrders?.getOrdersByDate || [];
@@ -114,7 +114,7 @@ function Page() {
 			try {
 				for (const order of relatedOrders) {
 					const variables: any = {
-						date: dateString,
+						date: selectedDate,
 						modifiedBy: userId!,
 						modifiedAt: Number(new Date()),
 						status: status.name,
@@ -136,7 +136,7 @@ function Page() {
 							}>({
 								query: GET_ORDERS_BY_DATE,
 								variables: {
-									date: dateString,
+									date: selectedDate,
 								},
 							})?.getOrdersByDate;
 
@@ -169,7 +169,7 @@ function Page() {
 								cache.writeQuery({
 									query: GET_ORDERS_BY_DATE,
 									variables: {
-										date: dateString,
+										date: selectedDate,
 									},
 									data: { getOrdersByDate: newOrders },
 								});
@@ -203,7 +203,7 @@ function Page() {
 						}>({
 							query: GET_ORDERS_BY_DATE,
 							variables: {
-								date: dateString,
+								date: selectedDate,
 							},
 						})?.getOrdersByDate;
 
@@ -237,7 +237,7 @@ function Page() {
 							cache.writeQuery({
 								query: GET_ORDERS_BY_DATE,
 								variables: {
-									date: dateString,
+									date: selectedDate,
 								},
 								data: { getOrdersByDate: newOrders },
 							});

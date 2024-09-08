@@ -7,6 +7,7 @@ import moment from "moment";
 import React, { useEffect, useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import { useTailwind } from "tailwind-rn";
+import OrderListItem from "./OrderListItem";
 
 interface StatusCategoryFilter extends StatusCategory {
 	active: boolean;
@@ -25,11 +26,9 @@ interface publicMetadata {
 
 export default function OrderList({
 	orders,
-	ordersIndex,
 	handleSelection,
 }: {
 	orders: CustomerOrders[];
-	ordersIndex: number[];
 	handleSelection: (order: CustomerOrders) => void;
 }) {
 	const tw = useTailwind();
@@ -41,20 +40,24 @@ export default function OrderList({
 	const [sortType, setSortType] = useState<"status" | "alphabetical" | "route">("status");
 	const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
 
-	const [statusCategories, setStatusCategories] = useState<StatusCategoryFilter[]>(
-		organization?.publicMetadata.statusCategories.map((status) => {
-			return {
-				...status,
-				active: true,
-			};
-		}) || [
-			{
-				color: "#000000",
-				name: "Unknown",
-				active: true,
-			},
-		]
-	);
+	const [statusCategories, setStatusCategories] = useState<StatusCategoryFilter[]>([]);
+
+	useEffect(() => {
+		setStatusCategories(
+			organization?.publicMetadata.statusCategories.map((status) => {
+				return {
+					...status,
+					active: true,
+				};
+			}) || [
+				{
+					color: "#000000",
+					name: "Unknown",
+					active: true,
+				},
+			]
+		);
+	}, [orgId]);
 
 	const [labels, setLabels] = useState<string[]>([]);
 	useEffect(() => {
@@ -100,20 +103,6 @@ export default function OrderList({
 					(category) => category.name.toLowerCase() === b.status?.toLowerCase()
 				);
 				return sortOrder === "asc" ? statusA - statusB : statusB - statusA;
-			} else if (sortType === "route" && ordersIndex && ordersIndex.length > 0) {
-				const indexA = ordersWithLabels.indexOf(a);
-				const indexB = ordersWithLabels.indexOf(b);
-
-				const orderIndexA = ordersIndex.includes(indexA) ? indexA : undefined;
-				const orderIndexB = ordersIndex.includes(indexB) ? indexB : undefined;
-
-				if (orderIndexA === undefined && orderIndexB !== undefined) return 1; // a is not in ordersIndex, place it at the end
-				if (orderIndexA !== undefined && orderIndexB === undefined) return -1; // b is not in ordersIndex, place it at the end
-				if (orderIndexA === undefined && orderIndexB === undefined) return 0; // both are not in ordersIndex, keep their order
-
-				return sortOrder === "asc"
-					? (orderIndexA ?? 0) - (orderIndexB ?? 0)
-					: (orderIndexB ?? 0) - (orderIndexA ?? 0);
 			} else {
 				const nameA = a.customer.name.toLowerCase();
 				const nameB = b.customer.name.toLowerCase();
@@ -123,10 +112,8 @@ export default function OrderList({
 			}
 		});
 	};
-
-	const publicMetadataOrder = organization?.publicMetadata?.order as publicMetadata;
 	return (
-		<View>
+		<View style={tw("flex-1 mb-20")}>
 			<View style={tw("px-5 pt-5 ")}>
 				<Text style={tw("text-center mb-5")}>
 					{orders.length} order
@@ -183,13 +170,15 @@ export default function OrderList({
 							<View
 								style={tw(
 									`mx-3 border-b-2 border-gray-500 px-2 py-2  my-3 rounded ${
-										sortType !== "alphabetical" ? "border-opacity-50" : ""
+										sortType !== "alphabetical" ? "border-opacity-50" : "border-opacity-100"
 									}`
 								)}
 							>
 								<Text
 									style={tw(
-										`text-gray-500 text-center ${sortType === "alphabetical" ? "font-bold" : ""}`
+										`text-gray-500 text-center ${
+											sortType === "alphabetical" ? "font-bold" : "font-normal"
+										}`
 									)}
 								>
 									Alphabetical
@@ -204,37 +193,21 @@ export default function OrderList({
 							<View
 								style={tw(
 									`mx-3 border-b-2 border-gray-500 px-2 py-2  my-3 rounded ${
-										sortType !== "status" ? "border-opacity-50" : ""
+										sortType !== "status" ? "border-opacity-50" : "border-opacity-100"
 									}`
 								)}
 							>
 								<Text
-									style={tw(`text-gray-500 text-center ${sortType === "status" ? "font-bold" : ""}`)}
+									style={tw(
+										`text-gray-500 text-center ${
+											sortType === "status" ? "font-bold" : "font-normal"
+										}`
+									)}
 								>
 									Status
 								</Text>
 							</View>
 						</Pressable>
-						{/* 
-						<Pressable
-							onPress={() => {
-								setSortType("route");
-							}}
-						>
-							<View
-								style={tw(
-									`mx-3 border-b-2 border-gray-500 px-2 py-2  my-3 rounded ${
-										sortType !== "route" ? "border-opacity-50" : ""
-									}`
-								)}
-							>
-								<Text
-									style={tw(`text-gray-500 text-center ${sortType === "route" ? "font-bold" : ""}`)}
-								>
-									Route
-								</Text>
-							</View>
-						</Pressable> */}
 					</View>
 					<Pressable
 						style={tw("mx-3 bg-gray-500 px-5 py-2  my-3 rounded")}
@@ -246,97 +219,31 @@ export default function OrderList({
 					</Pressable>
 				</View>
 			</View>
-			{orders &&
-				labels &&
-				sortOrders(orders)
-					.filter((order: OrderExtendedWithLabels) => {
-						const orderNoLocation = Number(order.customer.lat) === 0;
-						if (
-							orderNoLocation &&
-							order.status?.toLowerCase() === "open" &&
-							statusCategories.find((status) => status.active && status.name === "No Location")
-						) {
-							return true;
-						}
-						const status = statusCategories.find((s) => s.name === order.status);
-						return status?.active ?? false;
-					})
-					.map((order: any, index: number) => {
-						let latestEvent;
-						if (order.events && order.events.length > 0) {
-							latestEvent = order.events.reduce((latestEvent: any, currentEvent: any) => {
-								if (
-									currentEvent.status &&
-									(!latestEvent ||
-										new Date(currentEvent.modifiedAt) > new Date(latestEvent.modifiedAt))
-								) {
-									return currentEvent;
-								}
-								return latestEvent;
-							});
-						}
-
-						return (
-							<Pressable key={index} onPress={() => handleSelection(order)}>
-								<Card
-									containerStyle={[
-										{
-											borderLeftColor:
-												statusCategories.find(
-													(s: any) =>
-														s.name ===
-														(Number(order.customer.lat) === 0
-															? "No Location"
-															: order.status)
-												)?.color || "#000000",
-											elevation: 2,
-											shadowColor: "#000",
-											shadowOffset: { width: 0, height: 4 },
-											shadowOpacity: 0.05,
-											shadowRadius: 3,
-										},
-										tw("border-l-4  p-4 bg-white rounded "),
-									]}
-								>
-									<View style={tw("flex flex-row justify-between items-center")}>
-										<View style={tw("flex-row flex-wrap")}>
-											<Text>{order.label}</Text>
-										</View>
-
-										<View style={tw("flex-row items-center")}>
-											{order.status.toLowerCase() !== "open" && (
-												<View style={tw("bg-gray-200 rounded px-3 py-2 mr-2")}>
-													<Text>
-														{latestEvent &&
-															moment(latestEvent?.modifiedAt || "No time").format(
-																"HH:mm"
-															)}
-													</Text>
-												</View>
-											)}
-											<View
-												style={{
-													width: 24,
-													height: 24,
-													borderRadius: 12,
-													backgroundColor:
-														publicMetadataOrder?.categories?.find(
-															(category: any) => category.name === order.category
-														)?.color || "gray",
-													justifyContent: "center",
-													alignItems: "center",
-													marginLeft: 8,
-													marginRight: 8,
-												}}
-											>
-												<Text style={{ color: "white" }}>{order.amountOrders}</Text>
-											</View>
-										</View>
-									</View>
-								</Card>
-							</Pressable>
-						);
-					})}
+			<View style={tw("px-4")}>
+				{orders &&
+					labels &&
+					sortOrders(orders)
+						.filter((order: OrderExtendedWithLabels) => {
+							const orderNoLocation = Number(order.customer.lat) === 0;
+							if (
+								orderNoLocation &&
+								order.status?.toLowerCase() === "open" &&
+								statusCategories.find((status) => status.active && status.name === "No Location")
+							) {
+								return true;
+							}
+							const status = statusCategories.find((s) => s.name === order.status);
+							return status?.active ?? false;
+						})
+						.map((order: any, index: number) => (
+							<OrderListItem
+								key={index}
+								order={order}
+								handleSelection={handleSelection}
+								labels={labels}
+							/>
+						))}
+			</View>
 		</View>
 	);
 }

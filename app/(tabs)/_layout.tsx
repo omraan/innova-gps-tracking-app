@@ -1,3 +1,4 @@
+import { useRouteSessionStore } from "@/hooks/useRouteSessionStore";
 import { loadDevMessages, loadErrorMessages } from "@apollo/client/dev";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { Tabs } from "expo-router";
@@ -14,6 +15,8 @@ export default function Layout() {
 		loadErrorMessages();
 	}
 
+	const { routeSession } = useRouteSessionStore();
+
 	return (
 		<Tabs screenOptions={{ tabBarActiveTintColor: "blue" }}>
 			<Tabs.Screen
@@ -27,6 +30,7 @@ export default function Layout() {
 					tabBarLabel: () => null,
 				}}
 			/>
+
 			<Tabs.Screen
 				name="settings"
 				options={{

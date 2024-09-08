@@ -1,6 +1,7 @@
 import { client } from "@/graphql/client";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { AuthProvider } from "@/providers/AuthProvider";
+import LocationProvider from "@/providers/LocationProvider";
 import utilities from "@/tailwind.json";
 import { ApolloProvider } from "@apollo/client";
 import { ClerkLoaded, ClerkProvider, useAuth } from "@clerk/clerk-expo";
@@ -9,7 +10,7 @@ import { useFonts } from "expo-font";
 import { Redirect, Slot, Stack } from "expo-router";
 import * as SecureStore from "expo-secure-store";
 import * as SplashScreen from "expo-splash-screen";
-import { useEffect, useLayoutEffect } from "react";
+import { useEffect } from "react";
 import "react-native-reanimated";
 import { TailwindProvider } from "tailwind-rn";
 
@@ -73,10 +74,12 @@ export default function RootLayout() {
 					<ClerkLoaded>
 						<AuthProvider>
 							<ApolloProvider client={client}>
-								<Stack screenOptions={{ headerBackTitle: "Back" }}>
-									<Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-									<Stack.Screen name="(auth)" options={{ headerShown: false }} />
-								</Stack>
+								<LocationProvider>
+									<Stack screenOptions={{ headerBackTitle: "Back" }}>
+										<Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+										<Stack.Screen name="(auth)" options={{ headerShown: false }} />
+									</Stack>
+								</LocationProvider>
 							</ApolloProvider>
 						</AuthProvider>
 					</ClerkLoaded>

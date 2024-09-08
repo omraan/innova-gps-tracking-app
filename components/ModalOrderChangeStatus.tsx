@@ -1,3 +1,4 @@
+import { useDateStore } from "@/hooks/useDateStore";
 import { isColorDark } from "@/lib/styles";
 import { useAuth, useOrganization, useUser } from "@clerk/clerk-expo";
 import { router } from "expo-router";
@@ -9,14 +10,12 @@ import { useTailwind } from "tailwind-rn";
 export default function ModalOrderChangeStatus({
 	selectedCustomerOrders,
 	showLink,
-	dateString,
 	modalVisible,
 	setModalVisible,
 	onMarkerSubmit,
 }: {
 	selectedCustomerOrders: CustomerOrders;
 	showLink?: boolean;
-	dateString?: string;
 	modalVisible: boolean;
 	setModalVisible: (visible: boolean) => void;
 	onMarkerSubmit: (status: StatusCategory, notes: string) => void;
@@ -24,6 +23,7 @@ export default function ModalOrderChangeStatus({
 	const tw = useTailwind();
 	const { user } = useUser();
 	const { orgId, orgRole: authRole } = useAuth();
+	const { selectedDate } = useDateStore();
 
 	const { organization } = useOrganization();
 	const statusCategories: StatusCategory[] = Array.isArray(organization?.publicMetadata.statusCategories)
@@ -60,6 +60,9 @@ export default function ModalOrderChangeStatus({
 			}
 		}
 	}, [user?.publicMetadata, orgId]);
+
+	const showOrderNumbers =
+		orderNumbers && orderNumbers.length > 0 && orderNumbers.some((orderNumber) => orderNumber !== null);
 
 	return (
 		<Modal
@@ -107,7 +110,10 @@ export default function ModalOrderChangeStatus({
 											setModalVisible(false);
 											router.push({
 												pathname: `/orders/[customerId]`,
-												params: { customerId: selectedCustomerOrders.customerId!, dateString },
+												params: {
+													customerId: selectedCustomerOrders.customerId!,
+													selectedDate,
+												},
 											});
 										}}
 										style={tw("flex-1 max-w-[200px] mx-auto")}
@@ -126,7 +132,7 @@ export default function ModalOrderChangeStatus({
 						</View>
 					)}
 
-					{orderNumbers && orderNumbers.length > 0 && (
+					{showOrderNumbers && (
 						<View style={tw("flex flex-row justify-center items-center mb-5 flex-wrap")}>
 							{orderNumbers.map((orderNumber: number, index: number) => (
 								<View
@@ -134,7 +140,7 @@ export default function ModalOrderChangeStatus({
 									style={tw("m-2 bg-gray-100 rounded-lg px-3 py-2 border border-gray-200")}
 								>
 									<Text style={tw("text-center text-sm text-gray-700")}>
-										{orderNumber && orderNumber.toString()}
+										{orderNumber !== null ? orderNumber.toString() : "No order number"}
 									</Text>
 								</View>
 							))}

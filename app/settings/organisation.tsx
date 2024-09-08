@@ -1,5 +1,7 @@
+import LoadingScreen from "@/components/LoadingScreen";
 import { ModalPicker } from "@/components/ModalPicker";
 import { GET_VEHICLES } from "@/graphql/queries";
+import { useVehicleStore } from "@/hooks/useVehicleStore";
 import { useQuery } from "@apollo/client";
 import { useAuth, useOrganizationList, useUser } from "@clerk/clerk-expo";
 import { useNavigation } from "expo-router";
@@ -45,8 +47,10 @@ function Organisation() {
 
 	const { orgId } = useAuth();
 	const { user } = useUser();
-	const [selectedVehicle, setSelectedVehicle] = useState<{ name: string; value: Vehicle } | undefined>(undefined);
+	const { selectedVehicle, setSelectedVehicle } = useVehicleStore();
 	const [labels, setLabels] = useState<string[]>([]);
+	const [loading, setLoading] = useState(false);
+	const [initialLoading, setInitialLoading] = useState(true);
 
 	useLayoutEffect(() => {
 		navigation.setOptions({
@@ -206,6 +210,8 @@ function Organisation() {
 	return (
 		<GestureHandlerRootView style={{ flex: 1 }}>
 			<SafeAreaView style={tw("h-full bg-white")}>
+				<LoadingScreen loading={loading} />
+
 				<View style={tw("p-5")}>
 					<Text style={tw("mb-2 text-gray-600")}>Selected Organization</Text>
 					{organizations && organizations.length > 0 && (
@@ -219,7 +225,15 @@ function Organisation() {
 							options={{
 								defaultValue: orgId!,
 							}}
-							onSelect={(value) => setActive({ organization: value })}
+							onSelect={(value) => {
+								setLoading(true);
+								setActive({ organization: value });
+								const timer = setTimeout(() => {
+									setLoading(false);
+								}, 5000);
+
+								return () => clearTimeout(timer);
+							}}
 						/>
 					)}
 				</View>

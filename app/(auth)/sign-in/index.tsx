@@ -19,14 +19,13 @@ import { useTailwind } from "tailwind-rn";
 
 export default function Page() {
 	const { signIn, setActive, isLoaded } = useSignIn();
-	const router = useRouter();
 	const tw = useTailwind();
 
 	const [emailAddress, setEmailAddress] = useState<string>("");
 	const [password, setPassword] = useState<string>("");
 	const navigation = useNavigation();
 	const [errorMessage, setErrorMessage] = useState<string | undefined>(undefined);
-
+	const [isSigningIn, setIsSigning] = useState<boolean>(false);
 	useLayoutEffect(() => {
 		navigation.setOptions({
 			headerShown: false,
@@ -46,6 +45,7 @@ export default function Page() {
 
 	const onSignInPress = useCallback(async () => {
 		setErrorMessage(undefined);
+		setIsSigning(true);
 		if (!isLoaded) {
 			return;
 		}
@@ -71,6 +71,7 @@ export default function Page() {
 			setErrorMessage(err.errors[0].message);
 			console.error(JSON.stringify(err, null, 2));
 		}
+		setIsSigning(false);
 	}, [isLoaded, emailAddress, password]);
 	const stylesBox = StyleSheet.create({
 		shadow: {
@@ -147,11 +148,16 @@ export default function Page() {
 							<View>
 								<Pressable
 									style={tw(
-										`py-3 border border-gray-300 rounded-lg bg-primary flex-row justify-center items-center text-lg mb-5 w-full mx-auto`
+										`py-3 border border-gray-300 rounded-lg bg-primary flex-row justify-center items-center text-lg mb-5 w-full mx-auto ${
+											isSigningIn ? "opacity-50" : ""
+										}`
 									)}
 									onPress={onSignInPress}
+									disabled={isSigningIn}
 								>
-									<Text style={tw("text-lg text-white font-bold tracking-wider")}>Log in</Text>
+									<Text style={tw("text-lg text-white font-bold tracking-wider")}>
+										{isSigningIn ? "Logging in" : "Log in"}
+									</Text>
 								</Pressable>
 							</View>
 						</View>

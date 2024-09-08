@@ -48,7 +48,7 @@ interface RegisterOrder {
 	vehicleId?: string;
 	customerId?: string;
 	expectedDeliveryDate?: string;
-	status?: string;
+	status: string;
 	orderNumber?: string;
 	notes?: string;
 	category?: string;
@@ -109,3 +109,14 @@ type StatusCategory = {
 };
 
 type MapTypes = "standard" | "hybrid";
+
+interface GeoLocation {
+	latitude: number;
+	longitude: number;
+}
+
+interface LiveLocation extends GeoLocation {
+	speed: number | null;
+	speedInKmh: number;
+	timestamp: string;
+}

@@ -8,7 +8,7 @@
 		"owner": "innova-aruba",
 		"icon": "./assets/images/icon.png",
 		"scheme": "myapp",
-		"userInterfaceStyle": "automatic",
+		"userInterfaceStyle": "light",
 		"splash": {
 			"image": "./assets/images/splash.png",
 			"resizeMode": "cover",
@@ -17,7 +17,10 @@
 		"ios": {
 			"supportsTablet": true,
 			"infoPlist": {
-				"NSCameraUsageDescription": "This app uses the camera to scan barcodes."
+				"NSLocationWhenInUseUsageDescription": "This app uses your location to track your position.",
+				"NSLocationAlwaysUsageDescription": "This app uses your location to track your position even when the app is in the background.",
+				"NSCameraUsageDescription": "This app uses the camera to scan barcodes.",
+				"UIBackgroundModes": ["location"]
 			},
 			"bundleIdentifier": "com.innova.gpstracking",
 			"config": {
@@ -25,7 +28,15 @@
 			}
 		},
 		"android": {
-			"permissions": ["INTERNET", "CAMERA", "READ_EXTERNAL_STORAGE", "WRITE_EXTERNAL_STORAGE"],
+			"permissions": [
+				"INTERNET",
+				"CAMERA",
+				"READ_EXTERNAL_STORAGE",
+				"WRITE_EXTERNAL_STORAGE",
+				"ACCESS_FINE_LOCATION",
+				"ACCESS_COARSE_LOCATION",
+				"ACCESS_BACKGROUND_LOCATION"
+			],
 			"adaptiveIcon": {
 				"foregroundImage": "./assets/images/adaptive-icon.png",
 				"backgroundColor": "#ffffff"
@@ -42,7 +53,7 @@
 			[
 				"expo-location",
 				{
-					"isAndroidForegroundServiceEnabled": true
+					"locationAlwaysAndWhenInUsePermission": "Allow $(PRODUCT_NAME) to use your location."
 				}
 			]
 		],
