@@ -6,6 +6,7 @@ import { format } from "date-fns";
 import moment from "moment";
 import React, { useEffect, useState } from "react";
 import { Pressable, Text, View } from "react-native";
+import FontAwesomeIcon from "react-native-vector-icons/FontAwesome6";
 import { useTailwind } from "tailwind-rn";
 
 interface OrderExtendedWithLabels extends CustomerOrders {
@@ -125,22 +126,24 @@ export default function OrderList({
 								</Text>
 							</View>
 						)}
+						<View style={tw("flex justify-center items-center")}>
+							{order.notes && order.notes.length > 0 && (
+								<FontAwesomeIcon name="message" size={16} color="#999999" />
+							)}
+						</View>
+
 						<View
-							style={{
-								width: 24,
-								height: 24,
-								borderRadius: 12,
-								backgroundColor:
-									publicMetadataOrder?.categories?.find(
-										(category: any) => category.name === order.category
-									)?.color || "gray",
-								justifyContent: "center",
-								alignItems: "center",
-								marginLeft: 8,
-								marginRight: 8,
-							}}
+							style={[
+								{
+									backgroundColor:
+										publicMetadataOrder?.categories?.find(
+											(category: any) => category.name === order.category
+										)?.color || "gray",
+								},
+								tw("rounded flex justify-center items-center mx-3 h-[24px] w-[24px]"),
+							]}
 						>
-							<Text style={{ color: "white" }}>{order.amountOrders}</Text>
+							<Text style={[{ color: "white" }, tw("text-xs")]}>{order.amountOrders}</Text>
 						</View>
 					</View>
 				</View>

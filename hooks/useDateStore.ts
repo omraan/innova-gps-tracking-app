@@ -12,17 +12,9 @@ type DateStore = {
 	resetError: () => void;
 };
 
-export const useDateStore = create<DateStore>()(
-	persist(
-		(set, get) => ({
-			selectedDate: null,
-			setSelectedDate: (selectedDate) => set(() => ({ selectedDate })),
-			error: null,
-			resetError: () => set({ error: null }),
-		}),
-		{
-			name: "date-storage",
-			storage: createJSONStorage(() => AsyncStorage),
-		}
-	)
-);
+export const useDateStore = create<DateStore>()((set, get) => ({
+	selectedDate: null,
+	setSelectedDate: (selectedDate) => set(() => ({ selectedDate })),
+	error: null,
+	resetError: () => set({ error: null }),
+}));

@@ -51,6 +51,7 @@ export const UPDATE_ORDER = gql`
 		$status: String
 		$category: String
 		$routeIndex: Int
+		$notes: String
 	) {
 		updateOrder(
 			id: $id
@@ -66,6 +67,7 @@ export const UPDATE_ORDER = gql`
 			status: $status
 			category: $category
 			routeIndex: $routeIndex
+			notes: $notes
 		) {
 			name
 		}
@@ -87,8 +89,8 @@ export const CREATE_ROUTE_SESSION = gql`
 		$date: String!
 		$driverId: String
 		$vehicleId: String
-		$startTime: Float
-		$endTime: Float
+		$startTime: String
+		$endTime: String
 	) {
 		insertRouteSession(
 			organizationId: $organizationId
@@ -112,10 +114,10 @@ export const UPDATE_ROUTE_SESSION = gql`
 		$date: String!
 		$driverId: String
 		$vehicleId: String
-		$startTime: Float
-		$endTime: Float
+		$startTime: String
+		$endTime: String
 	) {
-		updateCustomer(
+		updateRouteSession(
 			id: $id
 			organizationId: $organizationId
 			token: $token

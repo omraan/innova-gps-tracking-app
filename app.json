@@ -35,10 +35,11 @@
 				"WRITE_EXTERNAL_STORAGE",
 				"ACCESS_FINE_LOCATION",
 				"ACCESS_COARSE_LOCATION",
-				"ACCESS_BACKGROUND_LOCATION"
+				"ACCESS_BACKGROUND_LOCATION",
+				"FOREGROUND_SERVICE"
 			],
 			"adaptiveIcon": {
-				"foregroundImage": "./assets/images/adaptive-icon.png",
+				"foregroundImage": "./assets/images/icon.png",
 				"backgroundColor": "#ffffff"
 			},
 			"config": {
@@ -53,7 +54,9 @@
 			[
 				"expo-location",
 				{
-					"locationAlwaysAndWhenInUsePermission": "Allow $(PRODUCT_NAME) to use your location."
+					"locationAlwaysAndWhenInUsePermission": "Allow $(PRODUCT_NAME) to use your location.",
+					"isAndroidBackgroundLocationEnabled": true,
+					"isAndroidForegroundServiceEnabled": true
 				}
 			]
 		],

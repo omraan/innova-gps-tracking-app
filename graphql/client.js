@@ -24,7 +24,7 @@ const addVariableMiddleware = new ApolloLink((operation, forward) => {
 				handle = forward(operation)
 					.map((response) => {
 						const queryName = Object.keys(response.data || {})[0];
-
+						// console.log("response: " + JSON.stringify(response));
 						if (!response.data || !queryName) {
 							// console.log("response: ", response);
 							return response;

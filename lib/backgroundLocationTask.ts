@@ -5,7 +5,12 @@ import { child, push, ref, update } from "firebase/database";
 
 export const UPDATE_LOCATION_TASK = "background-location-task";
 
-export const defineLocationTask = (userId: string, orgId: string, setLiveLocation: (location: any) => void) =>
+export const defineLocationTask = (
+	userId: string,
+	orgId: string,
+	routeSessionId: string,
+	setLiveLocation: (location: any) => void
+) =>
 	TaskManager.defineTask(UPDATE_LOCATION_TASK, async ({ data, error }: any) => {
 		if (error) {
 			console.error(error);
@@ -14,6 +19,7 @@ export const defineLocationTask = (userId: string, orgId: string, setLiveLocatio
 		if (data) {
 			const { locations } = data;
 			const location = locations[0];
+
 			if (location && userId && orgId) {
 				const { latitude, longitude, speed, heading } = location.coords;
 				const speedInKmh = (speed || 0) * 3.6;
@@ -23,6 +29,7 @@ export const defineLocationTask = (userId: string, orgId: string, setLiveLocatio
 				const updates: { [key: string]: any } = {};
 
 				const newTracking = {
+					routeSessionId,
 					latitude,
 					longitude,
 					speed,
@@ -33,8 +40,8 @@ export const defineLocationTask = (userId: string, orgId: string, setLiveLocatio
 				const newTrackingRef = push(child(trackingRef, `${newDate}/users/${userId}`));
 				const newTrackingKey = newTrackingRef.key;
 
-				updates[`${newDate}/users/${userId}/${newTrackingKey}`] = newTracking;
-				updates[`current/users/${userId}`] = newTracking;
+				updates[`${newDate}/route-sessions/${routeSessionId}/${newTrackingKey}`] = newTracking;
+				updates[`current/route-sessions/${routeSessionId}`] = newTracking;
 				await update(trackingRef, updates);
 			}
 		}

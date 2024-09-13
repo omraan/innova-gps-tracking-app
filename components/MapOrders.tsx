@@ -2,6 +2,7 @@ import { useLiveLocationStore } from "@/hooks/useLocationStore";
 import { getCurrentLocation } from "@/lib/getCurrentLocation";
 import { getDistance } from "@/lib/getDistance";
 import { useAuth, useOrganization, useUser } from "@clerk/clerk-expo";
+import * as Location from "expo-location";
 import { useEffect, useRef, useState } from "react";
 import { Animated, Pressable, StyleSheet, Text, View } from "react-native";
 import MapView, { PROVIDER_GOOGLE } from "react-native-maps";
@@ -11,7 +12,6 @@ import IonIcon from "react-native-vector-icons/Ionicons";
 import McIcon from "react-native-vector-icons/MaterialCommunityIcons";
 import { useTailwind } from "tailwind-rn";
 import MapOrdersMarker from "./MapOrdersMarker";
-
 export default function MapOrders({
 	orders,
 	handleSelection,
@@ -23,11 +23,10 @@ export default function MapOrders({
 }) {
 	const tw = useTailwind();
 	const { organization } = useOrganization();
-	const { orgId, orgRole: authRole } = useAuth();
+	const { orgId, orgRole: authRole, userId } = useAuth();
 	const [orgRole, setOrgRole] = useState<string | undefined>();
 	const { user } = useUser();
 
-	const { liveLocation } = useLiveLocationStore();
 	const [originLocation, setOriginLocation] = useState<GeoLocation | null>(null);
 
 	const mapRef = useRef<MapView>(null);
@@ -37,6 +36,8 @@ export default function MapOrders({
 
 	const scaleAnim = useRef(new Animated.Value(1)).current;
 	const colorAnim = useRef(new Animated.Value(0)).current;
+
+	const [liveLocation, setLiveLocation] = useState<GeoLocation | null>(null);
 
 	const goToLiveLocation = async () => {
 		if (
@@ -73,9 +74,49 @@ export default function MapOrders({
 			goToLiveLocation();
 		}
 		if (locationMode === "follow_location") {
-			goToLiveLocation();
+			const cleanup = watchUserPosition();
+			return cleanup;
 		}
 	}, [locationMode]);
+
+	useEffect(() => {
+		if (liveLocation && locationMode && locationMode === "follow_location") {
+			goToLiveLocation();
+		}
+	}, [liveLocation, locationMode]);
+
+	const watchUserPosition = () => {
+		let locationSubscription: any;
+
+		const startWatching = async () => {
+			let { status } = await Location.requestForegroundPermissionsAsync();
+			if (status !== "granted") {
+				console.error("Permission to access location was denied");
+				return;
+			}
+			if (userId) {
+				locationSubscription = await Location.watchPositionAsync(
+					{
+						accuracy: Location.Accuracy.High,
+						timeInterval: 10000,
+						distanceInterval: 10,
+					},
+					(position) => {
+						console.log("User position:", position);
+					}
+				);
+			}
+		};
+
+		startWatching();
+
+		// Cleanup functie om de locatie subscription te verwijderen
+		return () => {
+			if (locationSubscription) {
+				locationSubscription.remove();
+			}
+		};
+	};
 
 	useEffect(() => {
 		Animated.loop(
@@ -165,10 +206,8 @@ export default function MapOrders({
 						return { ...value, distance };
 					})
 					.sort((a: any, b: any) => a.distance - b.distance)
-					.slice(0, 4)
+					.slice(0, 14)
 			: [];
-
-	console.log(originLocation?.latitude);
 
 	return (
 		<View style={tw("h-full")}>
@@ -186,7 +225,7 @@ export default function MapOrders({
 					}}
 					ref={mapRef}
 					showsUserLocation={true}
-					followsUserLocation={locationMode === "follow_location"}
+					// followsUserLocation={locationMode === "follow_location"}
 				>
 					{sortedOrders && sortedOrders.length > 0 && originLocation?.latitude && (
 						<MapViewDirections
@@ -209,52 +248,11 @@ export default function MapOrders({
 							apikey="AIzaSyBnR0kXdNPHlgTMIpJRwlGfBgZNszzLB1I"
 							strokeWidth={5}
 							strokeColor="blue"
-							// onReady={(result) => {
-							// 	if (
-							// 		!routeExists &&
-							// 		result.waypointOrder &&
-							// 		result.waypointOrder[0] &&
-							// 		result.waypointOrder[0].length > 0
-							// 	) {
-							// 		result.waypointOrder[0].forEach((routeIndex: number) => {
-							// 			const variables: any = {
-							// 				id: sortedOrders[routeIndex].id,
-							// 				routeIndex,
-							// 			};
-
-							// 			UpdateOrder({
-							// 				variables,
-							// 				refetchQueries: [GET_ORDERS_BY_DATE],
-							// 				awaitRefetchQueries: true,
-							// 				update: (cache) => {
-							// 					// Handmatig de cache bijwerken als dat nodig is
-							// 					const existingOrders: OrderExtended[] =
-							// 						cache.readQuery({ query: GET_ORDERS_BY_DATE }) || [];
-							// 					if (existingOrders) {
-							// 						const newOrders = existingOrders.map((existingOrder) =>
-							// 							existingOrder.id === sortedOrders[routeIndex].id
-							// 								? {
-							// 										...existingOrder,
-							// 										routeIndex,
-							// 								  }
-							// 								: existingOrder
-							// 						);
-							// 						cache.writeQuery({
-							// 							query: GET_ORDERS_BY_DATE,
-							// 							data: { orders: newOrders },
-							// 						});
-							// 					}
-							// 				},
-							// 			});
-							// 		});
-							// 	}
-							// 	setOrdersIndex(...result.waypointOrder);
-							// }}
 						/>
 					)}
 
 					{orders.map((order: CustomerOrders, index: number) => (
-						<MapOrdersMarker key={index} handleSelection={handleSelection} order={order} />
+						<MapOrdersMarker key={order.customerId} handleSelection={handleSelection} order={order} />
 					))}
 				</MapView>
 			)}

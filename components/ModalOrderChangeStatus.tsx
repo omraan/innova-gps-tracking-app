@@ -41,9 +41,13 @@ export default function ModalOrderChangeStatus({
 	const singleOrderId = selectedCustomerOrders.orderIds[0];
 	const { orderNumbers, customer } = selectedCustomerOrders;
 
-	const [notes, setNotes] = useState<string>("");
+	const [notes, setNotes] = useState<string>(selectedCustomerOrders.notes || "");
 
 	const [orgRole, setOrgRole] = useState<string | undefined>();
+
+	useEffect(() => {
+		setNotes(selectedCustomerOrders.notes || "");
+	}, [selectedCustomerOrders]);
 
 	useEffect(() => {
 		const metaDataLabels = user?.publicMetadata as UserPublicMetadata;
@@ -152,8 +156,12 @@ export default function ModalOrderChangeStatus({
 							placeholderTextColor="#999"
 							value={notes}
 							onChangeText={setNotes}
-							style={tw("text-sm rounded text-gray-700 border-b pb-2 border-gray-300")}
+							style={tw(
+								"text-sm rounded text-gray-700 border-b pb-2 border-gray-300 flex flex-wrap max-w-[300px] text-wrap"
+							)}
 							editable={orgRole && orgRole !== "org:viewer" ? true : false}
+							multiline={true}
+							numberOfLines={4}
 						/>
 					</View>
 					{orgRole && orgRole !== "org:viewer" && (

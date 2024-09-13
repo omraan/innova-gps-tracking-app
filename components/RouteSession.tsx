@@ -1,4 +1,11 @@
+import { CREATE_ROUTE_SESSION, UPDATE_ROUTE_SESSION } from "@/graphql/mutations";
+import { GET_ROUTE_SESSIONS } from "@/graphql/queries";
+import { useDateStore } from "@/hooks/useDateStore";
 import { useRouteSessionStore } from "@/hooks/useRouteSessionStore";
+import { useVehicleStore } from "@/hooks/useVehicleStore";
+import { useMutation, useQuery } from "@apollo/client";
+import { useAuth } from "@clerk/clerk-expo";
+import moment from "moment";
 import React, { useEffect, useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import { useTailwind } from "tailwind-rn";
@@ -6,63 +13,58 @@ export default function RouteSession() {
 	const tw = useTailwind();
 
 	const { routeSession, setRouteSession } = useRouteSessionStore();
-	const [timer, setTimer] = useState(0);
-	const [intervalId, setIntervalId] = useState<NodeJS.Timeout | null>(null);
+	const { userId } = useAuth();
+	const { selectedDate } = useDateStore();
+	const { selectedVehicle } = useVehicleStore();
 
-	const startRoute = () => {
+	const [CreateRouteSession] = useMutation(CREATE_ROUTE_SESSION);
+	const [UpdateRouteSession] = useMutation(UPDATE_ROUTE_SESSION);
+
+	const startRoute = async () => {
 		const startTime = Date.now();
-		setTimer(0);
-		setRouteSession({ startTime, active: true });
-		const id = setInterval(() => {
-			setTimer(Date.now() - startTime);
-		}, 1000);
-		setIntervalId(id);
-	};
 
-	const endRoute = () => {
-		if (intervalId) {
-			clearInterval(intervalId);
+		if (!selectedDate) {
 		}
-		setRouteSession({ startTime: routeSession?.startTime!, endTime: Date.now(), active: false });
-		setIntervalId(null);
-	};
-
-	useEffect(() => {
-		if (routeSession?.active && !intervalId) {
-			console.log("hello");
-			const id = setInterval(() => {
-				setTimer(Date.now() - routeSession.startTime);
-			}, 1000);
-			setIntervalId(id);
+		if (!selectedVehicle) {
 		}
 
-		return () => {
-			if (intervalId) {
-				clearInterval(intervalId);
-				setIntervalId(null);
-			}
+		const variables = {
+			date: selectedDate,
+			vehicleId: selectedVehicle?.name,
+			driverId: userId,
+			startTime: moment(new Date()).format("yyyy-MM-DD HH:mm:ss"),
 		};
-	}, [routeSession, intervalId]);
+		await CreateRouteSession({
+			variables,
+			onCompleted: (data) => {
+				const routeSessionId = data?.insertRouteSession?.name;
+				setRouteSession({ id: routeSessionId, startTime });
+			},
+		});
+	};
 
-	const formatTime = (milliseconds: number) => {
-		const totalSeconds = Math.floor(milliseconds / 1000);
-		const hours = String(Math.floor(totalSeconds / 3600)).padStart(2, "0");
-		const minutes = String(Math.floor((totalSeconds % 3600) / 60)).padStart(2, "0");
-		const seconds = String(totalSeconds % 60).padStart(2, "0");
-		return `${hours}:${minutes}:${seconds}`;
+	const endRoute = async () => {
+		const variables = {
+			id: routeSession?.id!,
+			date: selectedDate,
+			endTime: moment(new Date()).format("yyyy-MM-DD HH:mm:ss"),
+		};
+		await UpdateRouteSession({
+			variables,
+		});
+		setRouteSession(null);
 	};
 
 	return (
 		<View
 			style={tw(
 				`w-full py-2 px-5 flex-row justify-${
-					routeSession?.active ? "between" : "center"
+					routeSession ? "between" : "center"
 				} items-center fixed bg-black/80 max-h-[50px]`
 			)}
 		>
-			{routeSession?.active ? (
+			{routeSession ? (
 				<>
-					<Text style={tw("text-white")}>{formatTime(timer)}</Text>
 					<Pressable onPress={endRoute} style={tw("bg-white py-2 px-4 rounded")}>
 						<Text style={tw("text-xs text-gray-600 font-bold")}>End Route</Text>
 					</Pressable>

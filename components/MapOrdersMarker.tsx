@@ -2,7 +2,7 @@ import { useOrganization } from "@clerk/clerk-expo";
 import React, { useEffect, useRef, useState } from "react";
 import { Platform, StyleSheet } from "react-native";
 import { Marker } from "react-native-maps";
-import FontAwesomeIcon from "react-native-vector-icons/FontAwesome";
+import FontAwesomeIcon from "react-native-vector-icons/FontAwesome6";
 import { useTailwind } from "tailwind-rn";
 import SvgMarker from "./svg/SvgMarker";
 interface publicMetadata {
@@ -69,9 +69,12 @@ export default function MapOrdersMarker({
 			onPress={() => {
 				handleSelection(order);
 			}}
-			style={[tw("z-10")]}
+			style={[tw("z-10 flex items-center")]}
 			tracksViewChanges={tracksViewChanges}
 		>
+			{order.notes && order.notes.length > 0 && (
+				<FontAwesomeIcon name="message" size={16} color="#000000" style={tw("mb-1")} solid={true} />
+			)}
 			<SvgMarker
 				size={45}
 				color={pinColor}

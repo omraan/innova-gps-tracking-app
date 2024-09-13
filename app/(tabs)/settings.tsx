@@ -1,6 +1,7 @@
 import LoadingScreen from "@/components/LoadingScreen";
 import { client } from "@/graphql/client";
-import { useAuth } from "@clerk/clerk-expo";
+import { useAuth, useUser } from "@clerk/clerk-expo";
+import Constants from "expo-constants";
 import { useRouter } from "expo-router";
 import React, { useEffect } from "react";
 import { Pressable, SafeAreaView, SectionList, Text, View } from "react-native";
@@ -10,6 +11,9 @@ export default function Settings() {
 	const tw = useTailwind();
 	const router = useRouter();
 	const { signOut, isSignedIn } = useAuth();
+	const expoConfig = Constants.expoConfig;
+
+	const { user } = useUser();
 
 	useEffect(() => {
 		if (!isSignedIn) {
@@ -54,6 +58,11 @@ export default function Settings() {
 			/>
 
 			<View style={tw("p-5")}>
+				<View style={tw("mb-5")}>
+					<Text>User: {user?.primaryEmailAddress?.toString() || ""}</Text>
+					<Text>Version: {expoConfig?.version}</Text>
+					<Text>Build Number: {expoConfig?.android?.versionCode || expoConfig?.ios?.buildNumber}</Text>
+				</View>
 				<Pressable style={tw("bg-red-500 py-3 rounded")} onPress={handleLogout}>
 					<Text style={tw("text-center text-white font-bold ")}>Log Out</Text>
 				</Pressable>

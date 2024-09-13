@@ -3,14 +3,15 @@ import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 
 type RouteSession = {
+	id: string;
+	routeId?: string;
 	startTime: number;
 	endTime?: number;
-	active: boolean;
 };
 
 type RouteSessionStore = {
 	routeSession: RouteSession | null;
-	setRouteSession: (routeSession: RouteSession) => void;
+	setRouteSession: (routeSession: RouteSession | null) => void;
 	error?: null | {
 		message?: string;
 		details?: string;

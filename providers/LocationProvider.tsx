@@ -14,7 +14,6 @@ const LocationProvider = ({ children }: { children: React.ReactNode }) => {
 	const { setLiveLocation } = useLiveLocationStore();
 	useEffect(() => {
 		const startBackgroundLocation = async () => {
-			console.log("hello worl2");
 			const { status } = await Location.requestForegroundPermissionsAsync();
 			if (status !== "granted") {
 				console.error("Permission to access location was denied");
@@ -27,13 +26,18 @@ const LocationProvider = ({ children }: { children: React.ReactNode }) => {
 				return;
 			}
 
-			const isRegistered = await TaskManager.isTaskRegisteredAsync(UPDATE_LOCATION_TASK);
+			// const isRegistered = await TaskManager.isTaskRegisteredAsync(UPDATE_LOCATION_TASK);
 
-			if (!isRegistered && userId && orgId) {
-				console.log("Registering task");
-				defineLocationTask(userId, orgId, setLiveLocation);
-				setBackgroundTaskRegistered(true);
-			}
+			// if (!isRegistered && userId && orgId) {
+			// 	const routeSessionId = routeSession?.id;
+			// 	defineLocationTask(userId, orgId, routeSessionId!, setLiveLocation);
+			// 	setBackgroundTaskRegistered(true);
+			// }
+			const routeSessionId = routeSession?.id;
+			defineLocationTask(userId!, orgId!, routeSessionId!, setLiveLocation);
+			setBackgroundTaskRegistered(true);
+			console.log("Start location sync");
+
 			await Location.startLocationUpdatesAsync(UPDATE_LOCATION_TASK, {
 				accuracy: Location.Accuracy.High,
 				timeInterval: 10000,
@@ -45,7 +49,7 @@ const LocationProvider = ({ children }: { children: React.ReactNode }) => {
 			});
 		};
 
-		if (routeSession?.active && userId && orgId) {
+		if (routeSession && userId && orgId) {
 			startBackgroundLocation();
 		}
 		return () => {
@@ -54,11 +58,11 @@ const LocationProvider = ({ children }: { children: React.ReactNode }) => {
 				setBackgroundTaskRegistered(false);
 			}
 		};
-	}, [routeSession?.active]);
+	}, [routeSession]);
 
 	useEffect(() => {
-		if (routeSession?.active) {
-			setRouteSession({ ...routeSession, active: false });
+		if (routeSession) {
+			setRouteSession(null);
 		}
 	}, [userId, orgId]);
 

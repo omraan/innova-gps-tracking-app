@@ -8,6 +8,7 @@ import RouteSession from "@/components/RouteSession";
 import { UPDATE_ORDER } from "@/graphql/mutations";
 import { GET_ORDERS_BY_DATE, GET_VEHICLES } from "@/graphql/queries";
 import { useDateStore } from "@/hooks/useDateStore";
+import { useRouteSessionStore } from "@/hooks/useRouteSessionStore";
 import { useVehicleStore } from "@/hooks/useVehicleStore";
 import { getRelatedOrders } from "@/lib/getRelatedOrders";
 import { useMutation, useQuery } from "@apollo/client";
@@ -46,6 +47,8 @@ export default function Page() {
 
 	const { selectedVehicle, setSelectedVehicle } = useVehicleStore();
 	const [selectedCustomerOrders, setSelectedCustomerOrders] = useState<CustomerOrders | undefined>(undefined);
+
+	const { routeSession } = useRouteSessionStore();
 
 	const { width, height } = useWindowDimensions();
 	const insets = useSafeAreaInsets();
@@ -142,7 +145,7 @@ export default function Page() {
 	async function onMarkerSubmit(status: StatusCategory, notes?: string) {
 		setLoading(true);
 		if (selectedCustomerOrders) {
-			await selectedCustomerOrders.orderIds.forEach((orderId: string) => {
+			selectedCustomerOrders.orderIds.forEach((orderId: string) => {
 				const variables: any = {
 					id: orderId,
 					date: selectedDate,
@@ -256,14 +259,13 @@ export default function Page() {
 	const showMode = (currentMode: any) => {
 		setShow(true);
 	};
-
-	/** */
 	return (
 		<SafeAreaView style={{ flex: 1 }}>
 			<DeviceDependedView tabletLandscapeView="view">
 				<LoadingScreen loading={loading ? loading : loadingOrders} />
 				<SignedIn>
-					<RouteSession />
+					{selectedDate === moment(new Date()).format("yyyy-MM-DD") && <RouteSession />}
+
 					<View style={tw("lg:flex-row")}>
 						<View style={tw("z-[3] lg:w-[60%]")}>
 							<View style={containerStyle}>
@@ -276,10 +278,10 @@ export default function Page() {
 								)}
 							</View>
 						</View>
-						<View style={[tw("lg:w-[40%]")]}>
+						<View style={[tw("lg:w-[40%] h-full flex flex-col")]}>
 							<View
 								style={[
-									tw("lg:fixed z-[2] bg-white"),
+									tw("lg:fixed z-[5] bg-white"),
 									{
 										elevation: 2,
 										shadowColor: "#000",
@@ -290,9 +292,9 @@ export default function Page() {
 								]}
 							>
 								{orgRole && orgRole !== "org:driver" && (
-									<View style={[tw("bg-white rounded px-5 pt-5 pb-2 flex flex-row justify-between")]}>
+									<View style={[tw("px-5 pt-5 pb-2 flex flex-row justify-between")]}>
 										{vehicles && vehicles.length > 0 && (
-											<View style={tw("min-w-[125px] md:min-w-[200px]")}>
+											<View style={tw(`min-w-[125px] md:min-w-[200px]`)}>
 												<ModalPicker
 													key={selectedVehicle?.name}
 													list={vehicles.map((v: any) => {
@@ -307,17 +309,20 @@ export default function Page() {
 														displayAllLabel: "All Vehicles",
 													}}
 													onSelect={handlePickerChange}
+													disabled={routeSession ? true : false}
 												/>
 											</View>
 										)}
-										{orgRole && orgRole !== "org:viewer" && (
+										{orgRole !== "org:viewer" && (
 											<View>
 												{Platform.OS === "android" ? (
 													<View>
 														<Pressable onPress={() => showMode("date")}>
 															<View
 																style={tw(
-																	"px-5 bg-gray-200 text-gray-700 font-semibold py-2 rounded"
+																	`px-5 bg-gray-200 text-gray-700 font-semibold py-2 rounded ${
+																		routeSession ? "opacity-30" : "opacity-100"
+																	}`
 																)}
 															>
 																<Text style={tw("text-gray-700 text-sm")}>
@@ -342,6 +347,9 @@ export default function Page() {
 														value={moment(selectedDate).toDate()}
 														mode="date"
 														onChange={onDateChange}
+														disabled={routeSession ? true : false}
+														style={tw(`${routeSession ? "opacity-30" : "opacity-100"} `)}
+														textColor="black"
 													/>
 												)}
 											</View>
@@ -359,9 +367,9 @@ export default function Page() {
 									/>
 								</View>
 							</View>
-							<View style={{ flex: 1 }}>
+							<View style={{ flex: 1, minHeight: 250 }}>
 								<DeviceDependedView tabletLandscapeView="scroll">
-									<View style={tw("px-0 py-2 mb-20 h-full")}>
+									<View style={tw("px-0 py-2 mb-20")}>
 										{loadingOrders ? (
 											<Text>Loading...</Text>
 										) : error ? (
@@ -377,17 +385,16 @@ export default function Page() {
 									</View>
 								</DeviceDependedView>
 							</View>
-
-							{selectedCustomerOrders && (
-								<ModalOrderChangeStatus
-									selectedCustomerOrders={selectedCustomerOrders}
-									showLink={true}
-									modalVisible={modalVisible}
-									setModalVisible={setModalVisible}
-									onMarkerSubmit={onMarkerSubmit}
-								/>
-							)}
 						</View>
+						{selectedCustomerOrders && (
+							<ModalOrderChangeStatus
+								selectedCustomerOrders={selectedCustomerOrders}
+								showLink={true}
+								modalVisible={modalVisible}
+								setModalVisible={setModalVisible}
+								onMarkerSubmit={onMarkerSubmit}
+							/>
+						)}
 					</View>
 				</SignedIn>
 			</DeviceDependedView>

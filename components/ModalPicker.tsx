@@ -17,9 +17,10 @@ type ModalPickerProps = {
 		displayAllLabel?: string;
 	};
 	onSelect: (value: string) => void;
+	disabled?: boolean;
 };
 
-export const ModalPicker = ({ list, onSelect, options }: ModalPickerProps) => {
+export const ModalPicker = ({ list, onSelect, options, disabled = false }: ModalPickerProps) => {
 	const [modalVisible, setModalVisible] = useState(false);
 	const [selectedItem, setSelectedItem] = useState<ListItem | null>(
 		list.find((item) => item.value === options?.defaultValue) || null
@@ -38,14 +39,7 @@ export const ModalPicker = ({ list, onSelect, options }: ModalPickerProps) => {
 		onSelect(value);
 	};
 
-	// useEffect(() => {
-	// 	if (Platform.OS === "android" && modalVisible) {
-	// 		pickerRef.current?.focus();
-	// 	}
-	// }, [modalVisible]);
-
 	const handleOpenModal = () => {
-		// pickerRef.current?.focus();
 		setModalVisible(true);
 	};
 
@@ -60,21 +54,15 @@ export const ModalPicker = ({ list, onSelect, options }: ModalPickerProps) => {
 		}
 	}, [modalVisible]);
 
-	// useEffect(() => {
-	// 	if (Platform.OS === "android" && !modalVisible && selectedItem) {
-	// 		handleCloseModal();
-	// 	}
-	// }, [selectedItem]);
-
 	return (
 		<View>
 			{Platform.OS === "android" ? (
-				<View style={tw("rounded border border-gray-300 w-full")}>
+				<View style={tw(`rounded border border-gray-300 w-full ${disabled ? "opacity-30" : "opacity-100"}`)}>
 					<Picker
 						ref={pickerRef}
 						onValueChange={handleSelectItem}
 						selectedValue={selectedItem?.value || options?.displayAllLabel}
-						// itemStyle={{ fontSize: 20 }}
+						enabled={!disabled}
 					>
 						{options?.displayAll ? (
 							<Picker.Item label={options?.displayAllLabel || "All"} value={"all"} />
@@ -88,8 +76,14 @@ export const ModalPicker = ({ list, onSelect, options }: ModalPickerProps) => {
 				</View>
 			) : (
 				<View>
-					<Pressable onPress={handleOpenModal}>
-						<View style={tw("rounded px-2 py-2 border border-gray-300 flex flex-row justify-between")}>
+					<Pressable onPress={handleOpenModal} disabled={disabled}>
+						<View
+							style={tw(
+								`rounded px-2 py-2 border border-gray-300 flex flex-row justify-between ${
+									disabled ? "opacity-30" : "opacity-100"
+								}`
+							)}
+						>
 							<Text style={tw("mr-5")}>
 								{selectedItem?.label || options?.displayAllLabel || "Choose option"}
 							</Text>

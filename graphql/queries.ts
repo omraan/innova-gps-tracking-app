@@ -123,3 +123,17 @@ export const GET_COUNTRIES = gql`
 		}
 	}
 `;
+
+export const GET_ROUTE_SESSIONS = gql`
+	query getRouteSessions($date: String!, $organizationId: ID!, $token: String!) {
+		getRouteSessions(date: $date, organizationId: $organizationId, token: $token) {
+			name
+			value {
+				driverId
+				vehicleId
+				startTime
+				endTime
+			}
+		}
+	}
+`;
