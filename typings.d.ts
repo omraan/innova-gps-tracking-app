@@ -28,6 +28,7 @@ interface RegisterCustomer {
 	phoneNumber?: string;
 	phoneNumber2?: string;
 	phoneNumber3?: string;
+	notes?: string;
 }
 
 interface Customer extends RegisterCustomer {
@@ -80,6 +81,7 @@ interface OrderExtended extends Order {
 		phoneNumber?: string;
 		phoneNumber2?: string;
 		phoneNumber3?: string;
+		notes?: string;
 	};
 }
 interface CustomerOrders extends OrderExtended {

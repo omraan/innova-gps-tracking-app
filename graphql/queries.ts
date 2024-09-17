@@ -13,6 +13,7 @@ const CustomerColumns = gql`
 		phoneNumber3
 		streetName
 		streetNumber
+		notes
 	}
 `;
 // Since Order and OrderEvent share the same columns, we can use the same fragment for both

@@ -80,6 +80,7 @@ export default function MapOrders({
 	}, [locationMode]);
 
 	useEffect(() => {
+		console.log("trigger");
 		if (liveLocation && locationMode && locationMode === "follow_location") {
 			goToLiveLocation();
 		}
@@ -98,11 +99,11 @@ export default function MapOrders({
 				locationSubscription = await Location.watchPositionAsync(
 					{
 						accuracy: Location.Accuracy.High,
-						timeInterval: 10000,
+						timeInterval: 1000,
 						distanceInterval: 10,
 					},
-					(position) => {
-						console.log("User position:", position);
+					({ coords }) => {
+						setLiveLocation({ latitude: coords.latitude, longitude: coords.longitude });
 					}
 				);
 			}

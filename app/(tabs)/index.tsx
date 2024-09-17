@@ -184,6 +184,7 @@ export default function Page() {
 											modifiedBy: userId!,
 											modifiedAt: Number(new Date()),
 											status: status.name,
+											notes: variables.notes || existingOrder.value.notes || "",
 											events: [
 												...existingOrder.value.events!,
 												{
@@ -191,6 +192,7 @@ export default function Page() {
 													createdBy: "",
 													createdAt: "",
 													status: status.name,
+													notes: variables.notes || existingOrder.value.notes || "",
 													modifiedAt: Number(new Date()),
 												},
 											],
@@ -264,7 +266,7 @@ export default function Page() {
 			<DeviceDependedView tabletLandscapeView="view">
 				<LoadingScreen loading={loading ? loading : loadingOrders} />
 				<SignedIn>
-					{selectedDate === moment(new Date()).format("yyyy-MM-DD") && <RouteSession />}
+					{selectedDate === moment(new Date()).format("yyyy-MM-DD") ? <RouteSession /> : <View />}
 
 					<View style={tw("lg:flex-row")}>
 						<View style={tw("z-[3] lg:w-[60%]")}>
@@ -367,9 +369,9 @@ export default function Page() {
 									/>
 								</View>
 							</View>
-							<View style={{ flex: 1, minHeight: 250 }}>
+							<View style={{ flex: 1, minHeight: 500 }}>
 								<DeviceDependedView tabletLandscapeView="scroll">
-									<View style={tw("px-0 py-2 mb-20")}>
+									<View style={tw("px-0 py-2 mb-20 min-h-[500px]")}>
 										{loadingOrders ? (
 											<Text>Loading...</Text>
 										) : error ? (

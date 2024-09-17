@@ -24,8 +24,10 @@ export default function RouteSession() {
 		const startTime = Date.now();
 
 		if (!selectedDate) {
+			return;
 		}
 		if (!selectedVehicle) {
+			return;
 		}
 
 		const variables = {
@@ -58,21 +60,38 @@ export default function RouteSession() {
 	return (
 		<View
 			style={tw(
-				`w-full py-2 px-5 flex-row justify-${
+				`w-full py-2 px-5 flex flex-row justify-${
 					routeSession ? "between" : "center"
 				} items-center fixed bg-black/80 max-h-[50px]`
 			)}
 		>
 			{routeSession ? (
-				<>
-					<Pressable onPress={endRoute} style={tw("bg-white py-2 px-4 rounded")}>
-						<Text style={tw("text-xs text-gray-600 font-bold")}>End Route</Text>
-					</Pressable>
-				</>
-			) : (
-				<Pressable onPress={startRoute} style={tw("bg-white py-2 px-4 rounded")}>
-					<Text style={tw("text-xs text-gray-600 font-bold")}>Start Route</Text>
+				<Pressable onPress={endRoute} style={tw("bg-white py-2 px-4 rounded")}>
+					<Text style={tw("text-xs text-gray-600 font-bold")}>End Route</Text>
 				</Pressable>
+			) : (
+				<View style={tw("flex flex-row items-center justify-center")}>
+					<Pressable
+						onPress={startRoute}
+						style={tw(
+							`bg-white py-2 px-4 rounded ${
+								!selectedDate || !selectedVehicle ? "opacity-50" : "opacity-100"
+							}`
+						)}
+					>
+						<Text style={tw("text-xs text-gray-600 font-bold")}>Start Route</Text>
+					</Pressable>
+					{!selectedDate && (
+						<View style={tw("ml-5")}>
+							<Text style={tw("text-xs text-red-600 font-bold")}>Please select a date</Text>
+						</View>
+					)}
+					{!selectedVehicle && (
+						<View style={tw("ml-5")}>
+							<Text style={tw("text-xs text-red-600 font-bold")}>Please select a vehicle</Text>
+						</View>
+					)}
+				</View>
 			)}
 		</View>
 	);

@@ -528,6 +528,29 @@ function Page() {
 										</View>
 
 										<View style={tw("md:flex-1 lg:flex-initial px-3")}>
+											{customerOrders.notes || customerOrders.customer.notes ? (
+												<View
+													style={tw(
+														"mb-5 bg-gray-200 border border-gray-300 rounded px-5 py-3"
+													)}
+												>
+													<Text style={tw("text-left text-sm mb-3 font-bold")}>Notes</Text>
+													<Text
+														style={tw(
+															`text-left max-w-[300px] flex flex-wrap ${
+																customerOrders.notes ? "mb-5" : "mb-0"
+															}`
+														)}
+													>
+														{customerOrders.customer.notes}
+													</Text>
+													<Text style={tw("text-left max-w-[300px] flex flex-wrap")}>
+														{customerOrders.notes}
+													</Text>
+												</View>
+											) : (
+												<View></View>
+											)}
 											<View style={tw("bg-gray-200 border border-gray-300 rounded px-3")}>
 												{relatedOrders &&
 													relatedOrders.map(
