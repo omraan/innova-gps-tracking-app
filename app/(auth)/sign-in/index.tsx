@@ -101,14 +101,14 @@ export default function Page() {
 					start={[0.5, 0]}
 					end={[0.5, 1]}
 				>
-					<View style={tw("mb-20 block")}>
+					<View style={tw("mb-10 block")}>
 						<Image
 							source={require("@/assets/images/logo-transparant.png")}
 							style={tw("w-40 h-32 md:w-64 md:h-52 ")}
 						/>
 					</View>
 
-					<View style={tw(`w-full lg:h-[100%] lg:w-[40%]`)}>
+					<View style={tw(`w-full  lg:w-[40%]`)}>
 						<View style={[stylesBox.shadow, stylesBox.container]}>
 							{errorMessage ? (
 								<View style={tw("mb-5 bg-red-300 border border-red-600 w-full p-3 rounded")}>

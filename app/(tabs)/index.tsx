@@ -153,12 +153,27 @@ export default function Page() {
 					modifiedAt: Number(new Date()),
 					status: status.name,
 				};
+				const selectedOrderEvents =
+					orders.find((order: { name: string; value: Order }) => order.name === orderId).value.events || [];
+				const sanitizedOrderEvents = selectedOrderEvents.map(({ __typename, ...rest }: any) => rest);
 
+				let newEvent: any = {
+					name: "",
+					notes: "",
+					createdBy: userId!,
+					createdAt: Number(new Date()),
+					status: status.name,
+				};
 				if (notes && notes !== "") {
 					variables.notes = notes;
+					newEvent.notes = notes;
 				}
+				variables.events = [...sanitizedOrderEvents, newEvent];
+
+				// console.log("Updating order with variables:", variables);
+
 				updateOrder({
-					variables,
+					variables: variables,
 					onCompleted: () => {
 						setLoading(false);
 						setModalVisible(false);
@@ -185,23 +200,17 @@ export default function Page() {
 											modifiedAt: Number(new Date()),
 											status: status.name,
 											notes: variables.notes || existingOrder.value.notes || "",
-											events: [
-												...existingOrder.value.events!,
-												{
-													name: "",
-													createdBy: "",
-													createdAt: "",
-													status: status.name,
-													notes: variables.notes || existingOrder.value.notes || "",
-													modifiedAt: Number(new Date()),
-												},
-											],
+											events: [...(existingOrder.value.events || []), newEvent],
 										},
 									};
 									return newOrder;
 								}
 								return existingOrder;
 							});
+							console.log(
+								"new orders:",
+								newOrders.map((o: any) => o.value.events.map((event: any) => event.status))
+							);
 							cache.writeQuery({
 								query: GET_ORDERS_BY_DATE,
 								variables: {
@@ -267,9 +276,12 @@ export default function Page() {
 				<LoadingScreen loading={loading ? loading : loadingOrders} />
 				<SignedIn>
 					{selectedDate === moment(new Date()).format("yyyy-MM-DD") ? <RouteSession /> : <View />}
-
-					<View style={tw("lg:flex-row")}>
-						<View style={tw("z-[3] lg:w-[60%]")}>
+					{/* <View>
+						<Text>{isLandscape ? "Is landscape" : "Is portret"}</Text>
+						<Text>{isTablet ? "Is tablet" : "Is phone"}</Text>
+					</View> */}
+					<View style={tw("xl:flex-row h-full ")}>
+						<View style={tw("z-[3] xl:w-[60%]")}>
 							<View style={containerStyle}>
 								{organization?.publicMetadata.lat && (
 									<MapOrders
@@ -280,10 +292,10 @@ export default function Page() {
 								)}
 							</View>
 						</View>
-						<View style={[tw("lg:w-[40%] h-full flex flex-col")]}>
+						<View style={[tw("xl:w-[40%] h-full flex flex-col")]}>
 							<View
 								style={[
-									tw("lg:fixed z-[5] bg-white"),
+									tw("xl:fixed z-[5] bg-white"),
 									{
 										elevation: 2,
 										shadowColor: "#000",

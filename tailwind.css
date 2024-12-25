@@ -30,6 +30,10 @@
   z-index: 99999
 }
 
+.z-\[-1\] {
+  z-index: -1
+}
+
 .m-2 {
   margin: 0.5rem
 }
@@ -67,6 +71,14 @@
   margin-bottom: 0.75rem
 }
 
+.mb-0 {
+  margin-bottom: 0px
+}
+
+.mb-1 {
+  margin-bottom: 0.25rem
+}
+
 .mb-10 {
   margin-bottom: 2.5rem
 }
@@ -99,6 +111,10 @@
   margin-left: 0.75rem
 }
 
+.ml-5 {
+  margin-left: 1.25rem
+}
+
 .mr-2 {
   margin-right: 0.5rem
 }
@@ -121,18 +137,6 @@
 
 .mt-5 {
   margin-top: 1.25rem
-}
-
-.mb-1 {
-  margin-bottom: 0.25rem
-}
-
-.ml-5 {
-  margin-left: 1.25rem
-}
-
-.mb-0 {
-  margin-bottom: 0px
 }
 
 .block {
@@ -175,6 +179,14 @@
   height: 100%
 }
 
+.h-\[800px\] {
+  height: 800px
+}
+
+.h-screen {
+  height: 100vh
+}
+
 .max-h-\[50px\] {
   max-height: 50px
 }
@@ -215,12 +227,12 @@
   max-width: 200px
 }
 
-.max-w-\[90\%\] {
-  max-width: 90%
-}
-
 .max-w-\[300px\] {
   max-width: 300px
+}
+
+.max-w-\[90\%\] {
+  max-width: 90%
 }
 
 .flex-1 {
@@ -322,14 +334,14 @@
   border-color: rgb(107 114 128 / var(--tw-border-opacity))
 }
 
-.border-red-600 {
-  --tw-border-opacity: 1;
-  border-color: rgb(220 38 38 / var(--tw-border-opacity))
-}
-
 .border-red-400 {
   --tw-border-opacity: 1;
   border-color: rgb(248 113 113 / var(--tw-border-opacity))
+}
+
+.border-red-600 {
+  --tw-border-opacity: 1;
+  border-color: rgb(220 38 38 / var(--tw-border-opacity))
 }
 
 .border-opacity-100 {
@@ -374,6 +386,11 @@
   background-color: rgb(113 30 146 / var(--tw-bg-opacity))
 }
 
+.bg-red-200 {
+  --tw-bg-opacity: 1;
+  background-color: rgb(254 202 202 / var(--tw-bg-opacity))
+}
+
 .bg-red-300 {
   --tw-bg-opacity: 1;
   background-color: rgb(252 165 165 / var(--tw-bg-opacity))
@@ -398,11 +415,6 @@
   background-color: rgb(255 255 255 / 0.8)
 }
 
-.bg-red-200 {
-  --tw-bg-opacity: 1;
-  background-color: rgb(254 202 202 / var(--tw-bg-opacity))
-}
-
 .p-10 {
   padding: 2.5rem
 }
@@ -421,10 +433,6 @@
 
 .p-5 {
   padding: 1.25rem
-}
-
-.p-6 {
-  padding: 1.5rem
 }
 
 .px-0 {
@@ -576,6 +584,11 @@
   color: rgb(55 65 81 / var(--tw-text-opacity))
 }
 
+.text-red-600 {
+  --tw-text-opacity: 1;
+  color: rgb(220 38 38 / var(--tw-text-opacity))
+}
+
 .text-red-700 {
   --tw-text-opacity: 1;
   color: rgb(185 28 28 / var(--tw-text-opacity))
@@ -584,11 +597,6 @@
 .text-white {
   --tw-text-opacity: 1;
   color: rgb(255 255 255 / var(--tw-text-opacity))
-}
-
-.text-red-600 {
-  --tw-text-opacity: 1;
-  color: rgb(220 38 38 / var(--tw-text-opacity))
 }
 
 .underline {
@@ -642,10 +650,6 @@
     position: fixed
   }
 
-  .lg\:h-\[100\%\] {
-    height: 100%
-  }
-
   .lg\:w-\[40\%\] {
     width: 40%
   }
@@ -667,6 +671,32 @@
   }
 
   .lg\:flex-col {
+    flex-direction: column
+  }
+}
+
+@media (min-width: 1280px) {
+  .xl\:fixed {
+    position: fixed
+  }
+
+  .xl\:w-\[60\%\] {
+    width: 60%
+  }
+
+  .xl\:w-\[40\%\] {
+    width: 40%
+  }
+
+  .xl\:flex-initial {
+    flex: 0 1 auto
+  }
+
+  .xl\:flex-row {
+    flex-direction: row
+  }
+
+  .xl\:flex-col {
     flex-direction: column
   }
 }

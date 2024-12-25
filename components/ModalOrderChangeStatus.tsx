@@ -83,9 +83,9 @@ export default function ModalOrderChangeStatus({
 					alignItems: "center",
 					backgroundColor: "rgba(0, 0, 0, 0.5)",
 				}}
-				onPress={() => {
-					setModalVisible(false);
-				}}
+				// onPress={() => {
+				// 	setModalVisible(false);
+				// }}
 			>
 				<KeyboardAvoidingView
 					style={tw("flex-1 justify-center items-center")}
@@ -230,6 +230,7 @@ export default function ModalOrderChangeStatus({
 															if (routeSession && routeSession !== null) {
 																setModalVisible(false);
 																onMarkerSubmit(status, notes);
+																setNotes("");
 															}
 														}}
 														disabled={routeSession === null}

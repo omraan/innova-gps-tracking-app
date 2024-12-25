@@ -1,4 +1,5 @@
 import { useLiveLocationStore } from "@/hooks/useLocationStore";
+import { useVehicleStore } from "@/hooks/useVehicleStore";
 import { getCurrentLocation } from "@/lib/getCurrentLocation";
 import { getDistance } from "@/lib/getDistance";
 import { useAuth, useOrganization, useUser } from "@clerk/clerk-expo";
@@ -27,6 +28,8 @@ export default function MapOrders({
 	const [orgRole, setOrgRole] = useState<string | undefined>();
 	const { user } = useUser();
 
+	const { selectedVehicle } = useVehicleStore();
+
 	const [originLocation, setOriginLocation] = useState<GeoLocation | null>(null);
 
 	const mapRef = useRef<MapView>(null);
@@ -38,6 +41,38 @@ export default function MapOrders({
 	const colorAnim = useRef(new Animated.Value(0)).current;
 
 	const [liveLocation, setLiveLocation] = useState<GeoLocation | null>(null);
+
+	const watchUserPosition = () => {
+		let locationSubscription: any;
+
+		const startWatching = async () => {
+			let { status } = await Location.requestForegroundPermissionsAsync();
+			if (status !== "granted") {
+				console.error("Permission to access location was denied");
+				return;
+			}
+			if (userId) {
+				locationSubscription = await Location.watchPositionAsync(
+					{
+						accuracy: Location.Accuracy.High,
+						timeInterval: 1000,
+						distanceInterval: 10,
+					},
+					({ coords }) => {
+						setLiveLocation({ latitude: coords.latitude, longitude: coords.longitude });
+					}
+				);
+			}
+		};
+
+		startWatching();
+
+		return () => {
+			if (locationSubscription) {
+				locationSubscription.remove();
+			}
+		};
+	};
 
 	const goToLiveLocation = async () => {
 		if (
@@ -80,44 +115,10 @@ export default function MapOrders({
 	}, [locationMode]);
 
 	useEffect(() => {
-		console.log("trigger");
 		if (liveLocation && locationMode && locationMode === "follow_location") {
 			goToLiveLocation();
 		}
 	}, [liveLocation, locationMode]);
-
-	const watchUserPosition = () => {
-		let locationSubscription: any;
-
-		const startWatching = async () => {
-			let { status } = await Location.requestForegroundPermissionsAsync();
-			if (status !== "granted") {
-				console.error("Permission to access location was denied");
-				return;
-			}
-			if (userId) {
-				locationSubscription = await Location.watchPositionAsync(
-					{
-						accuracy: Location.Accuracy.High,
-						timeInterval: 1000,
-						distanceInterval: 10,
-					},
-					({ coords }) => {
-						setLiveLocation({ latitude: coords.latitude, longitude: coords.longitude });
-					}
-				);
-			}
-		};
-
-		startWatching();
-
-		// Cleanup functie om de locatie subscription te verwijderen
-		return () => {
-			if (locationSubscription) {
-				locationSubscription.remove();
-			}
-		};
-	};
 
 	useEffect(() => {
 		Animated.loop(
@@ -173,24 +174,9 @@ export default function MapOrders({
 	}, [user?.publicMetadata, orgId]);
 
 	useEffect(() => {
-		let isMounted = true;
-		const updateLocation = async () => {
-			const newLocation: GeoLocation | null = await getCurrentLocation();
-			if (
-				newLocation &&
-				isMounted &&
-				(newLocation.latitude !== originLocation?.latitude ||
-					newLocation.longitude !== originLocation?.longitude)
-			) {
-				setOriginLocation(newLocation);
-			}
-		};
-
-		updateLocation();
-
-		return () => {
-			isMounted = false;
-		};
+		getCurrentLocation().then((location) => {
+			setOriginLocation(location);
+		});
 	}, [orders]);
 
 	const sortedOrders =
@@ -226,9 +212,8 @@ export default function MapOrders({
 					}}
 					ref={mapRef}
 					showsUserLocation={true}
-					// followsUserLocation={locationMode === "follow_location"}
 				>
-					{sortedOrders && sortedOrders.length > 0 && originLocation?.latitude && (
+					{sortedOrders && sortedOrders.length > 0 && originLocation?.latitude && selectedVehicle && (
 						<MapViewDirections
 							origin={{
 								latitude: originLocation.latitude,

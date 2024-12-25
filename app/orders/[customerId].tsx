@@ -114,20 +114,27 @@ function Page() {
 			try {
 				for (const order of relatedOrders) {
 					const variables: any = {
+						id: order.name,
 						date: selectedDate,
 						modifiedBy: userId!,
 						modifiedAt: Number(new Date()),
 						status: status.name,
 					};
-
+					const selectedOrderEvents = order.value.events || [];
+					const sanitizedOrderEvents = selectedOrderEvents.map(({ __typename, ...rest }: any) => rest);
+					let newEvent: any = {
+						modifiedBy: userId!,
+						modifiedAt: Number(new Date()),
+						status: status.name,
+					};
 					if (notes && notes !== "") {
 						variables.notes = notes;
+						newEvent.notes = notes;
 					}
+					variables.events = [...sanitizedOrderEvents, newEvent];
+
 					UpdateOrder({
-						variables: {
-							id: order.name,
-							...variables,
-						},
+						variables,
 						onCompleted: () => setLoading(false),
 						update: (cache) => {
 							// Handmatig de cache bijwerken als dat nodig is
@@ -150,16 +157,7 @@ function Page() {
 												modifiedBy: userId!,
 												modifiedAt: Number(new Date()),
 												status: status.name,
-												events: [
-													...existingOrder.value.events!,
-													{
-														name: "",
-														createdBy: "",
-														createdAt: "",
-														status: status.name,
-														modifiedAt: Number(new Date()),
-													},
-												],
+												events: [...(existingOrder.value.events || []), newEvent],
 											},
 										};
 										return newOrder;
@@ -338,7 +336,7 @@ function Page() {
 						{error ? (
 							<Text style={tw("text-red-700")}>Error: {error?.message}</Text>
 						) : customerOrders ? (
-							<View style={tw("lg:flex-row")}>
+							<View style={tw("xl:flex-row")}>
 								<View style={containerStyle}>
 									<MapView
 										style={StyleSheet.absoluteFillObject}
@@ -395,7 +393,7 @@ function Page() {
 									</View>
 								</View>
 
-								<View style={[tw("lg:w-[40%]"), { height: safeAreaHeight }]}>
+								<View style={[tw("xl:w-[40%]"), { height: safeAreaHeight }]}>
 									<View style={tw("px-3")}>
 										{customerOrders &&
 										customerOrders.customer.lat &&
@@ -472,8 +470,8 @@ function Page() {
 										</View>
 									)}
 
-									<View style={tw("md:flex-row lg:flex-col")}>
-										<View style={tw("md:flex-1 lg:flex-initial px-3 mb-5")}>
+									<View style={tw("md:flex-row xl:flex-col")}>
+										<View style={tw("md:flex-1 xl:flex-initial px-3 mb-5")}>
 											<View style={tw("bg-gray-200 border border-gray-300 rounded px-3")}>
 												{customerOrders && (
 													<View style={tw("px-2 py-4")}>
@@ -527,7 +525,7 @@ function Page() {
 											</View>
 										</View>
 
-										<View style={tw("md:flex-1 lg:flex-initial px-3")}>
+										<View style={tw("md:flex-1 xl:flex-initial px-3")}>
 											{customerOrders.notes || customerOrders.customer.notes ? (
 												<View
 													style={tw(

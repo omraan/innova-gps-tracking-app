@@ -63,6 +63,8 @@ export const GET_ORDERS = gql`
 					createdBy
 					createdAt
 					name
+					status
+					notes
 					...OrderEventColumns
 				}
 			}
@@ -86,6 +88,8 @@ export const GET_ORDERS_BY_DATE = gql`
 					createdBy
 					createdAt
 					name
+					status
+					notes
 					...OrderEventColumns
 				}
 			}
@@ -107,7 +111,9 @@ export const GET_ORDER_BY_ID = gql`
 				createdBy
 				createdAt
 				name
+				status
 				description
+				notes
 				...OrderEventColumns
 			}
 		}

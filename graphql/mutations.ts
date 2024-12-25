@@ -52,6 +52,7 @@ export const UPDATE_ORDER = gql`
 		$category: String
 		$routeIndex: Int
 		$notes: String
+		$events: [OrderEventInput!]!
 	) {
 		updateOrder(
 			id: $id
@@ -68,6 +69,7 @@ export const UPDATE_ORDER = gql`
 			category: $category
 			routeIndex: $routeIndex
 			notes: $notes
+			events: $events
 		) {
 			name
 		}

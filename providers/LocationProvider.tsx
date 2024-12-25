@@ -40,7 +40,7 @@ const LocationProvider = ({ children }: { children: React.ReactNode }) => {
 
 			await Location.startLocationUpdatesAsync(UPDATE_LOCATION_TASK, {
 				accuracy: Location.Accuracy.High,
-				timeInterval: 10000,
+				timeInterval: 20000,
 				distanceInterval: 100,
 				foregroundService: {
 					notificationTitle: "Location Tracking",

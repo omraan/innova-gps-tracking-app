@@ -122,7 +122,10 @@ export default function OrderList({
 						{order.status.toLowerCase() !== "open" && (
 							<View style={tw("bg-gray-200 rounded px-3 py-2 mr-2")}>
 								<Text>
-									{latestEvent && moment(latestEvent?.modifiedAt || "No time").format("HH:mm")}
+									{latestEvent &&
+										moment(latestEvent?.modifiedAt || latestEvent?.createdAt || "No time").format(
+											"HH:mm"
+										)}
 								</Text>
 							</View>
 						)}
