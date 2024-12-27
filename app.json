@@ -1,75 +1,79 @@
 {
-	"expo": {
-		"name": "Innova",
-		"slug": "innova-gps-tracking",
-		"description": "Innova GPS Tracking",
-		"version": "1.0.12",
-		"orientation": "default",
-		"owner": "innova-aruba",
-		"icon": "./assets/images/icon.png",
-		"scheme": "myapp",
-		"userInterfaceStyle": "light",
-		"splash": {
-			"image": "./assets/images/splash.png",
-			"resizeMode": "cover",
-			"backgroundColor": "#ffffff"
-		},
-		"ios": {
-			"supportsTablet": true,
-			"infoPlist": {
-				"NSLocationWhenInUseUsageDescription": "This app uses your location to track your position.",
-				"NSLocationAlwaysUsageDescription": "This app uses your location to track your position even when the app is in the background.",
-				"NSCameraUsageDescription": "This app uses the camera to scan barcodes.",
-				"UIBackgroundModes": ["location"]
-			},
-			"bundleIdentifier": "com.innova.gpstracking",
-			"config": {
-				"googleMapsApiKey": "AIzaSyBnR0kXdNPHlgTMIpJRwlGfBgZNszzLB1I"
-			}
-		},
-		"android": {
-			"permissions": [
-				"INTERNET",
-				"CAMERA",
-				"READ_EXTERNAL_STORAGE",
-				"WRITE_EXTERNAL_STORAGE",
-				"ACCESS_FINE_LOCATION",
-				"ACCESS_COARSE_LOCATION",
-				"ACCESS_BACKGROUND_LOCATION",
-				"FOREGROUND_SERVICE"
-			],
-			"adaptiveIcon": {
-				"foregroundImage": "./assets/images/icon.png",
-				"backgroundColor": "#ffffff"
-			},
-			"config": {
-				"googleMaps": {
-					"apiKey": "AIzaSyCL8f_XGJt8fOl4eQc2htTe6l_ADXDUL30"
-				}
-			},
-			"package": "com.innova.gpstracking"
-		},
-		"plugins": [
-			"expo-router",
-			[
-				"expo-location",
-				{
-					"locationAlwaysAndWhenInUsePermission": "Allow $(PRODUCT_NAME) to use your location.",
-					"isAndroidBackgroundLocationEnabled": true,
-					"isAndroidForegroundServiceEnabled": true
-				}
-			]
-		],
-		"experiments": {
-			"typedRoutes": true
-		},
-		"extra": {
-			"router": {
-				"origin": false
-			},
-			"eas": {
-				"projectId": "2c6a8923-5f52-44bd-be96-313724f1b03b"
-			}
-		}
-	}
+  "expo": {
+    "name": "Innova",
+    "slug": "innova-gps-tracking",
+    "description": "Innova GPS Tracking",
+    "version": "1.0.12",
+    "orientation": "default",
+    "owner": "innova-aruba",
+    "icon": "./assets/images/icon.png",
+    "scheme": "myapp",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/images/splash.png",
+      "resizeMode": "cover",
+      "backgroundColor": "#ffffff"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "This app uses your location to track your position.",
+        "NSLocationAlwaysUsageDescription": "This app uses your location to track your position even when the app is in the background.",
+        "NSCameraUsageDescription": "This app uses the camera to scan barcodes.",
+        "UIBackgroundModes": [
+          "location"
+        ]
+      },
+      "bundleIdentifier": "com.innova.gpstracking",
+      "config": {
+        "googleMapsApiKey": "AIzaSyBnR0kXdNPHlgTMIpJRwlGfBgZNszzLB1I"
+      }
+    },
+    "android": {
+      "permissions": [
+        "INTERNET",
+        "CAMERA",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE",
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_BACKGROUND_LOCATION",
+        "FOREGROUND_SERVICE"
+      ],
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/icon.png",
+        "backgroundColor": "#ffffff"
+      },
+      "config": {
+        "googleMaps": {
+          "apiKey": "AIzaSyCL8f_XGJt8fOl4eQc2htTe6l_ADXDUL30"
+        }
+      },
+      "package": "com.innova.gpstracking"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Allow $(PRODUCT_NAME) to use your location.",
+          "isAndroidBackgroundLocationEnabled": true,
+          "isAndroidForegroundServiceEnabled": true
+        }
+      ],
+      "expo-font",
+      "expo-secure-store"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    },
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "2c6a8923-5f52-44bd-be96-313724f1b03b"
+      }
+    }
+  }
 }

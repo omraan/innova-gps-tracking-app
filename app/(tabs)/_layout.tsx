@@ -1,12 +1,7 @@
 import { useRouteSessionStore } from "@/hooks/useRouteSessionStore";
 import { loadDevMessages, loadErrorMessages } from "@apollo/client/dev";
-import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { Tabs } from "expo-router";
 import Icon from "react-native-vector-icons/Ionicons";
-import Orders from ".";
-import Settings from "./settings";
-
-const Tab = createBottomTabNavigator();
 
 export default function Layout() {
 	if (__DEV__) {

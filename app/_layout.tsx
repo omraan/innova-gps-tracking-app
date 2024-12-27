@@ -5,12 +5,13 @@ import LocationProvider from "@/providers/LocationProvider";
 import utilities from "@/tailwind.json";
 import { ApolloProvider } from "@apollo/client";
 import { ClerkLoaded, ClerkProvider, useAuth } from "@clerk/clerk-expo";
-import { DarkTheme, DefaultTheme, ThemeProvider } from "@react-navigation/native";
+import { DarkTheme, DefaultTheme, NavigationContainer, ThemeProvider } from "@react-navigation/native";
 import { useFonts } from "expo-font";
 import { Redirect, Slot, Stack } from "expo-router";
 import * as SecureStore from "expo-secure-store";
 import * as SplashScreen from "expo-splash-screen";
 import { useEffect } from "react";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 import "react-native-reanimated";
 import { TailwindProvider } from "tailwind-rn";
 
@@ -70,20 +71,24 @@ export default function RootLayout() {
 		// @ts-ignore - TailwinProvider is missing type definition
 		<TailwindProvider utilities={utilities}>
 			<ThemeProvider value={DefaultTheme}>
-				<ClerkProvider tokenCache={tokenCache} publishableKey={publishableKey}>
-					<ClerkLoaded>
-						<AuthProvider>
-							<ApolloProvider client={client}>
-								<LocationProvider>
-									<Stack screenOptions={{ headerBackTitle: "Back" }}>
-										<Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-										<Stack.Screen name="(auth)" options={{ headerShown: false }} />
-									</Stack>
-								</LocationProvider>
-							</ApolloProvider>
-						</AuthProvider>
-					</ClerkLoaded>
-				</ClerkProvider>
+				<GestureHandlerRootView style={{ flex: 1 }}>
+					<ClerkProvider tokenCache={tokenCache} publishableKey={publishableKey}>
+						<ClerkLoaded>
+							<NavigationContainer>
+								<AuthProvider>
+									<ApolloProvider client={client}>
+										<LocationProvider>
+											<Stack screenOptions={{ headerBackTitle: "Back" }}>
+												<Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+												<Stack.Screen name="(auth)" options={{ headerShown: false }} />
+											</Stack>
+										</LocationProvider>
+									</ApolloProvider>
+								</AuthProvider>
+							</NavigationContainer>
+						</ClerkLoaded>
+					</ClerkProvider>
+				</GestureHandlerRootView>
 			</ThemeProvider>
 		</TailwindProvider>
 	);
