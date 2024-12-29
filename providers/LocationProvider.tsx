@@ -4,14 +4,17 @@ import { defineLocationTask, UPDATE_LOCATION_TASK } from "@/lib/backgroundLocati
 import { useAuth } from "@clerk/clerk-expo";
 import * as Location from "expo-location";
 import * as TaskManager from "expo-task-manager";
-import React, { useEffect, useState } from "react";
+import React, { createContext, PropsWithChildren, useContext, useEffect, useState } from "react";
 import { View } from "react-native";
+import { LatLng } from "react-native-maps";
 
-const LocationProvider = ({ children }: { children: React.ReactNode }) => {
+const LocationContext = createContext({});
+
+const LocationProvider = ({ children }: PropsWithChildren) => {
 	const { userId, orgId } = useAuth();
 	const { routeSession, setRouteSession } = useRouteSessionStore();
 	const [backgroundTaskRegistered, setBackgroundTaskRegistered] = useState(false);
-	const { setLiveLocation } = useLiveLocationStore();
+	const { liveLocation, setLiveLocation } = useLiveLocationStore();
 	useEffect(() => {
 		const startBackgroundLocation = async () => {
 			const { status } = await Location.requestForegroundPermissionsAsync();
@@ -26,13 +29,6 @@ const LocationProvider = ({ children }: { children: React.ReactNode }) => {
 				return;
 			}
 
-			// const isRegistered = await TaskManager.isTaskRegisteredAsync(UPDATE_LOCATION_TASK);
-
-			// if (!isRegistered && userId && orgId) {
-			// 	const routeSessionId = routeSession?.id;
-			// 	defineLocationTask(userId, orgId, routeSessionId!, setLiveLocation);
-			// 	setBackgroundTaskRegistered(true);
-			// }
 			const routeSessionId = routeSession?.id;
 			defineLocationTask(userId!, orgId!, routeSessionId!, setLiveLocation);
 			setBackgroundTaskRegistered(true);
@@ -66,7 +62,17 @@ const LocationProvider = ({ children }: { children: React.ReactNode }) => {
 		}
 	}, [userId, orgId]);
 
-	return <View style={{ flex: 1 }}>{children}</View>;
+	return (
+		<LocationContext.Provider
+			value={{
+				liveLocation,
+				setLiveLocation,
+			}}
+		>
+			{children}
+		</LocationContext.Provider>
+	);
 };
 
 export default LocationProvider;
+export const useLocation = () => useContext(LocationContext);

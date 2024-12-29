@@ -1,4 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import moment from "moment";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 
@@ -13,7 +14,7 @@ type DateStore = {
 };
 
 export const useDateStore = create<DateStore>()((set, get) => ({
-	selectedDate: null,
+	selectedDate: moment(new Date()).format("YYYY-MM-DD"),
 	setSelectedDate: (selectedDate) => set(() => ({ selectedDate })),
 	error: null,
 	resetError: () => set({ error: null }),

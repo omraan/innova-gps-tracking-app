@@ -1,18 +1,13 @@
-import { isColorDark } from "@/lib/styles";
-import { isArray } from "@apollo/client/utilities";
-import { useAuth, useOrganization, useUser } from "@clerk/clerk-expo";
-import { Card } from "@rneui/themed";
-import { format } from "date-fns";
+import colors from "@/colors";
+import { useOrder } from "@/providers/OrderProvider";
+import { useSheetContext } from "@/providers/SheetProvider";
+import { useOrganization } from "@clerk/clerk-expo";
+import Entypo from "@expo/vector-icons/Entypo";
 import moment from "moment";
-import React, { useEffect, useState } from "react";
-import { Pressable, Text, View } from "react-native";
+import React from "react";
+import { Text, TouchableOpacity, View } from "react-native";
 import FontAwesomeIcon from "react-native-vector-icons/FontAwesome6";
 import { useTailwind } from "tailwind-rn";
-
-interface OrderExtendedWithLabels extends CustomerOrders {
-	label: string;
-	[key: string]: any;
-}
 
 interface publicMetadata {
 	categories: {
@@ -21,22 +16,24 @@ interface publicMetadata {
 	}[];
 }
 
-export default function OrderList({
+export default function OrderListItem({
 	order,
-	handleSelection,
-	labels,
-}: {
-	order: OrderExtendedWithLabels;
-	handleSelection: (order: CustomerOrders) => void;
-	labels: string[];
+}: // handleSelection,
+// labels,
+{
+	order: CustomerOrders;
+	// handleSelection: (order: CustomerOrders) => void;
+	// labels: string[];
 }) {
 	const tw = useTailwind();
 	const { organization } = useOrganization();
-	const publicMetadataOrder = organization?.publicMetadata?.order as publicMetadata;
+	const { setSelectedOrder } = useOrder();
+	const { setActiveSheet } = useSheetContext();
 
 	const statusCategory: StatusCategory = organization?.publicMetadata.statusCategories.find(
 		(status) =>
 			status.name &&
+			order &&
 			(!order.customer.lat || order.customer.lat == 0
 				? status.name.toLocaleLowerCase() === "no location"
 				: status.name === order.status)
@@ -46,7 +43,7 @@ export default function OrderList({
 	};
 
 	let latestEvent: any;
-	if (order.events && order.events.length > 0) {
+	if (order && order.events && order.events.length > 0) {
 		latestEvent = order.events.reduce((latestEvent: any, currentEvent: any) => {
 			if (
 				currentEvent.status &&
@@ -58,64 +55,65 @@ export default function OrderList({
 		});
 	}
 
-	const categorisedLabels = Array.from(
-		new Set(
-			labels.map((label: string, index: number) => {
-				const splittedLabel: string[] = label.split(".");
+	// const categorisedLabels = Array.from(
+	// 	new Set(
+	// 		labels.map((label: string, index: number) => {
+	// 			const splittedLabel: string[] = label.split(".");
 
-				if (splittedLabel.length > 1) {
-					const [parent, child] = splittedLabel;
-					if (parent === "customer" && (child === "streetName" || child === "streetNumber")) {
-						const { streetName, streetNumber } = order.customer;
-						return `${streetName} ${streetNumber || ""}`;
-					} else {
-						return order[parent][child];
-					}
-				} else if (order[label]) {
-					return order[label].length > 1 ? order[label].join(" ") : order[label][0];
-				}
-			})
-		)
-	);
+	// 			if (splittedLabel.length > 1) {
+	// 				const [parent, child] = splittedLabel;
+	// 				if (parent === "customer" && (child === "streetName" || child === "streetNumber")) {
+	// 					const { streetName, streetNumber } = order.customer;
+	// 					return `${streetName} ${streetNumber || ""}`;
+	// 				} else {
+	// 					return order[parent][child];
+	// 				}
+	// 			} else if (order[label]) {
+	// 				return order[label].length > 1 ? order[label].join(" ") : order[label][0];
+	// 			}
+	// 		})
+	// 	)
+	// );
 
 	return (
-		<Pressable onPress={() => handleSelection(order)} style={tw("mb-4")}>
-			<View
-				style={[
-					tw(`border border-gray-200 border-l-4 p-4 bg-white rounded`),
-					{
-						borderLeftWidth: 4,
-						borderLeftColor: statusCategory.color,
-						elevation: 2,
-						shadowColor: "#000",
-						shadowOffset: { width: 0, height: 4 },
-						shadowOpacity: 0.05,
-						shadowRadius: 3,
-					},
-				]}
-			>
-				<View style={tw("flex flex-row justify-between items-center")}>
-					<View style={tw("flex-row flex-wrap")}>
-						<View>
-							{categorisedLabels.map((label, index) => (
-								<View
-									key={index}
-									style={tw(`${categorisedLabels.length > 1 ? "font-semibold" : "font-normal"}`)}
-								>
-									<Text
-										style={tw(
-											`${
-												categorisedLabels.length > 1 && index === 0
-													? "font-semibold"
-													: "font-normal"
-											} ${index > 0 ? "text-xs" : ""}`
-										)}
-									>
-										{label}
-									</Text>
-								</View>
-							))}
+		order && (
+			<View>
+				<View
+					style={{
+						flex: 1,
+						flexDirection: "row",
+						justifyContent: "space-between",
+						gap: 5,
+						alignItems: "center",
+					}}
+				>
+					<View style={{ flex: 1, gap: 5 }}>
+						<View style={{ flex: 1, flexDirection: "row", gap: 5, alignItems: "center" }}>
+							<View
+								style={[
+									tw("rounded p-2 mr-2 w-[5px] h-[5px]"),
+									{
+										backgroundColor: statusCategory.color,
+										// borderWidth: 1,
+										// borderColor: isColorDark(statusCategory.color) ? "white" : "black",
+									},
+								]}
+							/>
+							<View>
+								<Text style={{ color: "black", fontSize: 20, fontWeight: "600" }}>
+									{order.customer.name}
+								</Text>
+							</View>
 						</View>
+
+						<Text style={{ color: "gray", fontSize: 18 }}>
+							{order.orderNumbers && order.orderNumbers.length > 0
+								? order.orderNumbers.join(" · ")
+								: "No order number"}
+						</Text>
+						<Text style={{ color: "gray", fontSize: 18 }}>
+							{order.customer.streetName} {order.customer.streetNumber}
+						</Text>
 					</View>
 
 					<View style={tw("flex-row items-center")}>
@@ -135,22 +133,21 @@ export default function OrderList({
 							)}
 						</View>
 
-						<View
+						<TouchableOpacity
 							style={[
-								{
-									backgroundColor:
-										publicMetadataOrder?.categories?.find(
-											(category: any) => category.name === order.category
-										)?.color || "gray",
-								},
-								tw("rounded flex justify-center items-center mx-3 h-[24px] w-[24px]"),
+								tw("rounded flex justify-center items-center p-3"),
+								// { backgroundColor: "#eeeeee" },
 							]}
+							onPress={() => {
+								setActiveSheet("orders");
+								setSelectedOrder(order);
+							}}
 						>
-							<Text style={[{ color: "white" }, tw("text-xs")]}>{order.amountOrders}</Text>
-						</View>
+							<Entypo name="dots-three-horizontal" size={24} color={colors.primary} />
+						</TouchableOpacity>
 					</View>
 				</View>
 			</View>
-		</Pressable>
+		)
 	);
 }

@@ -58,6 +58,7 @@ interface RegisterOrder {
 
 interface Order extends RegisterOrder {
 	id: string;
+	waypoint_index?: number;
 	events?: OrderEvent[];
 }
 interface OrderExtended extends Order {

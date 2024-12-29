@@ -1,11 +1,12 @@
 import { isColorDark } from "@/lib/styles";
+import { useOrder } from "@/providers/OrderProvider";
 import { isArray } from "@apollo/client/utilities";
 import { useAuth, useOrganization, useUser } from "@clerk/clerk-expo";
 import { Card } from "@rneui/themed";
 import { format } from "date-fns";
 import moment from "moment";
 import React, { useEffect, useState } from "react";
-import { Pressable, Text, View } from "react-native";
+import { Pressable, ScrollView, Text, View } from "react-native";
 import { useTailwind } from "tailwind-rn";
 import OrderListItem from "./OrderListItem";
 
@@ -24,18 +25,14 @@ interface publicMetadata {
 	}[];
 }
 
-export default function OrderList({
-	orders,
-	handleSelection,
-}: {
-	orders: CustomerOrders[];
-	handleSelection: (order: CustomerOrders) => void;
-}) {
+export default function OrderList() {
 	const tw = useTailwind();
 	const { organization } = useOrganization();
 
 	const { user } = useUser();
 	const { orgId } = useAuth();
+
+	const { orders } = useOrder();
 
 	const [sortType, setSortType] = useState<"status" | "alphabetical" | "route">("status");
 	const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
@@ -66,61 +63,61 @@ export default function OrderList({
 		}
 	}, [user, orgId]);
 
-	const ordersWithMissingLocation = orders.filter((order: OrderExtended) => Number(order.customer.lat) === 0) || [];
+	const ordersWithMissingLocation = orders.filter((order: CustomerOrders) => Number(order.customer.lat) === 0) || [];
 
-	const sortOrders = (orders: CustomerOrders[]) => {
-		const ordersWithLabels = orders.map((order: any) => {
-			const label = labels.map((label) => {
-				const splittedLabel = label.split(".");
-				if (splittedLabel.length > 1) {
-					return order[splittedLabel[0]][splittedLabel[1]] + " ";
-				}
-				if (order[label]) {
-					return order[label].length > 1 ? order[label].join(" ") : order[label][0];
-				}
-			});
-			return { ...order, label: label.join(" ") };
-		});
+	// const sortOrders = (orders: CustomerOrders[]) => {
+	// 	const ordersWithLabels = orders.map((order: any) => {
+	// 		const label = labels.map((label) => {
+	// 			const splittedLabel = label.split(".");
+	// 			if (splittedLabel.length > 1) {
+	// 				return order[splittedLabel[0]][splittedLabel[1]] + " ";
+	// 			}
+	// 			if (order[label]) {
+	// 				return order[label].length > 1 ? order[label].join(" ") : order[label][0];
+	// 			}
+	// 		});
+	// 		return { ...order, label: label.join(" ") };
+	// 	});
 
-		return ordersWithLabels.sort((a, b) => {
-			if (sortType === "status") {
-				const latA = Number(a.customer.lat);
-				const latB = Number(b.customer.lat);
+	// 	return ordersWithLabels.sort((a, b) => {
+	// 		if (sortType === "status") {
+	// 			const latA = Number(a.customer.lat);
+	// 			const latB = Number(b.customer.lat);
 
-				if (sortOrder === "asc") {
-					if (latA === 0 && latB !== 0) return 1;
-					if (latA !== 0 && latB === 0) return -1;
-					if (latA === 0 && latB === 0) return 0;
-				} else {
-					if (latA === 0 && latB !== 0) return -1;
-					if (latA !== 0 && latB === 0) return 1;
-					if (latA === 0 && latB === 0) return 0;
-				}
-				const statusA = statusCategories.findIndex(
-					(category) => category.name.toLowerCase() === a.status?.toLowerCase()
-				);
-				const statusB = statusCategories.findIndex(
-					(category) => category.name.toLowerCase() === b.status?.toLowerCase()
-				);
-				return sortOrder === "asc" ? statusA - statusB : statusB - statusA;
-			} else {
-				const nameA = a.customer.name.toLowerCase();
-				const nameB = b.customer.name.toLowerCase();
-				if (nameA < nameB) return sortOrder === "asc" ? -1 : 1;
-				if (nameA > nameB) return sortOrder === "asc" ? 1 : -1;
-				return 0;
-			}
-		});
-	};
+	// 			if (sortOrder === "asc") {
+	// 				if (latA === 0 && latB !== 0) return 1;
+	// 				if (latA !== 0 && latB === 0) return -1;
+	// 				if (latA === 0 && latB === 0) return 0;
+	// 			} else {
+	// 				if (latA === 0 && latB !== 0) return -1;
+	// 				if (latA !== 0 && latB === 0) return 1;
+	// 				if (latA === 0 && latB === 0) return 0;
+	// 			}
+	// 			const statusA = statusCategories.findIndex(
+	// 				(category) => category.name.toLowerCase() === a.status?.toLowerCase()
+	// 			);
+	// 			const statusB = statusCategories.findIndex(
+	// 				(category) => category.name.toLowerCase() === b.status?.toLowerCase()
+	// 			);
+	// 			return sortOrder === "asc" ? statusA - statusB : statusB - statusA;
+	// 		} else {
+	// 			const nameA = a.customer.name.toLowerCase();
+	// 			const nameB = b.customer.name.toLowerCase();
+	// 			if (nameA < nameB) return sortOrder === "asc" ? -1 : 1;
+	// 			if (nameA > nameB) return sortOrder === "asc" ? 1 : -1;
+	// 			return 0;
+	// 		}
+	// 	});
+	// };
 	return (
-		<View style={tw("flex-1 mb-20")}>
-			<View style={tw("px-5 pt-5 ")}>
-				<Text style={tw("text-center mb-5")}>
+		<View style={tw("flex-1 mb-20 px-3")}>
+			<View style={tw(" pt-2 ")}>
+				<Text style={tw("text-center mb-2")}>
 					{orders.length} order
 					{orders.length !== 1 ? "s" : ""}
 				</Text>
 
-				<View style={tw("flex flex-row flex-wrap items-center justify-center")}>
+				<ScrollView horizontal style={tw("pb-5 mb-2")}>
 					{statusCategories.map((status, index) => (
 						<Pressable
 							key={index}
@@ -157,73 +154,16 @@ export default function OrderList({
 							</View>
 						</Pressable>
 					))}
-				</View>
+				</ScrollView>
 			</View>
-			<View>
-				<View style={tw("flex-row justify-between p-2")}>
-					<View style={tw("flex-row")}>
-						<Pressable
-							onPress={() => {
-								setSortType("alphabetical");
-							}}
-						>
-							<View
-								style={tw(
-									`mx-3 border-b-2 border-gray-500 px-2 py-2  my-3 rounded ${
-										sortType !== "alphabetical" ? "border-opacity-50" : "border-opacity-100"
-									}`
-								)}
-							>
-								<Text
-									style={tw(
-										`text-gray-500 text-center ${
-											sortType === "alphabetical" ? "font-bold" : "font-normal"
-										}`
-									)}
-								>
-									Alphabetical
-								</Text>
-							</View>
-						</Pressable>
-						<Pressable
-							onPress={() => {
-								setSortType("status");
-							}}
-						>
-							<View
-								style={tw(
-									`mx-3 border-b-2 border-gray-500 px-2 py-2  my-3 rounded ${
-										sortType !== "status" ? "border-opacity-50" : "border-opacity-100"
-									}`
-								)}
-							>
-								<Text
-									style={tw(
-										`text-gray-500 text-center ${
-											sortType === "status" ? "font-bold" : "font-normal"
-										}`
-									)}
-								>
-									Status
-								</Text>
-							</View>
-						</Pressable>
-					</View>
-					<Pressable
-						style={tw("mx-3 bg-gray-500 px-5 py-2  my-3 rounded")}
-						onPress={() => {
-							setSortOrder(sortOrder === "asc" ? "desc" : "asc");
-						}}
-					>
-						<Text style={tw("text-white text-center")}>{sortOrder === "asc" ? "▲" : "▼"}</Text>
-					</Pressable>
-				</View>
-			</View>
-			<View style={tw("px-4")}>
+
+			<View style={{ flex: 1, flexDirection: "column", gap: 20 }}>
 				{orders &&
+					orders.length > 0 &&
 					labels &&
-					sortOrders(orders)
-						.filter((order: OrderExtendedWithLabels) => {
+					// sortOrders(orders)
+					orders
+						.filter((order: CustomerOrders) => {
 							const orderNoLocation = Number(order.customer.lat) === 0;
 							if (
 								orderNoLocation &&
@@ -232,17 +172,11 @@ export default function OrderList({
 							) {
 								return true;
 							}
+
 							const status = statusCategories.find((s) => s.name === order.status);
 							return status?.active ?? false;
 						})
-						.map((order: any, index: number) => (
-							<OrderListItem
-								key={index}
-								order={order}
-								handleSelection={handleSelection}
-								labels={labels}
-							/>
-						))}
+						.map((order: CustomerOrders, index: number) => <OrderListItem order={order} key={index} />)}
 			</View>
 		</View>
 	);

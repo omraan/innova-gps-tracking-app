@@ -40,7 +40,6 @@ function Organisation() {
 	});
 
 	const { data: dataVehicles } = useQuery(GET_VEHICLES);
-	// console.log(dataVehicles);
 	const vehicles = dataVehicles?.getVehicles || [];
 
 	const organizations: any = userMemberships.data || [];
