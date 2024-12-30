@@ -1,14 +1,18 @@
+import colors from "@/colors";
 import { CREATE_ROUTE_SESSION, UPDATE_ROUTE_SESSION } from "@/graphql/mutations";
 import { GET_ROUTE_SESSIONS } from "@/graphql/queries";
 import { useDateStore } from "@/hooks/useDateStore";
 import { useRouteSessionStore } from "@/hooks/useRouteSessionStore";
 import { useVehicleStore } from "@/hooks/useVehicleStore";
+import { useOrder } from "@/providers/OrderProvider";
 import { useMutation, useQuery } from "@apollo/client";
 import { useAuth } from "@clerk/clerk-expo";
+import { AntDesign, MaterialIcons } from "@expo/vector-icons";
 import moment from "moment";
 import React, { useEffect, useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import { useTailwind } from "tailwind-rn";
+
 export default function RouteSession() {
 	const tw = useTailwind();
 
@@ -16,9 +20,8 @@ export default function RouteSession() {
 	const { userId } = useAuth();
 	const { selectedDate } = useDateStore();
 	const { selectedVehicle } = useVehicleStore();
-
+	const { orders } = useOrder();
 	const [CreateRouteSession] = useMutation(CREATE_ROUTE_SESSION);
-	const [UpdateRouteSession] = useMutation(UPDATE_ROUTE_SESSION);
 
 	const startRoute = async () => {
 		const startTime = Date.now();
@@ -45,54 +48,41 @@ export default function RouteSession() {
 		});
 	};
 
-	const endRoute = async () => {
-		const variables = {
-			id: routeSession?.id!,
-			date: selectedDate,
-			endTime: moment(new Date()).format("yyyy-MM-DD HH:mm:ss"),
-		};
-		await UpdateRouteSession({
-			variables,
-		});
-		setRouteSession(null);
-	};
-
+	const showButton =
+		!routeSession && selectedDate === moment(new Date()).format("YYYY-MM-DD") && orders && orders.length > 0;
+	console.log("selectedVehicle", selectedVehicle);
 	return (
-		<View
-			style={tw(
-				`w-full py-2 px-5 flex flex-row justify-${
-					routeSession ? "between" : "center"
-				} items-center fixed bg-black/80 max-h-[50px]`
-			)}
-		>
-			{routeSession ? (
-				<Pressable onPress={endRoute} style={tw("bg-white py-2 px-4 rounded")}>
-					<Text style={tw("text-xs text-gray-600 font-bold")}>End Route</Text>
-				</Pressable>
-			) : (
+		showButton && (
+			<View>
+				{!selectedVehicle ? (
+					<View className="flex-col items-center justify-center mb-2">
+						<View className="bg-white px-4 py-2 rounded flex-row gap-2 items-center">
+							<Text>Navigate to </Text>
+							<View className="rounded-full border border-secondary p-2">
+								<MaterialIcons name="settings" size={16} color={colors.secondary} />
+							</View>
+							<Text>to select a vehicle</Text>
+						</View>
+						<AntDesign name="caretdown" size={12} color="white" style={{ marginTop: -4 }} />
+					</View>
+				) : (
+					<View />
+				)}
 				<View style={tw("flex flex-row items-center justify-center")}>
 					<Pressable
 						onPress={startRoute}
-						style={tw(
-							`bg-white py-2 px-4 rounded ${
-								!selectedDate || !selectedVehicle ? "opacity-50" : "opacity-100"
-							}`
-						)}
+						className="bg-white py-3 px-5 rounded flex-row gap-3 items-center justify-between"
+						style={{
+							width: 150,
+							marginHorizontal: "auto",
+							opacity: !selectedDate || !selectedVehicle ? 0.5 : 1,
+						}}
 					>
-						<Text style={tw("text-xs text-gray-600 font-bold")}>Start Route</Text>
+						<Text className="text-center text-secondary text-lg font-semibold">Start Route</Text>
+						<AntDesign name="caretright" size={14} color="#6366f1" />
 					</Pressable>
-					{!selectedDate && (
-						<View style={tw("ml-5")}>
-							<Text style={tw("text-xs text-red-600 font-bold")}>Please select a date</Text>
-						</View>
-					)}
-					{!selectedVehicle && (
-						<View style={tw("ml-5")}>
-							<Text style={tw("text-xs text-red-600 font-bold")}>Please select a vehicle</Text>
-						</View>
-					)}
 				</View>
-			)}
-		</View>
+			</View>
+		)
 	);
 }

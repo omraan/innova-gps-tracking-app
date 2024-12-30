@@ -2,13 +2,14 @@ import { client } from "@/graphql/client";
 import { useDateStore } from "@/hooks/useDateStore";
 import { useRouteSessionStore } from "@/hooks/useRouteSessionStore";
 import { useSheetContext } from "@/providers/SheetProvider";
-import { useAuth, useOrganizationList } from "@clerk/clerk-expo";
+import { useAuth, useOrganizationList, useUser } from "@clerk/clerk-expo";
 import Feather from "@expo/vector-icons/Feather";
 import BottomSheet, { BottomSheetScrollView } from "@gorhom/bottom-sheet";
 // import DateTimePicker from "@react-native-community/datetimepicker";
 import { GET_VEHICLES } from "@/graphql/queries";
 import { useVehicleStore } from "@/hooks/useVehicleStore";
 import { useQuery } from "@apollo/client";
+import Constants from "expo-constants";
 import moment from "moment";
 import React, { useEffect, useState } from "react";
 import { ActivityIndicator, Platform, Pressable, StyleSheet, Text, TouchableOpacity, View } from "react-native";
@@ -20,6 +21,9 @@ export default function SettingsSheet() {
 	const { signOut, isSignedIn } = useAuth();
 	const { selectedDate, setSelectedDate } = useDateStore();
 	const { routeSession } = useRouteSessionStore();
+
+	const { user } = useUser();
+	const expoConfig = Constants.expoConfig;
 
 	const { selectedVehicle, setSelectedVehicle } = useVehicleStore();
 	const { data: dataVehicles, refetch: refetchVehicles } = useQuery(GET_VEHICLES);
@@ -125,6 +129,10 @@ export default function SettingsSheet() {
 				<TouchableOpacity className="bg-red-800 py-4 rounded" onPress={handleLogout}>
 					<Text className="text-white text-center">Log Out</Text>
 				</TouchableOpacity>
+				<View className="mt-5 mb-20">
+					<Text>User: {user?.primaryEmailAddress?.toString() || ""}</Text>
+					<Text>Version: {expoConfig?.version}</Text>
+				</View>
 			</BottomSheetScrollView>
 		</BottomSheet>
 	);

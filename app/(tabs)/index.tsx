@@ -1,11 +1,11 @@
 import colors from "@/colors";
 import Map from "@/components/mapbox/Map";
+import RouteSession from "@/components/RouteSession";
 import RouteSheet from "@/components/RouteSheet";
 import SelectedOrderSheet from "@/components/SelectedOrderSheet";
 import SettingsSheet from "@/components/SettingsSheet";
-import { useDateStore } from "@/hooks/useDateStore";
 import { MetaDataProvider } from "@/providers/MetaDataProvider";
-import OrderProvider from "@/providers/OrderProvider";
+import OrderProvider, { useOrder } from "@/providers/OrderProvider";
 import { RouteProvider } from "@/providers/RouteProvider";
 import { useSheetContext } from "@/providers/SheetProvider";
 import { SignedIn } from "@clerk/clerk-expo";
@@ -15,7 +15,7 @@ import { TouchableOpacity } from "react-native-gesture-handler";
 
 export default function Page() {
 	const { setActiveSheet } = useSheetContext();
-	const { selectedDate } = useDateStore();
+
 	return (
 		<SignedIn>
 			<MetaDataProvider>
@@ -52,6 +52,12 @@ export default function Page() {
 								</View>
 							</SafeAreaView>
 						</View>
+						<View style={{ position: "absolute", bottom: 50, width: "100%" }}>
+							<View className="flex-row justify-center items-center">
+								<RouteSession />
+							</View>
+						</View>
+
 						<RouteSheet />
 						<SelectedOrderSheet />
 						<SettingsSheet />
