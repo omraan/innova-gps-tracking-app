@@ -14,6 +14,7 @@ const MetaDataContext = createContext<{
 
 export const MetaDataProvider = ({ children }: PropsWithChildren) => {
 	const [orgRole, setOrgRole] = useState<string | undefined>();
+
 	const { isSignedIn, getToken, orgId, userId, orgRole: authRole } = useAuth();
 	const { user } = useUser();
 
@@ -41,16 +42,6 @@ export const MetaDataProvider = ({ children }: PropsWithChildren) => {
 				},
 			]
 		);
-		// setStatusCategories(
-		// 	Array.isArray(organization?.publicMetadata.statusCategories)
-		// 		? organization.publicMetadata.statusCategories
-		// : [
-		// 		{
-		// 			color: "#000000",
-		// 			name: "Unknown",
-		// 		},
-		//   ]
-		// );
 	}, [user?.publicMetadata, orgId]);
 
 	return <MetaDataContext.Provider value={{ orgRole, statusCategories }}>{children}</MetaDataContext.Provider>;

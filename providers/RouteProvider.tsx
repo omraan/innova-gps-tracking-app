@@ -1,3 +1,5 @@
+import { useDateStore } from "@/hooks/useDateStore";
+import { useVehicleStore } from "@/hooks/useVehicleStore";
 import { getOptimizedTrip } from "@/services/optimized-trips";
 import polyline from "@mapbox/polyline";
 import { Position } from "@rnmapbox/maps/lib/typescript/src/types/Position";
@@ -41,14 +43,15 @@ export const RouteProvider = ({ children }: PropsWithChildren) => {
 	const { orders, setOrders } = useOrder();
 
 	const [routeCoordinates, setRouteCoordinates] = useState<Position[] | null>(null);
-	useEffect(() => {
-		const fetchRoute = async () => {
+	const fetchRoute = async () => {
+		if (orders && orders.length > 0) {
 			const myLocation = await Location.getCurrentPositionAsync();
 			const res = await getOptimizedTrip(
 				{
 					latitude: myLocation.coords.latitude,
 					longitude: myLocation.coords.longitude,
 				},
+
 				orders.map((order: CustomerOrders) => {
 					return {
 						latitude: order.customer.lat,
@@ -57,40 +60,46 @@ export const RouteProvider = ({ children }: PropsWithChildren) => {
 				})
 			);
 			setRoute(res);
-		};
-		// console.log("Something happening", JSON.stringify(orders, null, 2));
-		if (orders.length > 0 && !route) {
-			fetchRoute();
+		} else {
+			setRoute(null);
 		}
+	};
+
+	useEffect(() => {
+		fetchRoute();
 	}, [orders]);
 
 	useEffect(() => {
-		if (!route) return;
+		if (!route) {
+			setRouteCoordinates(null);
+			return;
+		}
 		const { waypoints } = route;
 
-		const newOrders = orders.map((order, indexOrder) => {
-			const waypoint = waypoints.find((waypoint, indexWaypoint) => {
-				// First waypoint is the start location, so we need to skip it.
-				return indexWaypoint - 1 === indexOrder;
-			});
+		// const newOrders = orders.map((order, indexOrder) => {
+		// 	const waypoint = waypoints.find((waypoint, indexWaypoint) => {
+		// 		// First waypoint is the start location, so we need to skip it.
+		// 		return indexWaypoint - 1 === indexOrder;
+		// 	});
 
-			if (waypoint) {
-				return {
-					...order,
-					value: {
-						...order,
-						routeIndex: waypoint.waypoint_index,
-					},
-				};
-			}
-			return order;
-		});
-		setOrders(newOrders);
+		// 	if (waypoint) {
+		// 		return {
+		// 			...order,
+		// 			value: {
+		// 				...order,
+		// 				routeIndex: waypoint.waypoint_index,
+		// 			},
+		// 		};
+		// 	}
+		// 	return order;
+		// });
+		// setOrders(newOrders);
 
 		const decodedCoordinates = polyline.decode(route.trips[0].geometry).map((c) => [c[1], c[0]]);
 
 		setRouteCoordinates(decodedCoordinates);
 	}, [route]);
+
 	return <RouteContext.Provider value={{ route, setRoute, routeCoordinates }}>{children}</RouteContext.Provider>;
 };
 

@@ -10,7 +10,6 @@ export async function getOptimizedTrip(start: LatLng, destinations: LatLng[]) {
 		throw new Error(`HTTP error! status: ${response.status}`);
 	}
 	const routeResponse: any = await response.json();
-	console.log(JSON.stringify(routeResponse, null, 2));
 
 	// if (!routeResponse.routes || routeResponse.routes.length === 0) {
 	// 	throw new Error("No routes found");

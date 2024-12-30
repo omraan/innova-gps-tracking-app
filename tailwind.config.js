@@ -1,12 +1,15 @@
-const colors = require("./colors");
-
+/** @type {import('tailwindcss').Config} */
 module.exports = {
-	content: ["./app/**/*.tsx", "./components/**/*.tsx"],
+	// NOTE: Update this to include the paths to all of your component files.
+	content: ["./app/**/*.{js,jsx,ts,tsx}", "./components/**/*.{js,jsx,ts,tsx}"],
+	presets: [require("nativewind/preset")],
 	theme: {
 		extend: {
-			colors: colors,
+			colors: {
+				primary: "#711E92",
+				secondary: "#6366f1",
+			},
 		},
 	},
 	plugins: [],
-	corePlugins: require("tailwind-rn/unsupported-core-plugins"),
 };

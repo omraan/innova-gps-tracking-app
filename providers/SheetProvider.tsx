@@ -28,6 +28,7 @@ export const SheetProvider = ({ children }: PropsWithChildren) => {
 	};
 
 	const handleSetActiveSheet = (sheet: SheetCategories | null) => {
+		console.log("Setting active sheet", sheet, activeSheet);
 		if (sheet === activeSheet) {
 			if (activeSheet !== "orders") {
 				setActiveSheet(null);
@@ -50,6 +51,7 @@ export const SheetProvider = ({ children }: PropsWithChildren) => {
 	};
 
 	useEffect(() => {
+		console.log("useEffect activeSheet", activeSheet);
 		if (activeSheet) {
 			bottomSheetRefs[activeSheet].current?.expand();
 		}
@@ -58,7 +60,7 @@ export const SheetProvider = ({ children }: PropsWithChildren) => {
 				bottomSheetRefs[key as SheetCategories].current?.close();
 			}
 		});
-	}, [activeSheet]);
+	}, [activeSheet, bottomSheetRefs]);
 
 	return (
 		<SheetContext.Provider

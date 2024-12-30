@@ -14,6 +14,7 @@
 			"resizeMode": "cover",
 			"backgroundColor": "#ffffff"
 		},
+
 		"ios": {
 			"supportsTablet": true,
 			"infoPlist": {

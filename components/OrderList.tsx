@@ -26,7 +26,6 @@ interface publicMetadata {
 }
 
 export default function OrderList() {
-	const tw = useTailwind();
 	const { organization } = useOrganization();
 
 	const { user } = useUser();
@@ -110,14 +109,14 @@ export default function OrderList() {
 	// 	});
 	// };
 	return (
-		<View style={tw("flex-1 mb-20 px-3")}>
-			<View style={tw(" pt-2 ")}>
-				<Text style={tw("text-center mb-2")}>
+		<View className="flex-1 mb-20 px-3">
+			<View className=" pt-2 ">
+				<Text className="text-center mb-2">
 					{orders.length} order
 					{orders.length !== 1 ? "s" : ""}
 				</Text>
 
-				<ScrollView horizontal style={tw("pb-5 mb-2")}>
+				<ScrollView horizontal className="pb-5 mb-2">
 					{statusCategories.map((status, index) => (
 						<Pressable
 							key={index}
@@ -129,6 +128,7 @@ export default function OrderList() {
 							}}
 						>
 							<View
+								className="rounded py-2 px-4"
 								style={[
 									{
 										backgroundColor: status.color,
@@ -136,7 +136,6 @@ export default function OrderList() {
 										marginHorizontal: 3,
 										marginVertical: 5,
 									},
-									tw(`rounded py-2 px-4`),
 								]}
 							>
 								<Text

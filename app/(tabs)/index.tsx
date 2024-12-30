@@ -8,15 +8,14 @@ import { MetaDataProvider } from "@/providers/MetaDataProvider";
 import OrderProvider from "@/providers/OrderProvider";
 import { RouteProvider } from "@/providers/RouteProvider";
 import { useSheetContext } from "@/providers/SheetProvider";
-import { SignedIn, useAuth, useOrganization, useUser } from "@clerk/clerk-expo";
+import { SignedIn } from "@clerk/clerk-expo";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import React, { useEffect, useState } from "react";
 import { SafeAreaView, StyleSheet, Text, View } from "react-native";
 import { TouchableOpacity } from "react-native-gesture-handler";
+
 export default function Page() {
 	const { setActiveSheet } = useSheetContext();
 	const { selectedDate } = useDateStore();
-
 	return (
 		<SignedIn>
 			<MetaDataProvider>
@@ -26,11 +25,8 @@ export default function Page() {
 							<Map />
 							<SafeAreaView style={styles.safeArea}>
 								<View style={styles.buttonContainer}>
-									<TouchableOpacity style={styles.pillButton}>
-										<Text className="text-primary">{selectedDate}</Text>
-									</TouchableOpacity>
-									<TouchableOpacity style={styles.pillButton}>
-										<Text className="text-primary">Action 2</Text>
+									<TouchableOpacity>
+										{/* <Text className="text-red-700 text-lg">Action 2</Text> */}
 									</TouchableOpacity>
 									<View
 										style={{
@@ -44,13 +40,13 @@ export default function Page() {
 											style={styles.pillButton}
 											onPress={() => setActiveSheet("settings")}
 										>
-											<MaterialIcons name="settings" size={30} color={colors.primary} />
+											<MaterialIcons name="settings" size={30} color={colors.secondary} />
 										</TouchableOpacity>
 										<TouchableOpacity
 											style={styles.pillButton}
 											onPress={() => setActiveSheet("route")}
 										>
-											<MaterialIcons name="route" size={30} color={colors.primary} />
+											<MaterialIcons name="route" size={30} color={colors.secondary} />
 										</TouchableOpacity>
 									</View>
 								</View>
@@ -75,8 +71,8 @@ const styles = StyleSheet.create({
 	},
 	buttonContainer: {
 		flexDirection: "row",
-		justifyContent: "space-around",
-		paddingHorizontal: 10,
+		justifyContent: "space-between",
+		paddingHorizontal: 20,
 		marginTop: 10,
 	},
 	pillButton: {

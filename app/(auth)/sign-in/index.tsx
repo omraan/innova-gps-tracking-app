@@ -15,11 +15,9 @@ import {
 	TextInput,
 	View,
 } from "react-native";
-import { useTailwind } from "tailwind-rn";
 
 export default function Page() {
 	const { signIn, setActive, isLoaded } = useSignIn();
-	const tw = useTailwind();
 
 	const [emailAddress, setEmailAddress] = useState<string>("");
 	const [password, setPassword] = useState<string>("");
@@ -87,58 +85,50 @@ export default function Page() {
 				},
 			}),
 		},
-		container: tw(`bg-white p-5 w-[90%] m-auto rounded-xl md:w-[50%] lg:min-w-[400px] `),
 	});
 	return (
-		<KeyboardAvoidingView
-			style={tw("flex-1 justify-center")}
-			behavior={Platform.OS === "ios" ? "padding" : "height"}
-		>
+		<KeyboardAvoidingView className="flex-1 justify-center" behavior={Platform.OS === "ios" ? "padding" : "height"}>
 			<ScrollView contentContainerStyle={{ flexGrow: 1 }}>
 				<LinearGradient
-					style={tw("h-full justify-center items-center")}
+					style={{ flex: 1, alignItems: "center", justifyContent: "center" }}
 					colors={["#711E92", "#A63058"]}
 					start={[0.5, 0]}
 					end={[0.5, 1]}
 				>
-					<View style={tw("mb-10 block")}>
+					<View className="mb-10 block">
 						<Image
 							source={require("@/assets/images/logo-transparant.png")}
-							style={tw("w-40 h-32 md:w-64 md:h-52 ")}
+							style={{ width: 200, height: 200, resizeMode: "contain" }}
+							// className="w-40 h-32 md:w-64 md:h-52"
 						/>
 					</View>
 
-					<View style={tw(`w-full  lg:w-[40%]`)}>
-						<View style={[stylesBox.shadow, stylesBox.container]}>
+					<View className="w-full lg:w-[40%]">
+						<View
+							className="bg-white py-8 px-10 w-[90%] m-auto rounded-xl md:w-[50%] lg:min-w-[400px]"
+							style={stylesBox.shadow}
+						>
 							{errorMessage ? (
-								<View style={tw("mb-5 bg-red-300 border border-red-600 w-full p-3 rounded")}>
-									<Text style={tw("text-red-700")}>{errorMessage}</Text>
+								<View className="mb-5 bg-red-300 border border-red-600 w-full p-3 rounded">
+									<Text className="text-red-700">{errorMessage}</Text>
 								</View>
 							) : null}
 
-							<View style={tw(`m-auto w-full`)}>
-								<Text style={tw("mb-2 text-gray-700")}>Email</Text>
+							<View className="m-auto w-full">
+								<Text className="mb-2 text-gray-700">Email</Text>
 								<TextInput
-									style={[
-										tw(
-											`px-4 border border-gray-300 rounded-lg text-gray-600 text-lg mb-10 w-full mx-auto tracking-wider`
-										),
-										styles.textInput,
-									]}
+									className="px-4 border border-gray-300 rounded-lg text-gray-600 text-lg mb-10 w-full mx-auto tracking-wider"
+									style={styles.textInput}
 									value={emailAddress}
 									onChangeText={setEmailAddress}
 									placeholder="Email"
 									autoCapitalize="none"
 									keyboardType="email-address"
 								/>
-								<Text style={tw("mb-2 text-gray-700")}>Password</Text>
+								<Text className="mb-2 text-gray-700">Password</Text>
 								<TextInput
-									style={[
-										tw(
-											`px-4 border border-gray-300 rounded-lg text-gray-600 text-lg mb-10 w-full mx-auto tracking-wider`
-										),
-										styles.textInput,
-									]}
+									className="px-4 border border-gray-300 rounded-lg text-gray-600 text-lg mb-8 w-full mx-auto tracking-wider"
+									style={styles.textInput}
 									value={password}
 									onChangeText={setPassword}
 									placeholder="Password"
@@ -147,15 +137,12 @@ export default function Page() {
 							</View>
 							<View>
 								<Pressable
-									style={tw(
-										`py-3 border border-gray-300 rounded-lg bg-primary flex-row justify-center items-center text-lg mb-5 w-full mx-auto ${
-											isSigningIn ? "opacity-50" : ""
-										}`
-									)}
+									className="py-3 border border-gray-300 rounded-lg bg-primary flex-row justify-center items-center text-lg mb-5 w-full mx-auto"
+									style={{ opacity: isSigningIn ? 0.5 : 1 }}
 									onPress={onSignInPress}
 									disabled={isSigningIn}
 								>
-									<Text style={tw("text-lg text-white font-bold tracking-wider")}>
+									<Text className="text-lg text-white font-bold tracking-wider">
 										{isSigningIn ? "Logging in" : "Log in"}
 									</Text>
 								</Pressable>

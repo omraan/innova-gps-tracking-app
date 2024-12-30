@@ -6,6 +6,7 @@ import { Alert } from "react-native";
 
 import { GET_ORDERS_BY_DATE } from "@/graphql/queries";
 import { useDateStore } from "@/hooks/useDateStore";
+import { useVehicleStore } from "@/hooks/useVehicleStore";
 import { getRelatedOrders } from "@/lib/getRelatedOrders";
 import { useQuery } from "@apollo/client";
 import moment from "moment";
@@ -21,12 +22,13 @@ export default function OrderProvider({ children }: PropsWithChildren) {
 	const [orders, setOrders] = useState<any>([]);
 	const [selectedOrder, setSelectedOrder] = useState<any>();
 	const { selectedDate } = useDateStore();
+	const { selectedVehicle } = useVehicleStore();
 
 	const {
 		data: dataOrders,
 		loading: loadingOrders,
 		error,
-		refetch: refetchOrders,
+		refetch,
 	} = useQuery(GET_ORDERS_BY_DATE, {
 		variables: {
 			date: selectedDate || moment(new Date()).format("yyyy-MM-DD"),
@@ -35,18 +37,33 @@ export default function OrderProvider({ children }: PropsWithChildren) {
 	});
 
 	useEffect(() => {
-		if (dataOrders && dataOrders.getOrdersByDate.length > 0) {
-			const relatedOrders = getRelatedOrders(dataOrders.getOrdersByDate);
-			setOrders(relatedOrders || []);
+		console.log("dataOrders", dataOrders);
+		if (dataOrders) {
+			if (dataOrders.getOrdersByDate.length > 0) {
+				const relatedOrders = getRelatedOrders(dataOrders.getOrdersByDate);
+				setOrders(relatedOrders || []);
+			} else {
+				setOrders([]);
+			}
 		}
 	}, [dataOrders]);
 
 	useEffect(() => {
-		// console.log("Something happening", JSON.stringify(orders, null, 2));
-		if (orders.length === 0 && !loadingOrders) {
-			refetchOrders();
+		console.log("fetch");
+		refetch();
+	}, [selectedDate, refetch]);
+
+	useEffect(() => {
+		if (dataOrders && dataOrders.getOrdersByDate.length > 0) {
+			let relatedOrders = getRelatedOrders(dataOrders.getOrdersByDate);
+			console.log("selected vehicles >>> ", selectedVehicle, relatedOrders.length);
+			if (selectedVehicle) {
+				relatedOrders =
+					relatedOrders.filter((order: CustomerOrders) => order.vehicleId === selectedVehicle.name) || [];
+			}
+			setOrders(relatedOrders);
 		}
-	}, [orders, loadingOrders, refetchOrders]);
+	}, [selectedVehicle]);
 
 	return (
 		<OrderContext.Provider
