@@ -55,7 +55,7 @@ export const RouteProvider = ({ children }: PropsWithChildren) => {
 				},
 
 				orders
-					.filter((order) => !["Completed", "Failed"].includes(order.status))
+					.filter((order) => !["Completed", "Failed", "No Location"].includes(order.status))
 					.map((order: CustomerOrders) => {
 						return {
 							latitude: order.customer.lat,
