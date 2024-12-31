@@ -78,7 +78,7 @@ export default function OrderListItem({ order }: { order: CustomerOrders }) {
 					</View>
 
 					<View className="flex-row items-center">
-						{order.status.toLowerCase() !== "open" && (
+						{!["open", "no location"].includes(order.status.toLowerCase()) && (
 							<View className="bg-gray-200 rounded px-3 py-2 mr-2">
 								<Text>
 									{latestEvent &&

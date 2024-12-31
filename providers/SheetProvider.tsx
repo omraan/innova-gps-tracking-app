@@ -54,7 +54,7 @@ export const SheetProvider = ({ children }: PropsWithChildren) => {
 	useEffect(() => {
 		if (activeSheet) {
 			setTimeout(() => {
-				bottomSheetRefs.orders.current?.expand();
+				bottomSheetRefs[activeSheet].current?.expand();
 			}, 200);
 		}
 		Object.keys(bottomSheetRefs).forEach((key) => {
