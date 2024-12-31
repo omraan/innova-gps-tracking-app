@@ -13,7 +13,6 @@ import { useSheetContext } from "@/providers/SheetProvider";
 import { SignedIn } from "@clerk/clerk-expo";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { Pressable, SafeAreaView, StyleSheet, Text, View } from "react-native";
-import { TouchableOpacity } from "react-native-gesture-handler";
 
 export default function Page() {
 	const { setActiveSheet } = useSheetContext();
@@ -31,7 +30,7 @@ export default function Page() {
 										className="bg-white rounded-full p-4 m-auto shadow shadow-black/20"
 										onPress={() => setActiveSheet("account")}
 									>
-										<MaterialIcons name="person" size={24} color={colors.secondary} />
+										<MaterialIcons name="person" size={24} color={colors.primary} />
 									</Pressable>
 									<SearchBar />
 
@@ -40,7 +39,7 @@ export default function Page() {
 											className="bg-white rounded-full p-4 shadow shadow-black/20"
 											onPress={() => setActiveSheet("settings")}
 										>
-											<MaterialIcons name="settings" size={24} color={colors.secondary} />
+											<MaterialIcons name="settings" size={24} color={colors.primary} />
 										</Pressable>
 									</View>
 								</View>
@@ -49,7 +48,7 @@ export default function Page() {
 										className="bg-white rounded-full p-4 shadow shadow-black/20"
 										onPress={() => setActiveSheet("route")}
 									>
-										<MaterialIcons name="route" size={24} color={colors.secondary} />
+										<MaterialIcons name="route" size={24} color={colors.primary} />
 									</Pressable>
 								</View>
 							</SafeAreaView>

@@ -62,7 +62,6 @@ export default function SelectedOrderSheet() {
 				// orders.find((order: { name: string; value: Order }) => order.name === orderId).value.events || [];
 				const sanitizedOrderEvents = selectedOrder.events.map(({ __typename, ...rest }: any) => rest);
 
-				console.log("hello3");
 				let newEvent: any = {
 					name: "",
 					notes: "",
@@ -133,7 +132,10 @@ export default function SelectedOrderSheet() {
 			snapPoints={["50%"]}
 			enablePanDownToClose
 			backgroundStyle={{ backgroundColor: "#f9f9f9" }}
-			onClose={() => handlePanDownToClose("orders")}
+			onClose={() => {
+				setSelectedOrder(null);
+				handlePanDownToClose("orders");
+			}}
 		>
 			{selectedOrder && (
 				<BottomSheetView style={{ flex: 1, padding: 15 }}>
@@ -199,7 +201,7 @@ export default function SelectedOrderSheet() {
 										<View className="flex-row justify-start gap-2 items-center">
 											<Text className="text-md text-red-700">Navigate to </Text>
 											<View className="rounded-full border border-red-700 p-2">
-												<MaterialIcons name="settings" size={16} color={colors.secondary} />
+												<MaterialIcons name="settings" size={16} color={colors.primary} />
 											</View>
 											<Text className="text-md text-red-700">to change the date.</Text>
 										</View>

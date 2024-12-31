@@ -1,5 +1,6 @@
 import BottomSheet from "@gorhom/bottom-sheet";
 import React, { act, createContext, PropsWithChildren, useContext, useEffect, useRef, useState } from "react";
+import { useOrder } from "./OrderProvider";
 
 type SheetCategories = "orders" | "route" | "metadata" | "settings" | "account";
 
@@ -20,7 +21,6 @@ const SheetContext = createContext<SheetContextProps | null>(null);
 
 export const SheetProvider = ({ children }: PropsWithChildren) => {
 	const [activeSheet, setActiveSheet] = useState<SheetCategories | null>(null);
-
 	const bottomSheetRefs = {
 		orders: useRef<BottomSheet>(null),
 		route: useRef<BottomSheet>(null),
@@ -37,7 +37,7 @@ export const SheetProvider = ({ children }: PropsWithChildren) => {
 				bottomSheetRefs.orders.current?.close();
 				setTimeout(() => {
 					bottomSheetRefs.orders.current?.expand();
-				}, 100);
+				}, 200);
 			}
 		} else {
 			setActiveSheet(sheet);
@@ -53,7 +53,9 @@ export const SheetProvider = ({ children }: PropsWithChildren) => {
 
 	useEffect(() => {
 		if (activeSheet) {
-			bottomSheetRefs[activeSheet].current?.expand();
+			setTimeout(() => {
+				bottomSheetRefs.orders.current?.expand();
+			}, 200);
 		}
 		Object.keys(bottomSheetRefs).forEach((key) => {
 			if (key !== activeSheet) {

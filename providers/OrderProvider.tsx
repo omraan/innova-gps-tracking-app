@@ -13,6 +13,7 @@ import moment from "moment";
 
 const OrderContext = createContext<{
 	orders: CustomerOrders[];
+	filteredOrders: CustomerOrders[];
 	setOrders(orders: CustomerOrders[]): void;
 	selectedOrder: CustomerOrders | undefined;
 	setSelectedOrder(selectedOrder: CustomerOrders | undefined): void;
@@ -82,7 +83,8 @@ export default function OrderProvider({ children }: PropsWithChildren) {
 	return (
 		<OrderContext.Provider
 			value={{
-				orders: filteredOrders,
+				orders,
+				filteredOrders,
 				setOrders,
 				selectedOrder,
 				setSelectedOrder,

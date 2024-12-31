@@ -58,8 +58,8 @@ export default function RouteSession() {
 					<View className="flex-col items-center justify-center mb-2">
 						<View className="bg-white px-4 py-2 rounded flex-row gap-2 items-center">
 							<Text>Navigate to </Text>
-							<View className="rounded-full border border-secondary p-2">
-								<MaterialIcons name="settings" size={16} color={colors.secondary} />
+							<View className="rounded-full border border-primary p-2">
+								<MaterialIcons name="settings" size={16} color={colors.primary} />
 							</View>
 							<Text>to select a vehicle</Text>
 						</View>
