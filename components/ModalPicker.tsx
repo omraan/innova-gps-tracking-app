@@ -47,17 +47,10 @@ export const ModalPicker = ({ list, onSelect, options, disabled = false }: Modal
 	const handleOpenModal = () => {
 		setModalVisible(true);
 	};
-
-	const handleCloseModal = () => {
-		setModalVisible(false);
-	};
-	// useEffect(() => {
-	// 	if (Platform.OS === "android" && modalVisible) {
-	// 		if (modalVisible) {
-	// 			pickerRef.current?.focus();
-	// 		}
-	// 	}
-	// }, [modalVisible]);
+	console.log(
+		"default value",
+		list.find((item) => item.value === options?.defaultValue)
+	);
 
 	return (
 		<View>
@@ -66,6 +59,7 @@ export const ModalPicker = ({ list, onSelect, options, disabled = false }: Modal
 					className="border border-gray-300 p-4 rounded flex-row my-5 items-center"
 					onPress={handleOpenModal}
 					disabled={disabled}
+					style={{ opacity: disabled ? 0.5 : 1 }}
 				>
 					<Text className="text-gray-500 flex-1 text-lg font-semibold">
 						{list.find((item) => item.value === options?.defaultValue)?.label || "Choose option"}
@@ -131,11 +125,3 @@ export const ModalPicker = ({ list, onSelect, options, disabled = false }: Modal
 		</View>
 	);
 };
-const styles = StyleSheet.create({
-	modalOverlay: {
-		flex: 1,
-		backgroundColor: "rgba(0, 0, 0, 0.5)",
-		justifyContent: "center",
-		alignItems: "center",
-	},
-});
