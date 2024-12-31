@@ -37,7 +37,7 @@ export const SheetProvider = ({ children }: PropsWithChildren) => {
 				bottomSheetRefs.orders.current?.close();
 				setTimeout(() => {
 					bottomSheetRefs.orders.current?.expand();
-				}, 100);
+				}, 200);
 			}
 		} else {
 			setActiveSheet(sheet);
@@ -53,7 +53,9 @@ export const SheetProvider = ({ children }: PropsWithChildren) => {
 
 	useEffect(() => {
 		if (activeSheet) {
-			bottomSheetRefs[activeSheet].current?.expand();
+			setTimeout(() => {
+				bottomSheetRefs[activeSheet].current?.expand();
+			}, 200);
 		}
 		Object.keys(bottomSheetRefs).forEach((key) => {
 			if (key !== activeSheet) {
