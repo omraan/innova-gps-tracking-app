@@ -1,18 +1,14 @@
-import getDistance from "@turf/distance";
-import { point } from "@turf/helpers";
-import * as Location from "expo-location";
-import { PropsWithChildren, createContext, useContext, useEffect, useState } from "react";
-import { Alert } from "react-native";
-
 import { GET_ORDERS_BY_DATE } from "@/graphql/queries";
 import { useDateStore } from "@/hooks/useDateStore";
 import { useVehicleStore } from "@/hooks/useVehicleStore";
 import { getRelatedOrders } from "@/lib/getRelatedOrders";
 import { useQuery } from "@apollo/client";
 import moment from "moment";
+import { PropsWithChildren, createContext, useContext, useEffect, useState } from "react";
 
 const OrderContext = createContext<{
 	orders: CustomerOrders[];
+	filteredOrders: CustomerOrders[];
 	setOrders(orders: CustomerOrders[]): void;
 	selectedOrder: CustomerOrders | undefined;
 	setSelectedOrder(selectedOrder: CustomerOrders | undefined): void;
@@ -82,7 +78,8 @@ export default function OrderProvider({ children }: PropsWithChildren) {
 	return (
 		<OrderContext.Provider
 			value={{
-				orders: filteredOrders,
+				orders,
+				filteredOrders,
 				setOrders,
 				selectedOrder,
 				setSelectedOrder,

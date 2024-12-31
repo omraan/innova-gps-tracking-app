@@ -12,8 +12,7 @@ import { RouteProvider } from "@/providers/RouteProvider";
 import { useSheetContext } from "@/providers/SheetProvider";
 import { SignedIn } from "@clerk/clerk-expo";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import { Pressable, SafeAreaView, StyleSheet, Text, View } from "react-native";
-import { TouchableOpacity } from "react-native-gesture-handler";
+import { Pressable, SafeAreaView, View } from "react-native";
 
 export default function Page() {
 	const { setActiveSheet } = useSheetContext();
