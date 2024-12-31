@@ -1,7 +1,7 @@
 import BottomSheet from "@gorhom/bottom-sheet";
 import React, { act, createContext, PropsWithChildren, useContext, useEffect, useRef, useState } from "react";
 
-type SheetCategories = "orders" | "route" | "metadata" | "settings";
+type SheetCategories = "orders" | "route" | "metadata" | "settings" | "account";
 
 interface SheetContextProps {
 	activeSheet: SheetCategories | null;
@@ -11,6 +11,7 @@ interface SheetContextProps {
 		route: React.RefObject<BottomSheet>;
 		metadata: React.RefObject<BottomSheet>;
 		settings: React.RefObject<BottomSheet>;
+		account: React.RefObject<BottomSheet>;
 	};
 	handlePanDownToClose: (sheet: SheetCategories) => void;
 }
@@ -25,10 +26,10 @@ export const SheetProvider = ({ children }: PropsWithChildren) => {
 		route: useRef<BottomSheet>(null),
 		metadata: useRef<BottomSheet>(null),
 		settings: useRef<BottomSheet>(null),
+		account: useRef<BottomSheet>(null),
 	};
 
 	const handleSetActiveSheet = (sheet: SheetCategories | null) => {
-		console.log("Setting active sheet", sheet, activeSheet);
 		if (sheet === activeSheet) {
 			if (activeSheet !== "orders") {
 				setActiveSheet(null);
@@ -51,7 +52,6 @@ export const SheetProvider = ({ children }: PropsWithChildren) => {
 	};
 
 	useEffect(() => {
-		console.log("useEffect activeSheet", activeSheet);
 		if (activeSheet) {
 			bottomSheetRefs[activeSheet].current?.expand();
 		}

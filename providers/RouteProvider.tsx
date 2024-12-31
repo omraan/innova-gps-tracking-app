@@ -4,6 +4,7 @@ import { getOptimizedTrip } from "@/services/optimized-trips";
 import polyline from "@mapbox/polyline";
 import { Position } from "@rnmapbox/maps/lib/typescript/src/types/Position";
 import * as Location from "expo-location";
+import moment from "moment";
 import { createContext, PropsWithChildren, useContext, useEffect, useState } from "react";
 import { LatLng } from "react-native-maps";
 import { useOrder } from "./OrderProvider";
@@ -41,10 +42,11 @@ const RouteContext = createContext<{
 export const RouteProvider = ({ children }: PropsWithChildren) => {
 	const [route, setRoute] = useState<RouteProps | null>(null);
 	const { orders, setOrders } = useOrder();
+	const { selectedDate } = useDateStore();
 
 	const [routeCoordinates, setRouteCoordinates] = useState<Position[] | null>(null);
 	const fetchRoute = async () => {
-		if (orders && orders.length > 0) {
+		if (orders && orders.length > 0 && selectedDate === moment(new Date()).format("YYYY-MM-DD")) {
 			const myLocation = await Location.getCurrentPositionAsync();
 			const res = await getOptimizedTrip(
 				{

@@ -1,7 +1,9 @@
 import colors from "@/colors";
+import AccountSheet from "@/components/AccountSheet";
 import Map from "@/components/mapbox/Map";
 import RouteSession from "@/components/RouteSession";
 import RouteSheet from "@/components/RouteSheet";
+import SearchBar from "@/components/SearchBar";
 import SelectedOrderSheet from "@/components/SelectedOrderSheet";
 import SettingsSheet from "@/components/SettingsSheet";
 import { MetaDataProvider } from "@/providers/MetaDataProvider";
@@ -10,7 +12,7 @@ import { RouteProvider } from "@/providers/RouteProvider";
 import { useSheetContext } from "@/providers/SheetProvider";
 import { SignedIn } from "@clerk/clerk-expo";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import { SafeAreaView, StyleSheet, View } from "react-native";
+import { Pressable, SafeAreaView, StyleSheet, Text, View } from "react-native";
 import { TouchableOpacity } from "react-native-gesture-handler";
 
 export default function Page() {
@@ -21,34 +23,34 @@ export default function Page() {
 			<MetaDataProvider>
 				<OrderProvider>
 					<RouteProvider>
-						<View style={{ flex: 1 }}>
+						<View className="flex-1">
 							<Map />
-							<SafeAreaView style={styles.safeArea}>
-								<View style={styles.buttonContainer}>
-									<TouchableOpacity>
-										{/* <Text className="text-red-700 text-lg">Action 2</Text> */}
-									</TouchableOpacity>
-									<View
-										style={{
-											display: "flex",
-											flexDirection: "column",
-											gap: 20,
-											justifyContent: "space-between",
-										}}
+							<SafeAreaView className="absolute top-0 left-0 right-0">
+								<View className="flex-row justify-between gap-5 px-6 items-start">
+									<Pressable
+										className="bg-white rounded-full p-4 m-auto shadow shadow-black/20"
+										onPress={() => setActiveSheet("account")}
 									>
-										<TouchableOpacity
-											style={styles.pillButton}
+										<MaterialIcons name="person" size={24} color={colors.secondary} />
+									</Pressable>
+									<SearchBar />
+
+									<View className="flex-column gap-8 justify-between">
+										<Pressable
+											className="bg-white rounded-full p-4 shadow shadow-black/20"
 											onPress={() => setActiveSheet("settings")}
 										>
-											<MaterialIcons name="settings" size={30} color={colors.secondary} />
-										</TouchableOpacity>
-										<TouchableOpacity
-											style={styles.pillButton}
-											onPress={() => setActiveSheet("route")}
-										>
-											<MaterialIcons name="route" size={30} color={colors.secondary} />
-										</TouchableOpacity>
+											<MaterialIcons name="settings" size={24} color={colors.secondary} />
+										</Pressable>
 									</View>
+								</View>
+								<View className="flex-row justify-end px-6 py-6">
+									<Pressable
+										className="bg-white rounded-full p-4 shadow shadow-black/20"
+										onPress={() => setActiveSheet("route")}
+									>
+										<MaterialIcons name="route" size={24} color={colors.secondary} />
+									</Pressable>
 								</View>
 							</SafeAreaView>
 						</View>
@@ -61,29 +63,10 @@ export default function Page() {
 						<RouteSheet />
 						<SelectedOrderSheet />
 						<SettingsSheet />
+						<AccountSheet />
 					</RouteProvider>
 				</OrderProvider>
 			</MetaDataProvider>
 		</SignedIn>
 	);
 }
-
-const styles = StyleSheet.create({
-	safeArea: {
-		position: "absolute",
-		top: 0,
-		left: 0,
-		right: 0,
-	},
-	buttonContainer: {
-		flexDirection: "row",
-		justifyContent: "space-between",
-		paddingHorizontal: 20,
-		marginTop: 10,
-	},
-	pillButton: {
-		backgroundColor: "white",
-		padding: 15,
-		borderRadius: 50,
-	},
-});

@@ -1,3 +1,4 @@
+import colors from "@/colors";
 import { UPDATE_ORDER } from "@/graphql/mutations";
 import { GET_ORDERS_BY_DATE } from "@/graphql/queries";
 import { useDateStore } from "@/hooks/useDateStore";
@@ -8,13 +9,14 @@ import { useOrder } from "@/providers/OrderProvider";
 import { useSheetContext } from "@/providers/SheetProvider";
 import { useMutation } from "@apollo/client";
 import { useAuth } from "@clerk/clerk-expo";
+import { MaterialIcons } from "@expo/vector-icons";
 import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
 import { useState } from "react";
 import { Pressable, Text, TextInput, View } from "react-native";
 import { Modal } from "./Modal";
 export default function SelectedOrderSheet() {
 	const { bottomSheetRefs, handlePanDownToClose } = useSheetContext();
-	const { selectedDate } = useDateStore();
+	const { selectedDate, isToday } = useDateStore();
 	const { selectedOrder, setSelectedOrder }: any = useOrder();
 	const { orgRole, statusCategories } = useMetadata();
 	const { routeSession } = useRouteSessionStore();
@@ -187,9 +189,26 @@ export default function SelectedOrderSheet() {
 						
 					)} */}
 					{routeSession === null && (
-						<View className="bg-red-200 border border-red-400 p-3 rounded mb-5 ">
+						<View className="bg-red-200 border border-red-400 p-5 rounded mb-5 ">
 							<Text className="text-md text-red-700">
-								Please Press "Start route" before updating status
+								{!isToday() ? (
+									<View className="py-2">
+										<Text className="text-md text-red-700 mb-2">
+											This order is not part of a route session of today.
+										</Text>
+										<View className="flex-row justify-start gap-2 items-center">
+											<Text className="text-md text-red-700">Navigate to </Text>
+											<View className="rounded-full border border-red-700 p-2">
+												<MaterialIcons name="settings" size={16} color={colors.secondary} />
+											</View>
+											<Text className="text-md text-red-700">to change the date.</Text>
+										</View>
+									</View>
+								) : (
+									<Text className="text-md text-red-700">
+										Please Press "Start route" before updating status
+									</Text>
+								)}
 							</Text>
 						</View>
 					)}

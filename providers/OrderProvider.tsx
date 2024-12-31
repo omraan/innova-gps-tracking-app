@@ -16,11 +16,15 @@ const OrderContext = createContext<{
 	setOrders(orders: CustomerOrders[]): void;
 	selectedOrder: CustomerOrders | undefined;
 	setSelectedOrder(selectedOrder: CustomerOrders | undefined): void;
+	setSearchQuery(searchQuery: string): void;
 } | null>(null);
 
 export default function OrderProvider({ children }: PropsWithChildren) {
-	const [orders, setOrders] = useState<any>([]);
-	const [selectedOrder, setSelectedOrder] = useState<any>();
+	const [orders, setOrders] = useState<CustomerOrders[]>([]);
+	const [selectedOrder, setSelectedOrder] = useState<CustomerOrders>();
+	const [filteredOrders, setFilteredOrders] = useState<CustomerOrders[]>([]);
+	const [searchQuery, setSearchQuery] = useState<string>("");
+
 	const { selectedDate } = useDateStore();
 	const { selectedVehicle } = useVehicleStore();
 
@@ -37,7 +41,6 @@ export default function OrderProvider({ children }: PropsWithChildren) {
 	});
 
 	useEffect(() => {
-		console.log("dataOrders", dataOrders);
 		if (dataOrders) {
 			if (dataOrders.getOrdersByDate.length > 0) {
 				const relatedOrders = getRelatedOrders(dataOrders.getOrdersByDate);
@@ -49,14 +52,12 @@ export default function OrderProvider({ children }: PropsWithChildren) {
 	}, [dataOrders]);
 
 	useEffect(() => {
-		console.log("fetch");
 		refetch();
 	}, [selectedDate, refetch]);
 
 	useEffect(() => {
 		if (dataOrders && dataOrders.getOrdersByDate.length > 0) {
 			let relatedOrders = getRelatedOrders(dataOrders.getOrdersByDate);
-			console.log("selected vehicles >>> ", selectedVehicle, relatedOrders.length);
 			if (selectedVehicle) {
 				relatedOrders =
 					relatedOrders.filter((order: CustomerOrders) => order.vehicleId === selectedVehicle.name) || [];
@@ -65,13 +66,27 @@ export default function OrderProvider({ children }: PropsWithChildren) {
 		}
 	}, [selectedVehicle]);
 
+	useEffect(() => {
+		const filtered = orders.filter((order: CustomerOrders) => {
+			const query = searchQuery.toLowerCase();
+			return (
+				order.customer.name.toLowerCase().includes(query) ||
+				order.orderNumbers.some((num) => num.toString().includes(query)) ||
+				order.customer.streetName?.toLowerCase().includes(query) ||
+				order.customer.streetNumber?.toLowerCase().includes(query)
+			);
+		});
+		setFilteredOrders(filtered);
+	}, [searchQuery, orders]);
+
 	return (
 		<OrderContext.Provider
 			value={{
-				orders,
+				orders: filteredOrders,
 				setOrders,
 				selectedOrder,
 				setSelectedOrder,
+				setSearchQuery,
 			}}
 		>
 			{children}
