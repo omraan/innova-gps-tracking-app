@@ -32,7 +32,6 @@ export default function Map() {
 	}, [user?.unsafeMetadata.defaultMapView]);
 
 	const mapView = (user?.unsafeMetadata.defaultMapView as string) || "standard";
-	console.log(mapView);
 	return (
 		<MapView
 			key={mapView}
@@ -56,7 +55,7 @@ export default function Map() {
 				animationMode="flyTo"
 				animationDuration={0}
 			/>
-			{orders && orders.length > 0 && <OrderMarkers orders={orders} />}
+			{orders && orders.length > 0 && <OrderMarkers />}
 			{routeCoordinates && <LineRoute coordinates={routeCoordinates} />}
 			<LocationPuck puckBearingEnabled puckBearing="heading" pulsing={{ isEnabled: true }} />
 		</MapView>

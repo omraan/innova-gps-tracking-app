@@ -89,6 +89,8 @@ export default function OrderMarkers() {
 						"pinGreenPriority",
 						"Failed",
 						"pinRed",
+						"FailedPriority",
+						"pinRedPriority",
 						"Open",
 						"pinGray",
 						"OpenPriority",
