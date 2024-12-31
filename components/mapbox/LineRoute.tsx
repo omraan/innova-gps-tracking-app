@@ -3,7 +3,6 @@ import { LineLayer, ShapeSource } from "@rnmapbox/maps";
 import { Position } from "@rnmapbox/maps/lib/typescript/src/types/Position";
 import React from "react";
 export default function LineRoute({ coordinates }: { coordinates: Position[] }) {
-	// console.log("LineRoute -> coordinates", coordinates);
 	return (
 		<ShapeSource
 			id="routeSource"
@@ -19,11 +18,12 @@ export default function LineRoute({ coordinates }: { coordinates: Position[] }) 
 		>
 			<LineLayer
 				id="exampleLineLayer"
+				belowLayerID="symbolLocationSymbols"
 				style={{
 					lineColor: colors.secondary,
 					lineCap: "round",
 					lineJoin: "round",
-					lineWidth: 5,
+					lineWidth: 3,
 				}}
 			/>
 		</ShapeSource>

@@ -1,20 +1,128 @@
-import colors from "@/colors";
+import { UPDATE_ORDER } from "@/graphql/mutations";
+import { GET_ORDERS_BY_DATE } from "@/graphql/queries";
+import { useDateStore } from "@/hooks/useDateStore";
 import { useRouteSessionStore } from "@/hooks/useRouteSessionStore";
 import { isColorDark } from "@/lib/styles";
 import { useMetadata } from "@/providers/MetaDataProvider";
 import { useOrder } from "@/providers/OrderProvider";
 import { useSheetContext } from "@/providers/SheetProvider";
+import { useMutation } from "@apollo/client";
+import { useAuth } from "@clerk/clerk-expo";
 import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
 import { useState } from "react";
-import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
-import { useTailwind } from "tailwind-rn";
+import { Pressable, Text, TextInput, View } from "react-native";
+import { Modal } from "./Modal";
 export default function SelectedOrderSheet() {
 	const { bottomSheetRefs, handlePanDownToClose } = useSheetContext();
-
-	const { selectedOrder }: any = useOrder();
+	const { selectedDate } = useDateStore();
+	const { selectedOrder, setSelectedOrder }: any = useOrder();
 	const { orgRole, statusCategories } = useMetadata();
 	const { routeSession } = useRouteSessionStore();
+	const { setActiveSheet } = useSheetContext();
 	const [notes, setNotes] = useState<string>("");
+	const { userId } = useAuth();
+
+	const [modalVisible, setModalVisible] = useState(false);
+
+	const [selectedStatus, setSelectedStatus] = useState<StatusCategory | null>(null);
+
+	const handleOpenModal = () => {
+		setModalVisible(true);
+	};
+
+	const handleSave = () => {
+		if (selectedStatus) {
+			onMarkerSubmit(selectedStatus, notes);
+			setModalVisible(false);
+			setSelectedOrder(null);
+			setActiveSheet(null);
+			setNotes("");
+		}
+	};
+
+	const [updateOrder] = useMutation(UPDATE_ORDER, {
+		onCompleted: () => {},
+		onError: (error) => {
+			console.error(error);
+		},
+	});
+
+	async function onMarkerSubmit(status: StatusCategory, notes?: string) {
+		if (selectedOrder) {
+			selectedOrder.orderIds.forEach((orderId: string) => {
+				const variables: any = {
+					id: orderId,
+					date: selectedDate,
+					modifiedBy: userId!,
+					modifiedAt: Number(new Date()),
+					status: status.name,
+				};
+				// orders.find((order: { name: string; value: Order }) => order.name === orderId).value.events || [];
+				const sanitizedOrderEvents = selectedOrder.events.map(({ __typename, ...rest }: any) => rest);
+
+				console.log("hello3");
+				let newEvent: any = {
+					name: "",
+					notes: "",
+					createdBy: userId!,
+					createdAt: Number(new Date()),
+					status: status.name,
+				};
+				if (notes && notes !== "") {
+					variables.notes = notes;
+					newEvent.notes = notes;
+				}
+				variables.events = [...sanitizedOrderEvents, newEvent];
+
+				updateOrder({
+					variables: variables,
+					onCompleted: () => {
+						// setLoading(false);
+						// setModalVisible(false);
+					},
+					update: (cache) => {
+						// Handmatig de cache bijwerken als dat nodig is
+						const existingOrders = cache.readQuery<{
+							getOrdersByDate: { name: string; value: OrderExtended }[];
+						}>({
+							query: GET_ORDERS_BY_DATE,
+							variables: {
+								date: selectedDate,
+							},
+						})?.getOrdersByDate;
+
+						if (existingOrders) {
+							const newOrders = existingOrders.map((existingOrder) => {
+								if (existingOrder.name === orderId) {
+									const newOrder = {
+										name: existingOrder.name,
+										value: {
+											...existingOrder.value,
+											modifiedBy: userId!,
+											modifiedAt: Number(new Date()),
+											status: status.name,
+											notes: variables.notes || existingOrder.value.notes || "",
+											events: [...(existingOrder.value.events || []), newEvent],
+										},
+									};
+									return newOrder;
+								}
+								return existingOrder;
+							});
+
+							cache.writeQuery({
+								query: GET_ORDERS_BY_DATE,
+								variables: {
+									date: selectedDate,
+								},
+								data: { getOrdersByDate: newOrders },
+							});
+						}
+					},
+				});
+			});
+		}
+	}
 
 	return (
 		<BottomSheet
@@ -22,12 +130,11 @@ export default function SelectedOrderSheet() {
 			index={-1}
 			snapPoints={["50%"]}
 			enablePanDownToClose
-			// enableDynamicSizing
 			backgroundStyle={{ backgroundColor: "#f9f9f9" }}
 			onClose={() => handlePanDownToClose("orders")}
 		>
 			{selectedOrder && (
-				<BottomSheetView style={styles.contentContainer}>
+				<BottomSheetView style={{ flex: 1, padding: 15 }}>
 					<View style={{ flexDirection: "row", gap: 20, marginBottom: 20 }}>
 						{/* <Image source={OrderImage} style={{ width: 60, height: 60 }} /> */}
 						<View style={{ flex: 1, gap: 5 }}>
@@ -110,8 +217,8 @@ export default function SelectedOrderSheet() {
 										key={status.name}
 										onPress={() => {
 											if (routeSession && routeSession !== null) {
-												// onMarkerSubmit(status, notes);
-												setNotes("");
+												setSelectedStatus(status);
+												handleOpenModal();
 											}
 										}}
 										disabled={routeSession === null}
@@ -121,6 +228,7 @@ export default function SelectedOrderSheet() {
 											borderColor: "#dddddd",
 											backgroundColor: status.color,
 											opacity: routeSession === null ? 0.5 : 1,
+											display: status.name !== selectedOrder.status ? "flex" : "none",
 										}}
 									>
 										<Text
@@ -132,14 +240,28 @@ export default function SelectedOrderSheet() {
 									</Pressable>
 								))}
 					</View>
+
+					<Modal modalVisible={modalVisible} setModalVisible={setModalVisible} handleSave={handleSave}>
+						<View className="mb-10">
+							<Text className="font-semibold text-2xl text-center mb-5">Change Status</Text>
+							<Text className="font-normal text-gray-500 text-center mb-10">
+								Select the new status for this order: {selectedOrder.customer.name}
+							</Text>
+							<View
+								className="border rounded px-5 py-2 mx-auto"
+								style={{ borderColor: selectedStatus?.color }}
+							>
+								<Text
+									className="font-bold text-primary text-center text-2xl"
+									style={{ color: selectedStatus?.color }}
+								>
+									{selectedStatus?.name}
+								</Text>
+							</View>
+						</View>
+					</Modal>
 				</BottomSheetView>
 			)}
 		</BottomSheet>
 	);
 }
-const styles = StyleSheet.create({
-	contentContainer: {
-		flex: 1,
-		padding: 15,
-	},
-});

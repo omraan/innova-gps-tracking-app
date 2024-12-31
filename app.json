@@ -14,7 +14,6 @@
 			"resizeMode": "cover",
 			"backgroundColor": "#ffffff"
 		},
-
 		"ios": {
 			"supportsTablet": true,
 			"infoPlist": {
@@ -66,7 +65,8 @@
 			[
 				"@rnmapbox/maps",
 				{
-					"RNMapboxMapsDownloadToken": "sk.eyJ1Ijoib21yYWFuIiwiYSI6ImNtNTZuZXNjdjMwYTcya3A3dGIzbWZxcTYifQ.OKakG61fXWiiWVStGidjhw"
+					"RNMapboxMapsVersion": "11.8.0",
+					"RNMapboxMapsDownloadToken": "sk.eyJ1IjoidmVkaXNwYXRjaCIsImEiOiJjbTViNGxwMnM0NnB0MnFzZjZzOWhnazFuIn0.FQ8mSOzlrG6-OtSW0jy5kA"
 				}
 			]
 		],

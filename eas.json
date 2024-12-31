@@ -36,7 +36,8 @@
 				"EXPO_PUBLIC_FIREBASE_APP_ID": "1:543494384373:web:ca80f298ddda982b87b3bc",
 				"EXPO_PUBLIC_FIREBASE_DATABASE_URL": "https://innova-gps-tracking-dev-default-rtdb.firebaseio.com",
 				"EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY": "pk_test_YWRhcHRlZC1idWNrLTM5LmNsZXJrLmFjY291bnRzLmRldiQ",
-				"CLERK_SECRET_KEY": "sk_test_UgvXOSp4CoHFNCod8fI1ReFFwUkuBjmhOdoKw5syWV"
+				"CLERK_SECRET_KEY": "sk_test_UgvXOSp4CoHFNCod8fI1ReFFwUkuBjmhOdoKw5syWV",
+				"EXPO_PUBLIC_MAPBOX_KEY": "sk.eyJ1IjoidmVkaXNwYXRjaCIsImEiOiJjbTViNGxwMnM0NnB0MnFzZjZzOWhnazFuIn0.FQ8mSOzlrG6-OtSW0jy5kA"
 			}
 		},
 		"development-simulator": {

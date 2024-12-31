@@ -1,15 +1,24 @@
-// import pin from "@/assets/images/pin.svg";
-import pin from "@/assets/images/pin.png";
+import pinGray from "@/assets/images/pin-gray.png";
+import pinGreen from "@/assets/images/pin-green.png";
+import pinRed from "@/assets/images/pin-red.png";
+import colors from "@/colors";
+
 import { useOrder } from "@/providers/OrderProvider";
 import { useSheetContext } from "@/providers/SheetProvider";
 import { CircleLayer, Images, ShapeSource, SymbolLayer } from "@rnmapbox/maps";
 import { OnPressEvent } from "@rnmapbox/maps/lib/typescript/src/types/OnPressEvent";
 import { featureCollection, point } from "@turf/helpers";
+
+// interface OrderIcon {
+// 	color: string;
+// 	status: string;
+// }
 export default function OrderMarkers({ orders }: any) {
 	const { setSelectedOrder }: any = useOrder();
 	const points = orders.map((order: any) => {
-		return point([order.customer.lng, order.customer.lat], { order });
+		return point([order.customer.lng, order.customer.lat], { order, status: order.status });
 	});
+
 	const { setActiveSheet } = useSheetContext();
 
 	const onPointPress = async (event: OnPressEvent) => {
@@ -18,6 +27,23 @@ export default function OrderMarkers({ orders }: any) {
 			setActiveSheet("orders");
 		}
 	};
+
+	// console.log("test", JSON.stringify(featureCollection(points), null, 2));
+
+	// const icon: OrderIcon[] = [
+	// 	{
+	// 		color: "Green",
+	// 		status: "completed",
+	// 	},
+	// 	{
+	// 		color: "Red",
+	// 		status: "failed",
+	// 	},
+	// 	{
+	// 		color: "Gray",
+	// 		status: "open",
+	// 	},
+	// ];
 
 	return (
 		<ShapeSource id="orderShape" shape={featureCollection(points)} cluster onPress={onPointPress}>
@@ -36,7 +62,7 @@ export default function OrderMarkers({ orders }: any) {
 				filter={["has", "point_count"]}
 				style={{
 					circlePitchAlignment: "map",
-					circleColor: "#42E100",
+					circleColor: colors.primary,
 					circleRadius: 20,
 					circleOpacity: 0.7,
 					circleStrokeWidth: 2,
@@ -46,16 +72,25 @@ export default function OrderMarkers({ orders }: any) {
 
 			<SymbolLayer
 				id="symbolLocationSymbols"
-				// minZoomLevel={1}
 				style={{
-					iconImage: "pin",
-					// iconAllowOverlap: true,
-					iconSize: 0.5,
+					iconImage: [
+						"match",
+						["get", "status"],
+						"Completed",
+						"pinGreen",
+						"Failed",
+						"pinRed",
+						"open",
+						"pinGray",
+						"pinGray",
+					],
+					iconSize: 0.35,
 					iconAnchor: "bottom",
+					iconColor: "blue",
 				}}
 				filter={["!", ["has", "point_count"]]}
 			/>
-			<Images images={{ pin }} />
+			<Images images={{ pinGreen, pinRed, pinGray }} />
 		</ShapeSource>
 	);
 }

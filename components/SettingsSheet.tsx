@@ -1,18 +1,17 @@
+import { MapViewOptions } from "@/constants/MapViewOptions";
 import { client } from "@/graphql/client";
+import { GET_VEHICLES } from "@/graphql/queries";
 import { useDateStore } from "@/hooks/useDateStore";
 import { useRouteSessionStore } from "@/hooks/useRouteSessionStore";
-import { useSheetContext } from "@/providers/SheetProvider";
-import { useAuth, useOrganizationList, useUser } from "@clerk/clerk-expo";
-import Feather from "@expo/vector-icons/Feather";
-import BottomSheet, { BottomSheetScrollView } from "@gorhom/bottom-sheet";
-// import DateTimePicker from "@react-native-community/datetimepicker";
-import { GET_VEHICLES } from "@/graphql/queries";
 import { useVehicleStore } from "@/hooks/useVehicleStore";
+import { useSheetContext } from "@/providers/SheetProvider";
 import { useQuery } from "@apollo/client";
+import { useAuth, useOrganizationList, useUser } from "@clerk/clerk-expo";
+import BottomSheet, { BottomSheetScrollView } from "@gorhom/bottom-sheet";
 import Constants from "expo-constants";
 import moment from "moment";
 import React, { useEffect, useState } from "react";
-import { ActivityIndicator, Platform, Pressable, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Text, TouchableOpacity, View } from "react-native";
 import DateTimePicker from "./DateTimePicker";
 import { ModalPicker } from "./ModalPicker";
 
@@ -77,7 +76,7 @@ export default function SettingsSheet() {
 				</View>
 
 				{vehicles && vehicles.length > 0 && (
-					<View className="min-w-[125px] md:min-w-[200px] ">
+					<View>
 						<Text className="text-gray-500">Choose vehicle</Text>
 						<ModalPicker
 							key={selectedVehicle?.name}
@@ -97,6 +96,28 @@ export default function SettingsSheet() {
 						/>
 					</View>
 				)}
+
+				{/* <View className="">
+					<Text className="text-gray-500">Default Map View</Text>
+					{user && (
+						<ModalPicker
+							key={user?.unsafeMetadata.defaultMapView as string}
+							list={MapViewOptions}
+							options={{
+								defaultValue: user.unsafeMetadata.defaultMapView as string,
+								displayAll: false,
+							}}
+							onSelect={(value) =>
+								user.update({
+									unsafeMetadata: {
+										...user.unsafeMetadata,
+										defaultMapView: value,
+									},
+								})
+							}
+						/>
+					)}
+				</View> */}
 
 				{orgId && organizations && organizations.length > 1 && (
 					<View className="mb-10">

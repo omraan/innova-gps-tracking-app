@@ -52,12 +52,14 @@ export const RouteProvider = ({ children }: PropsWithChildren) => {
 					longitude: myLocation.coords.longitude,
 				},
 
-				orders.map((order: CustomerOrders) => {
-					return {
-						latitude: order.customer.lat,
-						longitude: order.customer.lng,
-					};
-				})
+				orders
+					.filter((order) => !["Completed", "Failed"].includes(order.status))
+					.map((order: CustomerOrders) => {
+						return {
+							latitude: order.customer.lat,
+							longitude: order.customer.lng,
+						};
+					})
 			);
 			setRoute(res);
 		} else {
@@ -74,7 +76,7 @@ export const RouteProvider = ({ children }: PropsWithChildren) => {
 			setRouteCoordinates(null);
 			return;
 		}
-		const { waypoints } = route;
+		// const { waypoints } = route;
 
 		// const newOrders = orders.map((order, indexOrder) => {
 		// 	const waypoint = waypoints.find((waypoint, indexWaypoint) => {

@@ -5,12 +5,12 @@ import RouteSheet from "@/components/RouteSheet";
 import SelectedOrderSheet from "@/components/SelectedOrderSheet";
 import SettingsSheet from "@/components/SettingsSheet";
 import { MetaDataProvider } from "@/providers/MetaDataProvider";
-import OrderProvider, { useOrder } from "@/providers/OrderProvider";
+import OrderProvider from "@/providers/OrderProvider";
 import { RouteProvider } from "@/providers/RouteProvider";
 import { useSheetContext } from "@/providers/SheetProvider";
 import { SignedIn } from "@clerk/clerk-expo";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import { SafeAreaView, StyleSheet, Text, View } from "react-native";
+import { SafeAreaView, StyleSheet, View } from "react-native";
 import { TouchableOpacity } from "react-native-gesture-handler";
 
 export default function Page() {
@@ -52,7 +52,7 @@ export default function Page() {
 								</View>
 							</SafeAreaView>
 						</View>
-						<View style={{ position: "absolute", bottom: 50, width: "100%" }}>
+						<View style={{ position: "absolute", bottom: 30, width: "100%" }}>
 							<View className="flex-row justify-center items-center">
 								<RouteSession />
 							</View>
