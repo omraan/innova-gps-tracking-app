@@ -62,7 +62,6 @@ export default function SelectedOrderSheet() {
 				// orders.find((order: { name: string; value: Order }) => order.name === orderId).value.events || [];
 				const sanitizedOrderEvents = selectedOrder.events.map(({ __typename, ...rest }: any) => rest);
 
-				console.log("hello3");
 				let newEvent: any = {
 					name: "",
 					notes: "",
@@ -126,11 +125,15 @@ export default function SelectedOrderSheet() {
 		}
 	}
 
+	if (!selectedOrder) return null;
+
+	const customerWithLocation = selectedOrder.customer.lat !== 0;
+
 	return (
 		<BottomSheet
 			ref={bottomSheetRefs.orders}
 			index={-1}
-			snapPoints={["50%"]}
+			snapPoints={[customerWithLocation ? "50%" : "30%"]}
 			enablePanDownToClose
 			backgroundStyle={{ backgroundColor: "#f9f9f9" }}
 			onClose={() => handlePanDownToClose("orders")}
@@ -183,7 +186,7 @@ export default function SelectedOrderSheet() {
 							<Text className="text-center max-w-[300px] flex flex-wrap">{selectedOrder.notes}</Text>
 						</View>
 					) : (
-						<View></View>
+						<View />
 					)}
 					{/* {orgRole && orgRole !== "org:viewer" && selectedDate == moment(new Date()).format("yyyy-MM-DD") && (
 						
@@ -212,53 +215,64 @@ export default function SelectedOrderSheet() {
 							</Text>
 						</View>
 					)}
-					<View className="mb-5">
-						<TextInput
-							placeholder={orgRole && orgRole !== "org:viewer" ? "Type Notes" : "No notes"}
-							placeholderTextColor="#999"
-							value={notes}
-							onChangeText={setNotes}
-							className="text-sm rounded text-gray-700 border-b pb-2 border-gray-300 flex flex-wrap text-wrap "
-							style={{ maxWidth: 300, opacity: routeSession === null ? 0.5 : 1 }}
-							editable={orgRole && orgRole !== "org:viewer" && routeSession !== null ? true : false}
-							multiline={true}
-							numberOfLines={4}
-						/>
-					</View>
 
-					<View className="flex-row justify-between items-center mb-5">
-						{statusCategories &&
-							statusCategories.length > 0 &&
-							statusCategories
-								.filter((s) => s.name !== "No Location")
-								.map((status) => (
-									<Pressable
-										key={status.name}
-										onPress={() => {
-											if (routeSession && routeSession !== null) {
-												setSelectedStatus(status);
-												handleOpenModal();
-											}
-										}}
-										disabled={routeSession === null}
-										className="flex-1 rounded py-4 mx-1"
-										style={{
-											borderWidth: !isColorDark(status.color) ? 1 : 0,
-											borderColor: "#dddddd",
-											backgroundColor: status.color,
-											opacity: routeSession === null ? 0.5 : 1,
-											display: status.name !== selectedOrder.status ? "flex" : "none",
-										}}
-									>
-										<Text
-											className="text-center"
-											style={{ color: isColorDark(status.color) ? "white" : "#666666" }}
-										>
-											{status.name}
-										</Text>
-									</Pressable>
-								))}
-					</View>
+					{selectedOrder.customer.lat !== 0 ? (
+						<View>
+							<View className="mb-5">
+								<TextInput
+									placeholder={orgRole && orgRole !== "org:viewer" ? "Type Notes" : "No notes"}
+									placeholderTextColor="#999"
+									value={notes}
+									onChangeText={setNotes}
+									className="text-sm rounded text-gray-700 border-b pb-2 border-gray-300 flex flex-wrap text-wrap "
+									style={{ maxWidth: 300, opacity: routeSession === null ? 0.5 : 1 }}
+									editable={
+										orgRole && orgRole !== "org:viewer" && routeSession !== null ? true : false
+									}
+									multiline={true}
+									numberOfLines={4}
+								/>
+							</View>
+
+							<View className="flex-row justify-between items-center mb-5">
+								{statusCategories &&
+									statusCategories.length > 0 &&
+									statusCategories
+										.filter((s) => s.name !== "No Location")
+										.map((status) => (
+											<Pressable
+												key={status.name}
+												onPress={() => {
+													if (routeSession && routeSession !== null) {
+														setSelectedStatus(status);
+														handleOpenModal();
+													}
+												}}
+												disabled={routeSession === null}
+												className="flex-1 rounded py-4 mx-1"
+												style={{
+													borderWidth: !isColorDark(status.color) ? 1 : 0,
+													borderColor: "#dddddd",
+													backgroundColor: status.color,
+													opacity: routeSession === null ? 0.5 : 1,
+													display: status.name !== selectedOrder.status ? "flex" : "none",
+												}}
+											>
+												<Text
+													className="text-center"
+													style={{ color: isColorDark(status.color) ? "white" : "#666666" }}
+												>
+													{status.name}
+												</Text>
+											</Pressable>
+										))}
+							</View>
+						</View>
+					) : (
+						<View>
+							<Text>This Customer does not have location set.</Text>
+						</View>
+					)}
 
 					<Modal modalVisible={modalVisible} setModalVisible={setModalVisible} handleSave={handleSave}>
 						<View className="mb-10">
