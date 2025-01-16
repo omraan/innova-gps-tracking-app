@@ -4,7 +4,7 @@ import { createJSONStorage, persist } from "zustand/middleware";
 
 type LiveLocationStore = {
 	liveLocation: LiveLocation | null;
-	setLiveLocation: (liveLocation: LiveLocation) => void;
+	setLiveLocation: (liveLocation: LiveLocation | null) => void;
 	error?: null | {
 		message?: string;
 		details?: string;

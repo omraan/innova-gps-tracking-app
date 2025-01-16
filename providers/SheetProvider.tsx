@@ -30,6 +30,7 @@ export const SheetProvider = ({ children }: PropsWithChildren) => {
 	};
 
 	const handleSetActiveSheet = (sheet: SheetCategories | null) => {
+		console.log("handleActiveSheet", sheet, activeSheet);
 		if (sheet === activeSheet) {
 			if (activeSheet !== "orders") {
 				setActiveSheet(null);
@@ -39,6 +40,7 @@ export const SheetProvider = ({ children }: PropsWithChildren) => {
 					bottomSheetRefs.orders.current?.expand();
 				}, 200);
 			}
+			setActiveSheet(null);
 		} else {
 			setActiveSheet(sheet);
 		}

@@ -47,10 +47,6 @@ export const ModalPicker = ({ list, onSelect, options, disabled = false }: Modal
 	const handleOpenModal = () => {
 		setModalVisible(true);
 	};
-	console.log(
-		"default value",
-		list.find((item) => item.value === options?.defaultValue)
-	);
 
 	return (
 		<View>

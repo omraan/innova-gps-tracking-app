@@ -6,6 +6,7 @@ import pinRedPriority from "@/assets/images/pin-red-priority.png";
 import pinRed from "@/assets/images/pin-red.png";
 
 import colors from "@/colors";
+import { useLocation } from "@/providers/LocationProvider";
 
 import { useOrder } from "@/providers/OrderProvider";
 import { useSheetContext } from "@/providers/SheetProvider";
@@ -16,6 +17,7 @@ import { useEffect, useState } from "react";
 
 export default function OrderMarkers() {
 	const { orders, selectedOrder, setSelectedOrder, filteredOrders } = useOrder();
+	const { isChangingLocation } = useLocation();
 
 	const [bounceValue, setBounceValue] = useState([0, 0]);
 
@@ -40,15 +42,18 @@ export default function OrderMarkers() {
 	};
 
 	useEffect(() => {
-		setBounceValue([0, 0]);
-		if (selectedOrder) {
-			let bounce = 0;
+		if (!isChangingLocation) {
+			setBounceValue([0, 0]);
+			if (selectedOrder) {
+				let bounce = 0;
 
-			const interval = setInterval(() => {
-				bounce = bounce === 0 ? 10 : 0;
-				setBounceValue([0, bounce]);
-			}, 500);
-			return () => clearInterval(interval);
+				const interval = setInterval(() => {
+					bounce = bounce === 0 ? 10 : 0;
+					setBounceValue([0, bounce]);
+				}, 500);
+				return () => clearInterval(interval);
+			}
+		} else {
 		}
 	}, [selectedOrder]);
 

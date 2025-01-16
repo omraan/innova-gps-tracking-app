@@ -3,17 +3,18 @@ import { UPDATE_ORDER } from "@/graphql/mutations";
 import { GET_ORDERS_BY_DATE } from "@/graphql/queries";
 import { useDateStore } from "@/hooks/useDateStore";
 import { useRouteSessionStore } from "@/hooks/useRouteSessionStore";
-import { isColorDark } from "@/lib/styles";
+import { useLocation } from "@/providers/LocationProvider";
 import { useMetadata } from "@/providers/MetaDataProvider";
 import { useOrder } from "@/providers/OrderProvider";
 import { useSheetContext } from "@/providers/SheetProvider";
-import { useMutation } from "@apollo/client";
+import { useMutation, useQuery } from "@apollo/client";
 import { useAuth } from "@clerk/clerk-expo";
 import { MaterialIcons } from "@expo/vector-icons";
 import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
 import { useState } from "react";
 import { Pressable, Text, TextInput, View } from "react-native";
-import { Modal } from "./Modal";
+import { ModalConfirmation } from "./ModalConfirmation";
+
 export default function SelectedOrderSheet() {
 	const { bottomSheetRefs, handlePanDownToClose } = useSheetContext();
 	const { selectedDate, isToday } = useDateStore();
@@ -23,23 +24,16 @@ export default function SelectedOrderSheet() {
 	const { setActiveSheet } = useSheetContext();
 	const [notes, setNotes] = useState<string>("");
 	const { userId } = useAuth();
+	const { isChangingLocation, setIsChangingLocation } = useLocation();
 
-	const [modalVisible, setModalVisible] = useState(false);
-
-	const [selectedStatus, setSelectedStatus] = useState<StatusCategory | null>(null);
-
-	const handleOpenModal = () => {
-		setModalVisible(true);
-	};
-
-	const handleSave = () => {
+	const handleSave = (selectedStatus: StatusCategory | null) => {
 		if (selectedStatus) {
 			onMarkerSubmit(selectedStatus, notes);
-			setModalVisible(false);
-			setSelectedOrder(null);
-			setActiveSheet(null);
-			setNotes("");
 		}
+
+		setSelectedOrder(null);
+		setActiveSheet(null);
+		setNotes("");
 	};
 
 	const [updateOrder] = useMutation(UPDATE_ORDER, {
@@ -125,9 +119,7 @@ export default function SelectedOrderSheet() {
 		}
 	}
 
-	if (!selectedOrder) return null;
-
-	const customerWithLocation = selectedOrder.customer.lat !== 0;
+	const customerWithLocation = selectedOrder?.customer?.lat !== 0;
 
 	return (
 		<BottomSheet
@@ -136,12 +128,18 @@ export default function SelectedOrderSheet() {
 			snapPoints={[customerWithLocation ? "50%" : "30%"]}
 			enablePanDownToClose
 			backgroundStyle={{ backgroundColor: "#f9f9f9" }}
-			onClose={() => handlePanDownToClose("orders")}
+			onChange={(index, position) => {
+				if (index === -1) {
+					handlePanDownToClose("orders");
+					if (!isChangingLocation) {
+						setSelectedOrder(null);
+					}
+				}
+			}}
 		>
 			{selectedOrder && (
 				<BottomSheetView style={{ flex: 1, padding: 15 }}>
 					<View style={{ flexDirection: "row", gap: 20, marginBottom: 20 }}>
-						{/* <Image source={OrderImage} style={{ width: 60, height: 60 }} /> */}
 						<View style={{ flex: 1, gap: 5 }}>
 							<Text className="font-semibold text-2xl">{selectedOrder.customer.name}</Text>
 							<Text className="font-normal text-gray-500">{`${
@@ -160,19 +158,28 @@ export default function SelectedOrderSheet() {
 								<Text className="font-normal text-gray-500">{selectedOrder.customer.phoneNumber3}</Text>
 							)}
 						</View>
-						<View style={{ flex: 1, flexDirection: "column", gap: 2, alignItems: "flex-end" }}>
-							{selectedOrder.orderNumbers && selectedOrder.orderNumbers.length > 0 ? (
-								selectedOrder.orderNumbers.map((orderNumber: string) => (
-									<View>
-										<Text>{orderNumber}</Text>
-									</View>
-								))
-							) : (
-								<View className="bg-primary/20 py-2 px-4 rounded">
-									<Text className="text-primary font-bold">No order number</Text>
+						<Pressable
+							className="bg-primary p-3 rounded mb-auto"
+							onPress={() => {
+								setActiveSheet(null);
+								setIsChangingLocation(true);
+							}}
+						>
+							<MaterialIcons name="edit-location-alt" size={20} color="#ffffff" />
+						</Pressable>
+					</View>
+					<View className="flex-row gap-2 my-5">
+						{selectedOrder.orderNumbers && selectedOrder.orderNumbers.length > 0 ? (
+							selectedOrder.orderNumbers.map((orderNumber: string) => (
+								<View>
+									<Text>{orderNumber}</Text>
 								</View>
-							)}
-						</View>
+							))
+						) : (
+							<View className="bg-primary/20 py-2 px-4 rounded">
+								<Text className="text-primary font-bold">No order number</Text>
+							</View>
+						)}
 					</View>
 					{selectedOrder.notes || selectedOrder.customer.notes ? (
 						<View className="mb-5 bg-gray-100 rounded-lg p-5">
@@ -188,6 +195,7 @@ export default function SelectedOrderSheet() {
 					) : (
 						<View />
 					)}
+
 					{/* {orgRole && orgRole !== "org:viewer" && selectedDate == moment(new Date()).format("yyyy-MM-DD") && (
 						
 					)} */}
@@ -234,65 +242,13 @@ export default function SelectedOrderSheet() {
 								/>
 							</View>
 
-							<View className="flex-row justify-between items-center mb-5">
-								{statusCategories &&
-									statusCategories.length > 0 &&
-									statusCategories
-										.filter((s) => s.name !== "No Location")
-										.map((status) => (
-											<Pressable
-												key={status.name}
-												onPress={() => {
-													if (routeSession && routeSession !== null) {
-														setSelectedStatus(status);
-														handleOpenModal();
-													}
-												}}
-												disabled={routeSession === null}
-												className="flex-1 rounded py-4 mx-1"
-												style={{
-													borderWidth: !isColorDark(status.color) ? 1 : 0,
-													borderColor: "#dddddd",
-													backgroundColor: status.color,
-													opacity: routeSession === null ? 0.5 : 1,
-													display: status.name !== selectedOrder.status ? "flex" : "none",
-												}}
-											>
-												<Text
-													className="text-center"
-													style={{ color: isColorDark(status.color) ? "white" : "#666666" }}
-												>
-													{status.name}
-												</Text>
-											</Pressable>
-										))}
-							</View>
+							<ModalConfirmation handleSave={handleSave} />
 						</View>
 					) : (
 						<View>
 							<Text>This Customer does not have location set.</Text>
 						</View>
 					)}
-
-					<Modal modalVisible={modalVisible} setModalVisible={setModalVisible} handleSave={handleSave}>
-						<View className="mb-10">
-							<Text className="font-semibold text-2xl text-center mb-5">Change Status</Text>
-							<Text className="font-normal text-gray-500 text-center mb-10">
-								Select the new status for this order: {selectedOrder.customer.name}
-							</Text>
-							<View
-								className="border rounded px-5 py-2 mx-auto"
-								style={{ borderColor: selectedStatus?.color }}
-							>
-								<Text
-									className="font-bold text-primary text-center text-2xl"
-									style={{ color: selectedStatus?.color }}
-								>
-									{selectedStatus?.name}
-								</Text>
-							</View>
-						</View>
-					</Modal>
 				</BottomSheetView>
 			)}
 		</BottomSheet>

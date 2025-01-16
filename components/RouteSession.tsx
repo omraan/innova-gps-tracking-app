@@ -50,7 +50,6 @@ export default function RouteSession() {
 
 	const showButton =
 		!routeSession && selectedDate === moment(new Date()).format("YYYY-MM-DD") && orders && orders.length > 0;
-	console.log("selectedVehicle", selectedVehicle);
 	return (
 		showButton && (
 			<View>

@@ -1,9 +1,11 @@
+import { MapViewOptions } from "@/constants/MapViewOptions";
 import { GET_ORDERS_BY_DATE, GET_VEHICLES } from "@/graphql/queries";
 import { useDateStore } from "@/hooks/useDateStore";
 import { useRouteSessionStore } from "@/hooks/useRouteSessionStore";
 import { useVehicleStore } from "@/hooks/useVehicleStore";
 import { useSheetContext } from "@/providers/SheetProvider";
 import { useQuery } from "@apollo/client";
+import { useUser } from "@clerk/clerk-expo";
 import BottomSheet, { BottomSheetScrollView, BottomSheetView } from "@gorhom/bottom-sheet";
 import moment from "moment";
 import { useState } from "react";
@@ -53,6 +55,8 @@ export default function SettingsSheet() {
 		setLoading(false);
 	};
 
+	const { user } = useUser();
+
 	return (
 		<BottomSheet
 			ref={bottomSheetRefs.settings}
@@ -99,7 +103,7 @@ export default function SettingsSheet() {
 					</View>
 				)}
 
-				{/* <View className="">
+				<View className="">
 					<Text className="text-gray-500">Default Map View</Text>
 					{user && (
 						<ModalPicker
@@ -119,7 +123,7 @@ export default function SettingsSheet() {
 							}
 						/>
 					)}
-				</View> */}
+				</View>
 			</BottomSheetView>
 		</BottomSheet>
 	);

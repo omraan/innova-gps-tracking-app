@@ -1,7 +1,9 @@
+import colors from "@/colors";
 import { isColorDark } from "@/lib/styles";
 import { useOrder } from "@/providers/OrderProvider";
 import { isArray } from "@apollo/client/utilities";
 import { useAuth, useOrganization, useUser } from "@clerk/clerk-expo";
+import { Entypo, MaterialIcons } from "@expo/vector-icons";
 import { Card } from "@rneui/themed";
 import { format } from "date-fns";
 import moment from "moment";
@@ -64,53 +66,33 @@ export default function OrderList() {
 
 	const ordersWithMissingLocation = orders.filter((order: CustomerOrders) => Number(order.customer.lat) === 0) || [];
 
-	// const sortOrders = (orders: CustomerOrders[]) => {
-	// 	const ordersWithLabels = orders.map((order: any) => {
-	// 		const label = labels.map((label) => {
-	// 			const splittedLabel = label.split(".");
-	// 			if (splittedLabel.length > 1) {
-	// 				return order[splittedLabel[0]][splittedLabel[1]] + " ";
-	// 			}
-	// 			if (order[label]) {
-	// 				return order[label].length > 1 ? order[label].join(" ") : order[label][0];
-	// 			}
-	// 		});
-	// 		return { ...order, label: label.join(" ") };
-	// 	});
-
-	// 	return ordersWithLabels.sort((a, b) => {
-	// 		if (sortType === "status") {
-	// 			const latA = Number(a.customer.lat);
-	// 			const latB = Number(b.customer.lat);
-
-	// 			if (sortOrder === "asc") {
-	// 				if (latA === 0 && latB !== 0) return 1;
-	// 				if (latA !== 0 && latB === 0) return -1;
-	// 				if (latA === 0 && latB === 0) return 0;
-	// 			} else {
-	// 				if (latA === 0 && latB !== 0) return -1;
-	// 				if (latA !== 0 && latB === 0) return 1;
-	// 				if (latA === 0 && latB === 0) return 0;
-	// 			}
-	// 			const statusA = statusCategories.findIndex(
-	// 				(category) => category.name.toLowerCase() === a.status?.toLowerCase()
-	// 			);
-	// 			const statusB = statusCategories.findIndex(
-	// 				(category) => category.name.toLowerCase() === b.status?.toLowerCase()
-	// 			);
-	// 			return sortOrder === "asc" ? statusA - statusB : statusB - statusA;
-	// 		} else {
-	// 			const nameA = a.customer.name.toLowerCase();
-	// 			const nameB = b.customer.name.toLowerCase();
-	// 			if (nameA < nameB) return sortOrder === "asc" ? -1 : 1;
-	// 			if (nameA > nameB) return sortOrder === "asc" ? 1 : -1;
-	// 			return 0;
-	// 		}
-	// 	});
-	// };
 	return (
 		<View className="flex-1 mb-20 px-3">
-			<View className=" pt-2 ">
+			{ordersWithMissingLocation.length > 0 ? (
+				<View className="flex-1">
+					<View className="bg-red-200 border border-red-400 p-5 rounded mb-10">
+						<Text className="text-lg font-bold text-gray-500 mb-2">
+							{ordersWithMissingLocation.length} order(s) with missing location
+						</Text>
+						<Text className="text-md text-gray-700 mb-5">
+							Please update the location of the following order(s):
+						</Text>
+						<View className="flex-row gap-5">
+							<Text className="text-md text-gray-700">Press on</Text>
+							<MaterialIcons name="edit-location-alt" size={24} color={colors.primary} />
+							<Text className="text-md text-gray-700">the order to update the location.</Text>
+						</View>
+					</View>
+					{/* <View className="mb-2 p-2">
+						{ordersWithMissingLocation.map((order: CustomerOrders, index: number) => (
+							<OrderListItem order={order} key={index} />
+						))}
+					</View> */}
+				</View>
+			) : (
+				<View />
+			)}
+			<View className="pt-2">
 				<Text className="text-center mb-2">
 					{orders.length} order
 					{orders.length !== 1 ? "s" : ""}
