@@ -1,10 +1,9 @@
 import colors from "@/colors";
-import { CREATE_ROUTE_SESSION, UPDATE_ROUTE_SESSION } from "@/graphql/mutations";
-import { GET_ROUTE_SESSIONS } from "@/graphql/queries";
+import { UPDATE_ROUTE_START_TIME } from "@/graphql/mutations";
 import { useDateStore } from "@/hooks/useDateStore";
-import { useRouteSessionStore } from "@/hooks/useRouteSessionStore";
 import { useVehicleStore } from "@/hooks/useVehicleStore";
-import { useOrder } from "@/providers/OrderProvider";
+import { useDispatch } from "@/providers/DispatchProvider";
+import { useRoute } from "@/providers/RouteProvider";
 import { useMutation, useQuery } from "@apollo/client";
 import { useAuth } from "@clerk/clerk-expo";
 import { AntDesign, MaterialIcons } from "@expo/vector-icons";
@@ -16,41 +15,43 @@ import { useTailwind } from "tailwind-rn";
 export default function RouteSession() {
 	const tw = useTailwind();
 
-	const { routeSession, setRouteSession } = useRouteSessionStore();
-	const { userId } = useAuth();
 	const { selectedDate } = useDateStore();
 	const { selectedVehicle } = useVehicleStore();
-	const { orders } = useOrder();
-	const [CreateRouteSession] = useMutation(CREATE_ROUTE_SESSION);
+	const { dispatches } = useDispatch();
+	const { selectedRoute, setSelectedRoute } = useRoute();
+
+	const [UpdateRouteStartTime] = useMutation(UPDATE_ROUTE_START_TIME);
 
 	const startRoute = async () => {
-		const startTime = Date.now();
+		const startTime = moment(new Date()).format("yyyy-MM-DD HH:mm:ss");
 
 		if (!selectedDate) {
 			return;
 		}
-		if (!selectedVehicle) {
+		if (!selectedRoute) {
 			return;
 		}
 
 		const variables = {
 			date: selectedDate,
-			vehicleId: selectedVehicle?.name,
-			driverId: userId,
-			startTime: moment(new Date()).format("yyyy-MM-DD HH:mm:ss"),
+			routeId: selectedRoute?.name,
+			startTime,
 		};
-		await CreateRouteSession({
+		await UpdateRouteStartTime({
 			variables,
 			onCompleted: (data) => {
-				const routeSessionId = data?.insertRouteSession?.name;
-				setRouteSession({ id: routeSessionId, startTime });
+				setSelectedRoute({
+					name: selectedRoute.name,
+					value: {
+						...selectedRoute.value,
+						startTime,
+					},
+				});
 			},
 		});
 	};
 
-	const showButton =
-		!routeSession && selectedDate === moment(new Date()).format("YYYY-MM-DD") && orders && orders.length > 0;
-	console.log("selectedVehicle", selectedVehicle);
+	const showButton = selectedRoute && !selectedRoute?.value.startTime && dispatches && dispatches.length > 0;
 	return (
 		showButton && (
 			<View>

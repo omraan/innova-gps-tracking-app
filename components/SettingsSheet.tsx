@@ -1,33 +1,26 @@
-import { GET_ORDERS_BY_DATE, GET_VEHICLES } from "@/graphql/queries";
+import { GET_DISPATCHES, GET_ROUTES, GET_VEHICLES } from "@/graphql/queries";
 import { useDateStore } from "@/hooks/useDateStore";
-import { useRouteSessionStore } from "@/hooks/useRouteSessionStore";
 import { useVehicleStore } from "@/hooks/useVehicleStore";
+import toastPromise from "@/lib/toastPromise";
+import { useRoute } from "@/providers/RouteProvider";
 import { useSheetContext } from "@/providers/SheetProvider";
 import { useQuery } from "@apollo/client";
-import BottomSheet, { BottomSheetScrollView, BottomSheetView } from "@gorhom/bottom-sheet";
+import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
 import moment from "moment";
-import { useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import DateTimePicker from "./DateTimePicker";
 import { ModalPicker } from "./ModalPicker";
-
 export default function SettingsSheet() {
 	const { bottomSheetRefs, handlePanDownToClose } = useSheetContext();
 	const { selectedDate, setSelectedDate } = useDateStore();
-	const { routeSession } = useRouteSessionStore();
 
+	const { selectedRoute, refetchRoutes } = useRoute();
 	const { selectedVehicle, setSelectedVehicle } = useVehicleStore();
-	const { data: dataVehicles, refetch: refetchVehicles } = useQuery(GET_VEHICLES);
+
+	const { refetch: refetchDispatches } = useQuery(GET_DISPATCHES, { fetchPolicy: "network-only" });
+	const { data: dataVehicles, refetch: refetchVehicles } = useQuery(GET_VEHICLES, { fetchPolicy: "network-only" });
 	const vehicles = dataVehicles?.getVehicles || [];
 
-	const { refetch: refetchOrders } = useQuery(GET_ORDERS_BY_DATE, {
-		variables: {
-			date: selectedDate || moment(new Date()).format("yyyy-MM-DD"),
-		},
-		fetchPolicy: "network-only",
-	});
-
-	const [loading, setLoading] = useState<boolean>(false);
 	const onDateChange = (newDate: any) => {
 		const currentDate = newDate;
 		setSelectedDate(moment(currentDate).format("yyyy-MM-DD"));
@@ -38,26 +31,27 @@ export default function SettingsSheet() {
 	};
 
 	const handleRefresh = async () => {
-		setLoading(true);
-		try {
-			await refetchOrders({
-				fetchPolicy: "network-only",
-			});
-			await refetchVehicles({
-				fetchPolicy: "network-only",
-			});
-			await new Promise((resolve) => setTimeout(resolve, 2000));
-		} catch (error) {
-			console.error(error);
-		}
-		setLoading(false);
+		const promises = Promise.all([
+			refetchRoutes(),
+			// refetchDispatches({
+			// 	variables: {
+			// 		routeId: selectedRoute?.name,
+			// 	},
+			// }),
+			refetchVehicles(),
+		]);
+
+		toastPromise(promises, {
+			loading: "Refreshing data...",
+			success: "Data refreshed",
+			error: "Failed to refresh data",
+		});
 	};
 
 	return (
 		<BottomSheet
 			ref={bottomSheetRefs.settings}
 			index={-1}
-			// snapPoints={["50%"]}
 			enablePanDownToClose
 			enableDynamicSizing={true}
 			backgroundStyle={{ backgroundColor: "#f9f9f9" }}
@@ -94,7 +88,7 @@ export default function SettingsSheet() {
 									displayAllLabel: "All Vehicles",
 								}}
 								onSelect={handlePickerChange}
-								disabled={routeSession ? true : false}
+								disabled={selectedRoute?.value.startTime ? true : false}
 							/>
 						</View>
 					)}

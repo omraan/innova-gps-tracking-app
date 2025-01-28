@@ -15,6 +15,8 @@ export const UPDATE_CUSTOMER = gql`
 		$streetNumber: String
 		$phoneNumber: String
 		$phoneNumber2: String
+		$phoneNumber3: String
+		$notes: String
 	) {
 		updateCustomer(
 			id: $id
@@ -30,6 +32,35 @@ export const UPDATE_CUSTOMER = gql`
 			streetNumber: $streetNumber
 			phoneNumber: $phoneNumber
 			phoneNumber2: $phoneNumber2
+			phoneNumber3: $phoneNumber3
+			notes: $notes
+		) {
+			name
+		}
+	}
+`;
+export const UPDATE_CUSTOMER_ADDRESS = gql`
+	mutation UpdateCustomer(
+		$id: ID!
+		$organizationId: ID!
+		$token: String!
+		$lat: Float
+		$lng: Float
+		$city: String
+		$streetName: String
+		$streetNumber: String
+		$notes: String
+	) {
+		updateCustomer(
+			id: $id
+			organizationId: $organizationId
+			token: $token
+			lat: $lat
+			lng: $lng
+			city: $city
+			streetName: $streetName
+			streetNumber: $streetNumber
+			notes: $notes
 		) {
 			name
 		}
@@ -44,15 +75,8 @@ export const UPDATE_ORDER = gql`
 		$token: String!
 		$modifiedBy: String
 		$modifiedAt: Float
-		$driverId: String
-		$vehicleId: String
 		$customerId: String
-		$expectedDeliveryDate: String
-		$status: String
-		$category: String
-		$routeIndex: Int
-		$notes: String
-		$events: [OrderEventInput!]!
+		$orderNumber: String
 	) {
 		updateOrder(
 			id: $id
@@ -61,81 +85,105 @@ export const UPDATE_ORDER = gql`
 			date: $date
 			modifiedBy: $modifiedBy
 			modifiedAt: $modifiedAt
-			driverId: $driverId
-			vehicleId: $vehicleId
 			customerId: $customerId
-			expectedDeliveryDate: $expectedDeliveryDate
-			status: $status
-			category: $category
-			routeIndex: $routeIndex
-			notes: $notes
-			events: $events
+			orderNumber: $orderNumber
 		) {
 			name
 		}
 	}
 `;
 
-export const REMOVE_ORDER = gql`
-	mutation RemoveOrder($organizationId: ID!, $token: String!, $id: ID!, $date: String!) {
-		deleteOrder(organizationId: $organizationId, token: $token, id: $id, date: $date) {
-			name
-		}
-	}
-`;
-
-export const CREATE_ROUTE_SESSION = gql`
-	mutation CreateRouteSession(
+export const UPDATE_DISPATCH = gql`
+	mutation UpdateDispatch(
 		$organizationId: ID!
 		$token: String!
-		$date: String!
-		$driverId: String
-		$vehicleId: String
-		$startTime: String
-		$endTime: String
-	) {
-		insertRouteSession(
-			organizationId: $organizationId
-			token: $token
-			date: $date
-			driverId: $driverId
-			vehicleId: $vehicleId
-			startTime: $startTime
-			endTime: $endTime
-		) {
-			name
-		}
-	}
-`;
-
-export const UPDATE_ROUTE_SESSION = gql`
-	mutation UpdateRouteSession(
 		$id: ID!
-		$organizationId: ID!
-		$token: String!
-		$date: String!
-		$driverId: String
-		$vehicleId: String
-		$startTime: String
-		$endTime: String
+		$routeId: String
+		$customerId: String
+		$trackAndTraceCode: String
+		$expectedDeliveryDate: String
+		$estimatedTimeArrival: Int
+		$status: String
+		$events: [DispatchEventInput]
+		$createdAt: Float
+		$modifiedAt: Float
+		$notes: String
+		$orders: [DispatchOrderInput]
+		$route: DispatchRouteInput
 	) {
-		updateRouteSession(
-			id: $id
+		updateDispatch(
 			organizationId: $organizationId
 			token: $token
-			date: $date
-			driverId: $driverId
-			vehicleId: $vehicleId
-			startTime: $startTime
-			endTime: $endTime
+			id: $id
+			routeId: $routeId
+			customerId: $customerId
+			trackAndTraceCode: $trackAndTraceCode
+			expectedDeliveryDate: $expectedDeliveryDate
+			estimatedTimeArrival: $estimatedTimeArrival
+			status: $status
+			createdAt: $createdAt
+			modifiedAt: $modifiedAt
+			notes: $notes
+			orders: $orders
+			events: $events
+			route: $route
 		) {
 			name
 		}
 	}
 `;
-export const REMOVE_ROUTE_SESSION = gql`
-	mutation RemoveRouteSession($organizationId: ID!, $token: String!, $id: ID!, $date: String!) {
-		deleteRouteSession(organizationId: $organizationId, token: $token, id: $id, date: $date) {
+
+export const UPDATE_ROUTE = gql`
+	mutation UpdateRoute(
+		$organizationId: ID!
+		$token: String!
+		$id: ID!
+		$date: String!
+		$title: String
+		$driverId: String
+		$vehicleId: String
+		$startTime: String
+		$endTime: String
+		$expectedStartTime: String
+		$expectedEndTime: String
+		$geometry: String
+	) {
+		updateRoute(
+			organizationId: $organizationId
+			token: $token
+			id: $id
+			date: $date
+			title: $title
+			driverId: $driverId
+			vehicleId: $vehicleId
+			startTime: $startTime
+			endTime: $endTime
+			expectedStartTime: $expectedStartTime
+			expectedEndTime: $expectedEndTime
+			geometry: $geometry
+		) {
+			name
+		}
+	}
+`;
+
+export const UPDATE_ROUTE_START_TIME = gql`
+	mutation UpdateRouteStartTime($organizationId: ID!, $token: String!, $id: ID!, $date: String!, $startTime: String) {
+		updateRouteStartTime(
+			organizationId: $organizationId
+			token: $token
+			id: $id
+			date: $date
+			startTime: $startTime
+		) {
+			name
+		}
+	}
+`;
+
+export const UPDATE_ROUTE_END_TIME = gql`
+	mutation UpdateRouteEndTime($organizationId: ID!, $token: String!, $id: ID!, $date: String!, $endTime: String) {
+		updateRouteEndTime(organizationId: $organizationId, token: $token, id: $id, date: $date, endTime: $endTime) {
 			name
 		}
 	}

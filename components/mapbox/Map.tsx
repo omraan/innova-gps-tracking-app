@@ -1,11 +1,11 @@
 import { MapViewOptions } from "@/constants/MapViewOptions";
-import { useOrder } from "@/providers/OrderProvider";
+import { useDispatch } from "@/providers/DispatchProvider";
 import { useRoute } from "@/providers/RouteProvider";
 import { useOrganization, useUser } from "@clerk/clerk-expo";
 import Mapbox, { Camera, LocationPuck, MapView } from "@rnmapbox/maps";
 import { useEffect, useRef, useState } from "react";
+import DispatchMarkers from "./DispatchMarkers";
 import LineRoute from "./LineRoute";
-import OrderMarkers from "./OrderMarkers";
 const publicAccessToken =
 	"pk.eyJ1IjoidmVkaXNwYXRjaCIsImEiOiJjbTU4NWU0ZzkzbXB1MmtzZGdlOGIwZjM2In0.3C22WiMd_1T_mRsYAWm8GQ";
 
@@ -14,8 +14,7 @@ export default function Map() {
 	const { organization } = useOrganization();
 	const [followingUser, setFollowingUser] = useState(false);
 
-	const { orders } = useOrder();
-	const { routeCoordinates } = useRoute();
+	const { routeCoordinates } = useDispatch();
 	const cameraRef = useRef<Camera>(null);
 
 	const defaultLatitude = organization?.publicMetadata.lat || 12.503286;
@@ -32,7 +31,6 @@ export default function Map() {
 	}, [user?.unsafeMetadata.defaultMapView]);
 
 	const mapView = (user?.unsafeMetadata.defaultMapView as string) || "standard";
-	console.log(mapView);
 	return (
 		<MapView
 			key={mapView}
@@ -56,7 +54,7 @@ export default function Map() {
 				animationMode="flyTo"
 				animationDuration={0}
 			/>
-			<OrderMarkers />
+			<DispatchMarkers />
 			{routeCoordinates && <LineRoute coordinates={routeCoordinates} />}
 			<LocationPuck puckBearingEnabled puckBearing="heading" pulsing={{ isEnabled: true }} />
 		</MapView>

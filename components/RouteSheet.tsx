@@ -1,32 +1,55 @@
-import { UPDATE_ROUTE_SESSION } from "@/graphql/mutations";
+import { UPDATE_ROUTE_END_TIME } from "@/graphql/mutations";
 import { useDateStore } from "@/hooks/useDateStore";
 import { useRouteSessionStore } from "@/hooks/useRouteSessionStore";
-import { useOrder } from "@/providers/OrderProvider";
+import { useDispatch } from "@/providers/DispatchProvider";
+import { useRoute } from "@/providers/RouteProvider";
 import { useSheetContext } from "@/providers/SheetProvider";
 import { useMutation } from "@apollo/client";
 import BottomSheet, { BottomSheetScrollView } from "@gorhom/bottom-sheet";
 import moment from "moment";
 import { Text, TouchableOpacity, View } from "react-native";
-import { Pressable } from "react-native-gesture-handler";
-import OrderList from "./OrderList";
+import DispatchList from "./DispatchList";
+import { ModalPicker } from "./ModalPicker";
+
 export default function RouteSheet() {
-	const { orders }: any = useOrder();
+	const { dispatches }: any = useDispatch();
 	const { bottomSheetRefs, handlePanDownToClose } = useSheetContext();
 	const { routeSession, setRouteSession } = useRouteSessionStore();
 
-	const [UpdateRouteSession] = useMutation(UPDATE_ROUTE_SESSION);
+	const [UpdateRouteEndTime] = useMutation(UPDATE_ROUTE_END_TIME);
+	const { routes, selectionRoutes, selectedRoute, setSelectedRoute } = useRoute();
+
 	const { selectedDate } = useDateStore();
+
 	const endRoute = async () => {
+		const endTime = moment(new Date()).format("yyyy-MM-DD HH:mm:ss");
+
+		if (!selectedDate) {
+			return;
+		}
+		if (!selectedRoute) {
+			return;
+		}
+
 		const variables = {
-			id: routeSession?.id!,
 			date: selectedDate,
-			endTime: moment(new Date()).format("yyyy-MM-DD HH:mm:ss"),
+			routeId: selectedRoute?.name,
+			endTime,
 		};
-		await UpdateRouteSession({
+		await UpdateRouteEndTime({
 			variables,
+			onCompleted: (data) => {
+				setSelectedRoute({
+					name: selectedRoute.name,
+					value: {
+						...selectedRoute.value,
+						endTime,
+					},
+				});
+			},
 		});
-		setRouteSession(null);
 	};
+
 	return (
 		<BottomSheet
 			ref={bottomSheetRefs.route}
@@ -37,6 +60,28 @@ export default function RouteSheet() {
 			backgroundStyle={{ backgroundColor: "#f9f9f9" }}
 			onClose={() => handlePanDownToClose("route")}
 		>
+			{!selectedRoute && selectionRoutes && selectionRoutes.length > 0 ? (
+				<View>
+					{
+						<View>
+							<Text className="text-center text-gray-500">Select a route to start</Text>
+							<ModalPicker
+								list={selectionRoutes.map((route: any) => {
+									return {
+										value: route.name,
+										label: route.value.title,
+									};
+								})}
+								onSelect={(routeId) =>
+									setSelectedRoute(selectionRoutes.find((r) => r.name === routeId))
+								}
+							/>
+						</View>
+					}
+				</View>
+			) : (
+				<View />
+			)}
 			{routeSession ? (
 				<View className="flex-row items-center justify-center py-4">
 					<TouchableOpacity onPress={endRoute} className="bg-black py-4 px-8 rounded">
@@ -47,14 +92,14 @@ export default function RouteSheet() {
 				<View />
 			)}
 
-			{orders && orders.length > 0 && (
+			{dispatches && dispatches.length > 0 && (
 				<BottomSheetScrollView
 					style={{
 						flex: 1,
 						padding: 10,
 					}}
 				>
-					<OrderList />
+					<DispatchList />
 				</BottomSheetScrollView>
 			)}
 		</BottomSheet>

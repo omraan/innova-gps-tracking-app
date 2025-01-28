@@ -4,24 +4,28 @@ import Map from "@/components/mapbox/Map";
 import RouteSession from "@/components/RouteSession";
 import RouteSheet from "@/components/RouteSheet";
 import SearchBar from "@/components/SearchBar";
-import SelectedOrderSheet from "@/components/SelectedOrderSheet";
+import SelectedDispatchSheet from "@/components/SelectedDispatchSheet";
 import SettingsSheet from "@/components/SettingsSheet";
+import DispatchProvider from "@/providers/DispatchProvider";
 import { MetaDataProvider } from "@/providers/MetaDataProvider";
-import OrderProvider from "@/providers/OrderProvider";
 import { RouteProvider } from "@/providers/RouteProvider";
 import { useSheetContext } from "@/providers/SheetProvider";
+import { loadDevMessages, loadErrorMessages } from "@apollo/client/dev";
 import { SignedIn } from "@clerk/clerk-expo";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { Pressable, SafeAreaView, StyleSheet, Text, View } from "react-native";
+import Toast from "react-native-toast-message";
 
 export default function Page() {
 	const { setActiveSheet } = useSheetContext();
+	loadDevMessages();
+	loadErrorMessages();
 
 	return (
 		<SignedIn>
 			<MetaDataProvider>
-				<OrderProvider>
-					<RouteProvider>
+				<RouteProvider>
+					<DispatchProvider>
 						<View className="flex-1">
 							<Map />
 							<SafeAreaView className="absolute top-0 left-0 right-0">
@@ -60,11 +64,12 @@ export default function Page() {
 						</View>
 
 						<RouteSheet />
-						<SelectedOrderSheet />
+						<SelectedDispatchSheet />
 						<SettingsSheet />
 						<AccountSheet />
-					</RouteProvider>
-				</OrderProvider>
+						<Toast />
+					</DispatchProvider>
+				</RouteProvider>
 			</MetaDataProvider>
 		</SignedIn>
 	);

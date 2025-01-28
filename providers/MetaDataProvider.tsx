@@ -1,14 +1,8 @@
 import { GET_VEHICLES } from "@/graphql/queries";
 import { useVehicleStore } from "@/hooks/useVehicleStore";
-import { getOptimizedTrip } from "@/services/optimized-trips";
 import { useQuery } from "@apollo/client";
 import { useAuth, useOrganization, useUser } from "@clerk/clerk-expo";
-import polyline from "@mapbox/polyline";
-import { Position } from "@rnmapbox/maps/lib/typescript/src/types/Position";
-import * as Location from "expo-location";
 import { createContext, PropsWithChildren, useContext, useEffect, useState } from "react";
-import { LatLng } from "react-native-maps";
-import { useOrder } from "./OrderProvider";
 
 const MetaDataContext = createContext<{
 	orgRole: string | undefined;

@@ -1,11 +1,11 @@
 import colors from "@/colors";
-import { UPDATE_ORDER } from "@/graphql/mutations";
-import { GET_ORDERS_BY_DATE } from "@/graphql/queries";
+import { UPDATE_DISPATCH } from "@/graphql/mutations";
+import { GET_DISPATCHES } from "@/graphql/queries";
 import { useDateStore } from "@/hooks/useDateStore";
-import { useRouteSessionStore } from "@/hooks/useRouteSessionStore";
 import { isColorDark } from "@/lib/styles";
+import { useDispatch } from "@/providers/DispatchProvider";
 import { useMetadata } from "@/providers/MetaDataProvider";
-import { useOrder } from "@/providers/OrderProvider";
+import { useRoute } from "@/providers/RouteProvider";
 import { useSheetContext } from "@/providers/SheetProvider";
 import { useMutation } from "@apollo/client";
 import { useAuth } from "@clerk/clerk-expo";
@@ -14,12 +14,14 @@ import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
 import { useState } from "react";
 import { Pressable, Text, TextInput, View } from "react-native";
 import { Modal } from "./Modal";
-export default function SelectedOrderSheet() {
+export default function SelectedDispatchSheet() {
 	const { bottomSheetRefs, handlePanDownToClose } = useSheetContext();
 	const { selectedDate, isToday } = useDateStore();
-	const { selectedOrder, setSelectedOrder }: any = useOrder();
+	const { selectedDispatch, setSelectedDispatch }: any = useDispatch();
+	const { selectedRoute } = useRoute();
+
 	const { orgRole, statusCategories } = useMetadata();
-	const { routeSession } = useRouteSessionStore();
+
 	const { setActiveSheet } = useSheetContext();
 	const [notes, setNotes] = useState<string>("");
 	const { userId } = useAuth();
@@ -36,13 +38,13 @@ export default function SelectedOrderSheet() {
 		if (selectedStatus) {
 			onMarkerSubmit(selectedStatus, notes);
 			setModalVisible(false);
-			setSelectedOrder(null);
+			setSelectedDispatch(null);
 			setActiveSheet(null);
 			setNotes("");
 		}
 	};
 
-	const [updateOrder] = useMutation(UPDATE_ORDER, {
+	const [updateDispatch] = useMutation(UPDATE_DISPATCH, {
 		onCompleted: () => {},
 		onError: (error) => {
 			console.error(error);
@@ -50,118 +52,128 @@ export default function SelectedOrderSheet() {
 	});
 
 	async function onMarkerSubmit(status: StatusCategory, notes?: string) {
-		if (selectedOrder) {
-			selectedOrder.orderIds.forEach((orderId: string) => {
-				const variables: any = {
-					id: orderId,
-					date: selectedDate,
-					modifiedBy: userId!,
-					modifiedAt: Number(new Date()),
-					status: status.name,
-				};
-				// orders.find((order: { name: string; value: Order }) => order.name === orderId).value.events || [];
-				const sanitizedOrderEvents = selectedOrder.events.map(({ __typename, ...rest }: any) => rest);
+		if (selectedDispatch) {
+			const variables: any = {
+				id: selectedDispatch.name,
+				routeId: selectedDispatch.value.route.id,
+				date: selectedDate,
+				modifiedBy: userId!,
+				modifiedAt: Number(new Date()),
+				status: status.name,
+			};
 
-				let newEvent: any = {
-					name: "",
-					notes: "",
-					createdBy: userId!,
-					createdAt: Number(new Date()),
-					status: status.name,
-				};
-				if (notes && notes !== "") {
-					variables.notes = notes;
-					newEvent.notes = notes;
-				}
-				variables.events = [...sanitizedOrderEvents, newEvent];
+			let newEvent: any = {
+				name: "",
+				notes: "",
+				createdBy: userId!,
+				createdAt: Number(new Date()),
+				status: status.name,
+			};
+			if (notes && notes !== "") {
+				variables.notes = notes;
+				newEvent.notes = notes;
+			}
+			const sanitizedDispatchEvents = selectedDispatch.events.map(({ __typename, ...rest }: any) => rest);
 
-				updateOrder({
-					variables: variables,
-					onCompleted: () => {
-						// setLoading(false);
-						// setModalVisible(false);
-					},
-					update: (cache) => {
-						// Handmatig de cache bijwerken als dat nodig is
-						const existingOrders = cache.readQuery<{
-							getOrdersByDate: { name: string; value: OrderExtended }[];
-						}>({
-							query: GET_ORDERS_BY_DATE,
+			if (notes && notes !== "") {
+				variables.notes = notes;
+				newEvent.notes = notes;
+			}
+			variables.events = [...sanitizedDispatchEvents, newEvent];
+			updateDispatch({
+				variables: variables,
+				onCompleted: () => {
+					// setLoading(false);
+					// setModalVisible(false);
+				},
+				update: (cache) => {
+					// Handmatig de cache bijwerken als dat nodig is
+					const existingDispatches = cache.readQuery<{
+						getDispatches: { name: string; value: DispatchExtended }[];
+					}>({
+						query: GET_DISPATCHES,
+						variables: {
+							routeId: selectedDispatch.value.route.id,
+						},
+					})?.getDispatches;
+
+					if (existingDispatches) {
+						const newDispatches = existingDispatches.map((existingDispatch) => {
+							if (existingDispatch.name === selectedDispatch.name) {
+								const newDispatch = {
+									name: existingDispatch.name,
+									value: {
+										...existingDispatch.value,
+										modifiedBy: userId!,
+										modifiedAt: Number(new Date()),
+										status: status.name,
+										notes: variables.notes || existingDispatch.value.notes || "",
+										events: [...(existingDispatch.value.events || []), newEvent],
+									},
+								};
+								return newDispatch;
+							}
+							return existingDispatch;
+						});
+
+						cache.writeQuery({
+							query: GET_DISPATCHES,
 							variables: {
 								date: selectedDate,
 							},
-						})?.getOrdersByDate;
-
-						if (existingOrders) {
-							const newOrders = existingOrders.map((existingOrder) => {
-								if (existingOrder.name === orderId) {
-									const newOrder = {
-										name: existingOrder.name,
-										value: {
-											...existingOrder.value,
-											modifiedBy: userId!,
-											modifiedAt: Number(new Date()),
-											status: status.name,
-											notes: variables.notes || existingOrder.value.notes || "",
-											events: [...(existingOrder.value.events || []), newEvent],
-										},
-									};
-									return newOrder;
-								}
-								return existingOrder;
-							});
-
-							cache.writeQuery({
-								query: GET_ORDERS_BY_DATE,
-								variables: {
-									date: selectedDate,
-								},
-								data: { getOrdersByDate: newOrders },
-							});
-						}
-					},
-				});
+							data: { getDispatches: newDispatches },
+						});
+					}
+				},
 			});
 		}
 	}
 
 	return (
 		<BottomSheet
-			ref={bottomSheetRefs.orders}
+			ref={bottomSheetRefs.dispatches}
 			index={-1}
 			snapPoints={["50%"]}
 			enablePanDownToClose
 			backgroundStyle={{ backgroundColor: "#f9f9f9" }}
 			onClose={() => {
-				setSelectedOrder(null);
-				handlePanDownToClose("orders");
+				setSelectedDispatch(null);
+				handlePanDownToClose("dispatches");
 			}}
 		>
-			{selectedOrder && (
+			{selectedDispatch && (
 				<BottomSheetView style={{ flex: 1, padding: 15 }}>
 					<View style={{ flexDirection: "row", gap: 20, marginBottom: 20 }}>
 						{/* <Image source={OrderImage} style={{ width: 60, height: 60 }} /> */}
 						<View style={{ flex: 1, gap: 5 }}>
-							<Text className="font-semibold text-2xl">{selectedOrder.customer.name}</Text>
+							<Text className="font-semibold text-2xl">{selectedDispatch.customer.name}</Text>
 							<Text className="font-normal text-gray-500">{`${
-								selectedOrder.customer.streetName && selectedOrder.customer.streetName
-							} ${selectedOrder.customer.streetNumber && selectedOrder.customer.streetNumber}`}</Text>
-							{selectedOrder.customer.city && (
-								<Text className="font-normal text-gray-500">{selectedOrder.customer.city}</Text>
+								selectedDispatch.customer.streetName && selectedDispatch.customer.streetName
+							} ${
+								selectedDispatch.customer.streetNumber && selectedDispatch.customer.streetNumber
+							}`}</Text>
+							{selectedDispatch.customer.city && (
+								<Text className="font-normal text-gray-500">{selectedDispatch.customer.city}</Text>
 							)}
-							{selectedOrder.customer.phoneNumber && (
-								<Text className="font-normal text-gray-500">{selectedOrder.customer.phoneNumber}</Text>
+							{selectedDispatch.customer.phoneNumber && (
+								<Text className="font-normal text-gray-500">
+									{selectedDispatch.customer.phoneNumber}
+								</Text>
 							)}
-							{selectedOrder.customer.phoneNumber2 && (
-								<Text className="font-normal text-gray-500">{selectedOrder.customer.phoneNumber2}</Text>
+							{selectedDispatch.customer.phoneNumber2 && (
+								<Text className="font-normal text-gray-500">
+									{selectedDispatch.customer.phoneNumber2}
+								</Text>
 							)}
-							{selectedOrder.customer.phoneNumber3 && (
-								<Text className="font-normal text-gray-500">{selectedOrder.customer.phoneNumber3}</Text>
+							{selectedDispatch.customer.phoneNumber3 && (
+								<Text className="font-normal text-gray-500">
+									{selectedDispatch.customer.phoneNumber3}
+								</Text>
 							)}
 						</View>
 						<View style={{ flex: 1, flexDirection: "column", gap: 2, alignItems: "flex-end" }}>
-							{selectedOrder.orderNumbers && selectedOrder.orderNumbers.length > 0 ? (
-								selectedOrder.orderNumbers.map((orderNumber: string) => (
+							{selectedDispatch.orderNumbers && selectedDispatch.orderNumbers.length > 0 ? (
+								selectedDispatch.orderNumbers.map((orderNumber: string) => (
 									<View>
 										<Text>{orderNumber}</Text>
 									</View>
@@ -173,16 +185,16 @@ export default function SelectedOrderSheet() {
 							)}
 						</View>
 					</View>
-					{selectedOrder.notes || selectedOrder.customer.notes ? (
+					{selectedDispatch.notes || selectedDispatch.customer.notes ? (
 						<View className="mb-5 bg-gray-100 rounded-lg p-5">
 							<Text className="text-center text-sm text-gray-400 mb-3">Notes</Text>
 							<Text
 								className="text-center flex flex-wrap"
-								style={{ maxWidth: 300, marginBottom: selectedOrder.notes ? 5 : 0 }}
+								style={{ maxWidth: 300, marginBottom: selectedDispatch.notes ? 5 : 0 }}
 							>
-								{selectedOrder.customer.notes}
+								{selectedDispatch.customer.notes}
 							</Text>
-							<Text className="text-center max-w-[300px] flex flex-wrap">{selectedOrder.notes}</Text>
+							<Text className="text-center max-w-[300px] flex flex-wrap">{selectedDispatch.notes}</Text>
 						</View>
 					) : (
 						<View></View>
@@ -190,7 +202,7 @@ export default function SelectedOrderSheet() {
 					{/* {orgRole && orgRole !== "org:viewer" && selectedDate == moment(new Date()).format("yyyy-MM-DD") && (
 						
 					)} */}
-					{routeSession === null && (
+					{!selectedRoute?.value.startTime && (
 						<View className="bg-red-200 border border-red-400 p-5 rounded mb-5 ">
 							<Text className="text-md text-red-700">
 								{!isToday() ? (
@@ -221,8 +233,10 @@ export default function SelectedOrderSheet() {
 							value={notes}
 							onChangeText={setNotes}
 							className="text-sm rounded text-gray-700 border-b pb-2 border-gray-300 flex flex-wrap text-wrap "
-							style={{ maxWidth: 300, opacity: routeSession === null ? 0.5 : 1 }}
-							editable={orgRole && orgRole !== "org:viewer" && routeSession !== null ? true : false}
+							style={{ maxWidth: 300, opacity: !selectedRoute?.value.startTime ? 0.5 : 1 }}
+							editable={
+								orgRole && orgRole !== "org:viewer" && selectedRoute?.value.startTime ? true : false
+							}
 							multiline={true}
 							numberOfLines={4}
 						/>
@@ -237,19 +251,19 @@ export default function SelectedOrderSheet() {
 									<Pressable
 										key={status.name}
 										onPress={() => {
-											if (routeSession && routeSession !== null) {
+											if (selectedRoute?.value.startTime) {
 												setSelectedStatus(status);
 												handleOpenModal();
 											}
 										}}
-										disabled={routeSession === null}
+										disabled={!selectedRoute?.value.startTime}
 										className="flex-1 rounded py-4 mx-1"
 										style={{
 											borderWidth: !isColorDark(status.color) ? 1 : 0,
 											borderColor: "#dddddd",
 											backgroundColor: status.color,
-											opacity: routeSession === null ? 0.5 : 1,
-											display: status.name !== selectedOrder.status ? "flex" : "none",
+											opacity: !selectedRoute?.value.startTime ? 0.5 : 1,
+											display: status.name !== selectedDispatch.status ? "flex" : "none",
 										}}
 									>
 										<Text
@@ -266,7 +280,7 @@ export default function SelectedOrderSheet() {
 						<View className="mb-10">
 							<Text className="font-semibold text-2xl text-center mb-5">Change Status</Text>
 							<Text className="font-normal text-gray-500 text-center mb-10">
-								Select the new status for this order: {selectedOrder.customer.name}
+								Select the new status for this order: {selectedDispatch.customer.name}
 							</Text>
 							<View
 								className="border rounded px-5 py-2 mx-auto"

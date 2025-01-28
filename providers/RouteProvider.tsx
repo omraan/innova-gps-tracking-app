@@ -1,14 +1,13 @@
+import { GET_ROUTES } from "@/graphql/queries";
 import { useDateStore } from "@/hooks/useDateStore";
 import { useVehicleStore } from "@/hooks/useVehicleStore";
-import { getOptimizedTrip } from "@/services/optimized-trips";
+import { getDirections } from "@/services/optimized-trips";
+import { useQuery } from "@apollo/client";
 import polyline from "@mapbox/polyline";
 import { Position } from "@rnmapbox/maps/lib/typescript/src/types/Position";
 import * as Location from "expo-location";
 import moment from "moment";
 import { createContext, PropsWithChildren, useContext, useEffect, useState } from "react";
-import { LatLng } from "react-native-maps";
-import { useOrder } from "./OrderProvider";
-
 interface RouteProps {
 	code: string;
 	waypoints: {
@@ -34,77 +33,114 @@ interface RouteProps {
 	}[];
 }
 const RouteContext = createContext<{
-	route: RouteProps | null;
-	setRoute: any;
-	routeCoordinates: Position[] | null;
+	routes: { name: string; value: Route }[];
+	setRoutes(routes: { name: string; value: Route }[]): void;
+	refetchRoutes: () => void;
+	selectionRoutes: { name: string; value: Route }[];
+	setSelectionRoutes(routes: { name: string; value: Route }[]): void;
+	selectedRoute: { name: string; value: Route } | undefined;
+	setSelectedRoute(selectedRoute: { name: string; value: Route } | undefined): void;
 } | null>(null);
 
 export const RouteProvider = ({ children }: PropsWithChildren) => {
-	const [route, setRoute] = useState<RouteProps | null>(null);
-	const { orders, setOrders } = useOrder();
+	const [routes, setRoutes] = useState<{ name: string; value: Route }[]>([]);
+	const [selectionRoutes, setSelectionRoutes] = useState<{ name: string; value: Route }[]>([]);
+
+	const [selectedRoute, setSelectedRoute] = useState<{ name: string; value: Route }>();
 	const { selectedDate } = useDateStore();
 
-	const [routeCoordinates, setRouteCoordinates] = useState<Position[] | null>(null);
-	const fetchRoute = async () => {
-		if (orders && orders.length > 0 && selectedDate === moment(new Date()).format("YYYY-MM-DD")) {
-			const myLocation = await Location.getCurrentPositionAsync();
-			const res = await getOptimizedTrip(
-				{
-					latitude: myLocation.coords.latitude,
-					longitude: myLocation.coords.longitude,
-				},
+	const { selectedVehicle } = useVehicleStore();
 
-				orders
-					.filter((order) => !["Completed", "Failed", "No Location"].includes(order.status))
-					.map((order: CustomerOrders) => {
-						return {
-							latitude: order.customer.lat,
-							longitude: order.customer.lng,
-						};
-					})
-			);
-			setRoute(res);
-		} else {
-			setRoute(null);
-		}
-	};
+	const {
+		data: dataRoutes,
+		refetch: refetchRoutes,
+		error,
+	} = useQuery(GET_ROUTES, {
+		variables: {
+			date: selectedDate || moment(new Date()).format("yyyy-MM-DD"),
+		},
+		fetchPolicy: "network-only",
+	});
 
 	useEffect(() => {
-		fetchRoute();
-	}, [orders]);
+		console.log("Error >>> ", error);
+	}, [error]);
 
 	useEffect(() => {
-		if (!route) {
-			setRouteCoordinates(null);
-			return;
+		if (dataRoutes) {
+			setRoutes(dataRoutes.getRoutes || []);
 		}
-		// const { waypoints } = route;
+	}, [dataRoutes]);
 
-		// const newOrders = orders.map((order, indexOrder) => {
-		// 	const waypoint = waypoints.find((waypoint, indexWaypoint) => {
-		// 		// First waypoint is the start location, so we need to skip it.
-		// 		return indexWaypoint - 1 === indexOrder;
-		// 	});
+	useEffect(() => {
+		refetchRoutes();
+	}, [selectedDate]);
 
-		// 	if (waypoint) {
-		// 		return {
-		// 			...order,
-		// 			value: {
-		// 				...order,
-		// 				routeIndex: waypoint.waypoint_index,
-		// 			},
-		// 		};
-		// 	}
-		// 	return order;
-		// });
-		// setOrders(newOrders);
+	useEffect(() => {
+		if (routes && routes.length > 0) {
+			let newSelectionRoutes = routes;
+			if (selectedVehicle) {
+				newSelectionRoutes = routes.filter(
+					(route: { name: string; value: Route }) => route.value.vehicleId === selectedVehicle.name
+				);
+			}
+			setSelectionRoutes(newSelectionRoutes);
+		}
+	}, [selectedVehicle, routes]);
 
-		const decodedCoordinates = polyline.decode(route.trips[0].geometry).map((c) => [c[1], c[0]]);
+	// useEffect(() => {
+	// 	if (selectedRoute && selectedRoute.value.geometry) {
+	// 		const coordinates = polyline.decode(selectedRoute.value.geometry).map((c) => [c[1], c[0]]);
+	// 		setRouteCoordinates(coordinates);
+	// 	}
+	// }, [selectedRoute]);
 
-		setRouteCoordinates(decodedCoordinates);
-	}, [route]);
+	// useEffect(() => {
+	// 	if (!selectedRoute) {
+	// 		setRouteCoordinates(null);
+	// 		return;
+	// 	}
+	// 	// const { waypoints } = route;
 
-	return <RouteContext.Provider value={{ route, setRoute, routeCoordinates }}>{children}</RouteContext.Provider>;
+	// 	// const newOrders = orders.map((order, indexOrder) => {
+	// 	// 	const waypoint = waypoints.find((waypoint, indexWaypoint) => {
+	// 	// 		// First waypoint is the start location, so we need to skip it.
+	// 	// 		return indexWaypoint - 1 === indexOrder;
+	// 	// 	});
+
+	// 	// 	if (waypoint) {
+	// 	// 		return {
+	// 	// 			...order,
+	// 	// 			value: {
+	// 	// 				...order,
+	// 	// 				routeIndex: waypoint.waypoint_index,
+	// 	// 			},
+	// 	// 		};
+	// 	// 	}
+	// 	// 	return order;
+	// 	// });
+	// 	// setOrders(newOrders);
+
+	// 	const decodedCoordinates = polyline.decode(route.trips[0].geometry).map((c) => [c[1], c[0]]);
+
+	// 	setRouteCoordinates(decodedCoordinates);
+	// }, [route]);
+
+	return (
+		<RouteContext.Provider
+			value={{
+				routes,
+				setRoutes,
+				refetchRoutes,
+				selectedRoute,
+				setSelectedRoute,
+				selectionRoutes,
+				setSelectionRoutes,
+			}}
+		>
+			{children}
+		</RouteContext.Provider>
+	);
 };
 
 export const useRoute = () => {

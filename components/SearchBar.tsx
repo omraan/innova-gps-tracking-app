@@ -1,9 +1,9 @@
-import { useOrder } from "@/providers/OrderProvider";
+import { useDispatch } from "@/providers/DispatchProvider";
 import React, { useState } from "react";
 import { StyleSheet, TextInput, View } from "react-native";
 
 const SearchBar = () => {
-	const { setSearchQuery } = useOrder();
+	const { setSearchQuery } = useDispatch();
 	const [query, setQuery] = useState("");
 
 	const handleSearch = (text: string) => {

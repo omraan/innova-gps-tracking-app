@@ -1,14 +1,13 @@
 import BottomSheet from "@gorhom/bottom-sheet";
 import React, { act, createContext, PropsWithChildren, useContext, useEffect, useRef, useState } from "react";
-import { useOrder } from "./OrderProvider";
 
-type SheetCategories = "orders" | "route" | "metadata" | "settings" | "account";
+type SheetCategories = "dispatches" | "route" | "metadata" | "settings" | "account";
 
 interface SheetContextProps {
 	activeSheet: SheetCategories | null;
 	setActiveSheet: (sheet: SheetCategories | null) => void;
 	bottomSheetRefs: {
-		orders: React.RefObject<BottomSheet>;
+		dispatches: React.RefObject<BottomSheet>;
 		route: React.RefObject<BottomSheet>;
 		metadata: React.RefObject<BottomSheet>;
 		settings: React.RefObject<BottomSheet>;
@@ -21,8 +20,9 @@ const SheetContext = createContext<SheetContextProps | null>(null);
 
 export const SheetProvider = ({ children }: PropsWithChildren) => {
 	const [activeSheet, setActiveSheet] = useState<SheetCategories | null>(null);
+
 	const bottomSheetRefs = {
-		orders: useRef<BottomSheet>(null),
+		dispatches: useRef<BottomSheet>(null),
 		route: useRef<BottomSheet>(null),
 		metadata: useRef<BottomSheet>(null),
 		settings: useRef<BottomSheet>(null),
@@ -30,15 +30,17 @@ export const SheetProvider = ({ children }: PropsWithChildren) => {
 	};
 
 	const handleSetActiveSheet = (sheet: SheetCategories | null) => {
+		// console.log("handleActiveSheet", sheet, activeSheet);
 		if (sheet === activeSheet) {
-			if (activeSheet !== "orders") {
+			if (activeSheet !== "dispatches") {
 				setActiveSheet(null);
 			} else {
-				bottomSheetRefs.orders.current?.close();
+				bottomSheetRefs.dispatches.current?.close();
 				setTimeout(() => {
-					bottomSheetRefs.orders.current?.expand();
+					bottomSheetRefs.dispatches.current?.expand();
 				}, 200);
 			}
+			setActiveSheet(null);
 		} else {
 			setActiveSheet(sheet);
 		}

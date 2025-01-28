@@ -7,7 +7,7 @@ import pinRed from "@/assets/images/pin-red.png";
 
 import colors from "@/colors";
 
-import { useOrder } from "@/providers/OrderProvider";
+import { useDispatch } from "@/providers/DispatchProvider";
 import { useSheetContext } from "@/providers/SheetProvider";
 import { CircleLayer, Images, ShapeSource, SymbolLayer } from "@rnmapbox/maps";
 import { OnPressEvent } from "@rnmapbox/maps/lib/typescript/src/types/OnPressEvent";
@@ -15,17 +15,18 @@ import { featureCollection, point } from "@turf/helpers";
 import { useEffect, useState } from "react";
 
 export default function OrderMarkers() {
-	const { orders, selectedOrder, setSelectedOrder, filteredOrders } = useOrder();
+	const { selectedDispatch, setSelectedDispatch, filteredDispatches } = useDispatch();
 
 	const [bounceValue, setBounceValue] = useState([0, 0]);
 
-	const points = filteredOrders.map((order: CustomerOrders) => {
-		const isSelected = selectedOrder && order.customerId === selectedOrder.customerId;
+	const points = filteredDispatches.map((dispatch: { name: string; value: DispatchExtended }) => {
+		const isSelected = selectedDispatch && dispatch.value.customerId === selectedDispatch.value.customerId;
 
-		return point([order.customer.lng, order.customer.lat], {
-			order,
-			customerId: order.customerId,
-			statusCategory: order.category === "priority" ? order.status + "Priority" : order.status,
+		return point([dispatch.value.customer.lng, dispatch.value.customer.lat], {
+			dispatch,
+			customerId: dispatch.value.customerId,
+			statusCategory:
+				dispatch.value.category === "priority" ? dispatch.value.status + "Priority" : dispatch.value.status,
 			iconTranslate: isSelected ? bounceValue : [0, 0],
 		});
 	});
@@ -34,14 +35,14 @@ export default function OrderMarkers() {
 
 	const onPointPress = async (event: OnPressEvent) => {
 		if (event.features[0].properties?.order) {
-			setSelectedOrder(event.features[0].properties.order);
-			setActiveSheet("orders");
+			setSelectedDispatch(event.features[0].properties.order);
+			setActiveSheet("dispatches");
 		}
 	};
 
 	useEffect(() => {
 		setBounceValue([0, 0]);
-		if (selectedOrder) {
+		if (selectedDispatch) {
 			let bounce = 0;
 
 			const interval = setInterval(() => {
@@ -50,7 +51,7 @@ export default function OrderMarkers() {
 			}, 500);
 			return () => clearInterval(interval);
 		}
-	}, [selectedOrder]);
+	}, [selectedDispatch]);
 
 	return (
 		<ShapeSource id="orderShape" shape={featureCollection(points)} cluster onPress={onPointPress}>
@@ -103,7 +104,7 @@ export default function OrderMarkers() {
 				filter={[
 					"all",
 					["!", ["has", "point_count"]],
-					["!=", ["get", "customerId"], selectedOrder?.customerId || ""],
+					["!=", ["get", "customerId"], selectedDispatch?.value.customerId || ""],
 				]}
 			/>
 			<SymbolLayer
@@ -129,7 +130,7 @@ export default function OrderMarkers() {
 					iconColor: "blue",
 					iconTranslate: bounceValue,
 				}}
-				filter={["==", ["get", "customerId"], selectedOrder?.customerId || ""]}
+				filter={["==", ["get", "customerId"], selectedDispatch?.value.customerId || ""]}
 			/>
 			<Images images={{ pinGreen, pinGreenPriority, pinRed, pinRedPriority, pinGray, pinGrayPriority }} />
 		</ShapeSource>

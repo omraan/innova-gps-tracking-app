@@ -13,6 +13,8 @@ declare global {
 		country: string;
 		lat: number;
 		lng: number;
+		defaultServiceTime: string;
+		defaultStartTime: string;
 	}
 }
 
@@ -45,57 +47,66 @@ interface Vehicle extends RegisterVehicle {
 }
 
 interface RegisterOrder {
+	createdBy: string;
+	createdAt: number;
 	driverId?: string;
 	vehicleId?: string;
 	customerId?: string;
 	expectedDeliveryDate?: string;
-	status: string;
+	status?: string;
+	category?: string;
 	orderNumber?: string;
 	notes?: string;
+}
+
+interface RegisterDispatch {
+	routeId?: string;
+	customerId?: string;
+	expectedDeliveryDate?: string;
+	estimatedTimeArrival?: string;
+	trackAndTraceCode: string;
+	status: string;
 	category?: string;
-	routeIndex?: number;
+	orderNumbers?: string;
+	orders?: {
+		orderId: string | null;
+		orderNumber?: string;
+	}[];
+	notes?: string;
+}
+
+interface Dispatch extends RegisterDispatch {
+	id: string;
+	createdBy: string;
+	createdAt: number;
+	events?: DispatchEvent[];
+}
+interface DispatchRoute extends Dispatch {
+	index?: number;
+	distance?: number;
+	duration?: number;
+	estimatedTimeArrival?: string;
+}
+interface DispatchExtended extends Dispatch {
+	customer: RegisterCustomer;
+	amountDispatches?: number;
+	route: DispatchRoute;
 }
 
 interface Order extends RegisterOrder {
 	id: string;
-	waypoint_index?: number;
 	events?: OrderEvent[];
 }
 interface OrderExtended extends Order {
-	driver?: {
-		name: string;
-		email: string;
-	};
-	vehicle?: {
-		licensePlate: string;
-		name: string;
-	};
-	customer: {
-		lat: number;
-		lng: number;
-		name: string;
-		code: string;
-		email?: string;
-		city?: string;
-		streetName?: string;
-		streetNumber?: string;
-		phoneNumber?: string;
-		phoneNumber2?: string;
-		phoneNumber3?: string;
-		notes?: string;
-	};
-}
-interface CustomerOrders extends OrderExtended {
-	amountOrders: number;
-	orderIds: string[];
-	orderNumbers: number[];
+	customer: RegisterCustomer;
 }
 
 interface OrderEvent extends RegisterOrder {
-	createdBy: string;
-	createdAt: number;
 	name: string;
 	description?: string;
+	createdAt?: number;
+	modifiedAt?: number;
+	modifiedBy?: string;
 }
 
 interface RegisterCountry {
@@ -109,6 +120,7 @@ interface Country extends RegisterCountry {
 type StatusCategory = {
 	color: string;
 	name: string;
+	active?: boolean;
 };
 
 type MapTypes = "standard" | "hybrid";
@@ -122,4 +134,28 @@ interface LiveLocation extends GeoLocation {
 	speed: number | null;
 	speedInKmh: number;
 	timestamp: string;
+}
+
+interface Route {
+	title: string;
+	vehicleId: string;
+	driverId: string;
+	startTime?: string;
+	endTime?: string;
+	expectedStartTime: string;
+	expectedEndTime?: string;
+	geometry?: string;
+}
+interface RegisterRoute extends Route {
+	date: string;
+}
+
+type RouteOptions = "existing" | "new" | "open";
+
+interface TrackingLocation {
+	latitude: number;
+	longitude: number;
+	speed: number;
+	speedInKmh: number;
+	timestamp: number;
 }
