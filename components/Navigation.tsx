@@ -1,5 +1,5 @@
 import colors from "@/colors";
-import { useOrder } from "@/providers/OrderProvider";
+import { useDispatch } from "@/providers/DispatchProvider";
 import { useSheetContext } from "@/providers/SheetProvider";
 import { MaterialIcons } from "@expo/vector-icons";
 import React from "react";
@@ -10,9 +10,11 @@ import SearchBar from "./SearchBar";
 export default function Navigation() {
 	const { setActiveSheet } = useSheetContext();
 
-	const { orders } = useOrder();
+	const { dispatches } = useDispatch();
 
-	const orderCount = orders.filter((order) => !order.customer.lat || order.customer.lat === 0).length;
+	const dispatchCount = dispatches.filter(
+		(dispatch) => !dispatch.value.customer.lat || dispatch.value.customer.lat === 0
+	).length;
 
 	return (
 		<SafeAreaView className="absolute top-0 left-0 right-0">
@@ -42,10 +44,10 @@ export default function Navigation() {
 					>
 						<MaterialIcons name="route" size={24} color={colors.primary} />
 					</Pressable>
-					{orderCount > 0 && (
+					{dispatchCount > 0 && (
 						<View className="w-6 h-6 bg-red-500 rounded-full absolute top-0 -right-2 z-10">
 							<View className="flex-row justify-center items-center h-full w-full">
-								<Text className="text-white text-xs text-center font-bold">{orderCount}</Text>
+								<Text className="text-white text-xs text-center font-bold">{dispatchCount}</Text>
 							</View>
 						</View>
 					)}

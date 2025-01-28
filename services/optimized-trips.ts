@@ -32,7 +32,6 @@ export async function getDirections(
 	const url = `https://api.mapbox.com/directions/v5/mapbox/driving-traffic/${coordinates}?access_token=${accessKey}`;
 	const response: any = await fetch(url);
 	const routeResponse: any = await response.json();
-	console.log("Route response: ", routeResponse);
 	if (routeResponse.message === "Not Found") {
 		return {
 			success: false,

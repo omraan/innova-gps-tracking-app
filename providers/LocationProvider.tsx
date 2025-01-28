@@ -8,13 +8,20 @@ import React, { createContext, PropsWithChildren, useContext, useEffect, useStat
 import { View } from "react-native";
 import { LatLng } from "react-native-maps";
 
-const LocationContext = createContext({});
+const LocationContext = createContext<{
+	liveLocation: LiveLocation | null;
+	setLiveLocation: (liveLocation: LiveLocation | null) => void;
+	isChangingLocation: boolean;
+	setIsChangingLocation: (isChanging: boolean) => void;
+} | null>(null);
 
 const LocationProvider = ({ children }: PropsWithChildren) => {
 	const { userId, orgId } = useAuth();
 	const { routeSession, setRouteSession } = useRouteSessionStore();
 	const [backgroundTaskRegistered, setBackgroundTaskRegistered] = useState(false);
 	const { liveLocation, setLiveLocation } = useLiveLocationStore();
+	const [isChangingLocation, setIsChangingLocation] = useState<boolean>(false);
+
 	useEffect(() => {
 		const startBackgroundLocation = async () => {
 			const { status } = await Location.requestForegroundPermissionsAsync();
@@ -67,6 +74,8 @@ const LocationProvider = ({ children }: PropsWithChildren) => {
 			value={{
 				liveLocation,
 				setLiveLocation,
+				isChangingLocation,
+				setIsChangingLocation,
 			}}
 		>
 			{children}
@@ -75,4 +84,10 @@ const LocationProvider = ({ children }: PropsWithChildren) => {
 };
 
 export default LocationProvider;
-export const useLocation = () => useContext(LocationContext);
+export const useLocation = () => {
+	const context = useContext(LocationContext);
+	if (!context) {
+		throw new Error("useLocation must be used within an LocationProvider");
+	}
+	return context;
+};

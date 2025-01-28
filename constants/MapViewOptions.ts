@@ -8,7 +8,7 @@ export const MapViewOptions: MapViewOption[] = [
 	{
 		value: "standard",
 		label: "Standard",
-		styleUrl: "mapbox://styles/mapbox/streets-v11",
+		styleUrl: "mapbox://styles/vedispatch/cm5azom7t00kd01sb25kkc74o",
 	},
 	{
 		value: "hybrid",

@@ -145,6 +145,7 @@ interface Route {
 	expectedStartTime: string;
 	expectedEndTime?: string;
 	geometry?: string;
+	active?: boolean;
 }
 interface RegisterRoute extends Route {
 	date: string;

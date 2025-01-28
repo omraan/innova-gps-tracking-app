@@ -1,8 +1,10 @@
+import colors from "@/colors";
 import { isColorDark } from "@/lib/styles";
 import { useDispatch } from "@/providers/DispatchProvider";
 import { useMetadata } from "@/providers/MetaDataProvider";
 import { isArray } from "@apollo/client/utilities";
 import { useAuth, useOrganization, useUser } from "@clerk/clerk-expo";
+import { MaterialIcons } from "@expo/vector-icons";
 import { Card } from "@rneui/themed";
 import { format } from "date-fns";
 import moment from "moment";
@@ -29,9 +31,6 @@ interface publicMetadata {
 export default function DispatchList() {
 	const { organization } = useOrganization();
 
-	const { user } = useUser();
-	const { orgId } = useAuth();
-
 	const { dispatches } = useDispatch();
 	const { statusCategories } = useMetadata();
 
@@ -43,21 +42,39 @@ export default function DispatchList() {
 		}
 	}, [statusCategories]);
 
-	const [labels, setLabels] = useState<string[]>([]);
-	useEffect(() => {
-		if (user && orgId && user?.unsafeMetadata?.organizations && user?.unsafeMetadata?.organizations[orgId]) {
-			setLabels(user.unsafeMetadata.organizations[orgId].labels || ["customer.name"]);
-		}
-	}, [user, orgId]);
-
-	const ordersWithMissingLocation = dispatches.filter((dispatch) => Number(dispatch.value.customer.lat) === 0) || [];
+	const dispatchesWithMissingLocation =
+		dispatches.filter((dispatch) => Number(dispatch.value.customer.lat) === 0) || [];
 
 	return (
 		<View className="flex-1 mb-20 px-3">
+			{dispatchesWithMissingLocation.length > 0 ? (
+				<View className="flex-1">
+					<View className="bg-red-200 border border-red-400 p-5 rounded mb-10">
+						<Text className="text-lg font-bold text-gray-500 mb-2">
+							{dispatchesWithMissingLocation.length} order(s) with missing location
+						</Text>
+						<Text className="text-md text-gray-700 mb-5">
+							Please update the location of the following order(s):
+						</Text>
+						<View className="flex-row gap-5">
+							<Text className="text-md text-gray-700">Press on</Text>
+							<MaterialIcons name="edit-location-alt" size={24} color={colors.primary} />
+							<Text className="text-md text-gray-700">the order to update the location.</Text>
+						</View>
+					</View>
+					{/* <View className="mb-2 p-2">
+						{dispatchesWithMissingLocation.map((order: CustomerOrders, index: number) => (
+							<OrderListItem order={order} key={index} />
+						))}
+					</View> */}
+				</View>
+			) : (
+				<View />
+			)}
 			<View className=" pt-2 ">
 				<Text className="text-center mb-2">
-					{dispatches.length} order
-					{dispatches.length !== 1 ? "s" : ""}
+					{dispatches.length} dispatch
+					{dispatches.length !== 1 ? "es" : ""}
 				</Text>
 
 				<ScrollView horizontal className="pb-5 mb-2">
@@ -93,7 +110,7 @@ export default function DispatchList() {
 										]}
 									>
 										{status.name === "No Location"
-											? ordersWithMissingLocation.length
+											? dispatchesWithMissingLocation.length
 											: dispatches.filter((dispatch) => dispatch.value.status === status.name)
 													.length}{" "}
 										{status.name}
@@ -107,21 +124,24 @@ export default function DispatchList() {
 			<View style={{ flex: 1, flexDirection: "column", gap: 20 }}>
 				{dispatches &&
 					dispatches.length > 0 &&
-					labels &&
+					// labels &&
 					dispatches
 						.filter((dispatch) => {
 							const dispatchNoLocation = Number(dispatch.value.customer.lat) === 0;
 							if (
 								dispatchNoLocation &&
 								dispatch.value.status?.toLowerCase() === "open" &&
-								statusCategories &&
-								statusCategories.find((status) => status.active && status.name === "No Location")
+								selectedStatusCategories &&
+								selectedStatusCategories.find(
+									(status) => status.active && status.name === "No Location"
+								)
 							) {
 								return true;
 							}
 
 							const status =
-								statusCategories && statusCategories.find((s) => s.name === dispatch.value.status);
+								selectedStatusCategories &&
+								selectedStatusCategories.find((s) => s.name === dispatch.value.status);
 							return status?.active ?? false;
 						})
 						.map((dispatch, index: number) => <DispatchListItem dispatch={dispatch} key={index} />)}

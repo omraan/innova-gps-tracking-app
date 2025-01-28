@@ -8,6 +8,7 @@ import pinRed from "@/assets/images/pin-red.png";
 import colors from "@/colors";
 
 import { useDispatch } from "@/providers/DispatchProvider";
+import { useLocation } from "@/providers/LocationProvider";
 import { useSheetContext } from "@/providers/SheetProvider";
 import { CircleLayer, Images, ShapeSource, SymbolLayer } from "@rnmapbox/maps";
 import { OnPressEvent } from "@rnmapbox/maps/lib/typescript/src/types/OnPressEvent";
@@ -16,6 +17,7 @@ import { useEffect, useState } from "react";
 
 export default function OrderMarkers() {
 	const { selectedDispatch, setSelectedDispatch, filteredDispatches } = useDispatch();
+	const { isChangingLocation } = useLocation();
 
 	const [bounceValue, setBounceValue] = useState([0, 0]);
 
@@ -34,22 +36,24 @@ export default function OrderMarkers() {
 	const { setActiveSheet } = useSheetContext();
 
 	const onPointPress = async (event: OnPressEvent) => {
-		if (event.features[0].properties?.order) {
-			setSelectedDispatch(event.features[0].properties.order);
+		if (event.features[0].properties?.dispatch) {
+			setSelectedDispatch(event.features[0].properties.dispatch);
 			setActiveSheet("dispatches");
 		}
 	};
 
 	useEffect(() => {
-		setBounceValue([0, 0]);
-		if (selectedDispatch) {
-			let bounce = 0;
+		if (!isChangingLocation) {
+			setBounceValue([0, 0]);
+			if (selectedDispatch) {
+				let bounce = 0;
 
-			const interval = setInterval(() => {
-				bounce = bounce === 0 ? 10 : 0;
-				setBounceValue([0, bounce]);
-			}, 500);
-			return () => clearInterval(interval);
+				const interval = setInterval(() => {
+					bounce = bounce === 0 ? 10 : 0;
+					setBounceValue([0, bounce]);
+				}, 500);
+				return () => clearInterval(interval);
+			}
 		}
 	}, [selectedDispatch]);
 
@@ -90,6 +94,8 @@ export default function OrderMarkers() {
 						"pinGreenPriority",
 						"Failed",
 						"pinRed",
+						"FailedPriority",
+						"pinRedPriority",
 						"Open",
 						"pinGray",
 						"OpenPriority",

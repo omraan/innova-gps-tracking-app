@@ -66,21 +66,23 @@ export default function DispatchProvider({ children }: PropsWithChildren) {
 			const { coords } = await Location.getCurrentPositionAsync();
 			const { latitude, longitude } = coords;
 
-			const locations = dispatches
+			const selectionDispatches = dispatches
 				.filter((dispatch) => !["Completed", "Failed"].includes(dispatch.value.status))
 				.filter((dispatch) => dispatch.value.customer.lat !== 0)
 				.sort((a, b) => a.value.route.index! - b.value.route.index!)
-				.map((dispatch) => ({
-					latitude: dispatch.value.customer.lat,
-					longitude: dispatch.value.customer.lng,
-				}));
+				.slice(0, 14);
 			let startLocation = { latitude, longitude };
 
-			const response = await getDirections(startLocation, locations);
+			const response = await getDirections(
+				startLocation,
+				selectionDispatches.map((dispatch) => ({
+					latitude: dispatch.value.customer.lat,
+					longitude: dispatch.value.customer.lng,
+				}))
+			);
 			if (!response.success) return;
 
 			const { waypoints, routes } = response;
-
 			if (!response.success) {
 				Toast.show({
 					type: "error",
@@ -89,23 +91,35 @@ export default function DispatchProvider({ children }: PropsWithChildren) {
 				});
 				return;
 			}
-			const newDispatches = dispatches.map((dispatch, index) => {
-				const newDispatch = {
+			const newSelectionDispatches = selectionDispatches.map((dispatch, index) => {
+				return {
 					name: dispatch.name,
 					value: {
 						...dispatch.value,
 						route: {
 							...dispatch.value.route,
-							index: index + 1,
+							// index: index + 1,
 							duration: routes[0].legs[index].duration,
 							distance: routes[0].legs[index].distance,
 						},
 					},
 				};
-				return newDispatch;
 			});
-			setFilteredDispatches(newDispatches);
 
+			const newDispatches = dispatches.map((dispatch, index) => {
+				const newDispatch = newSelectionDispatches.find((d) => d.name === dispatch.name);
+				return {
+					name: dispatch.name,
+					value: {
+						...dispatch.value,
+						route: newDispatch ? newDispatch.value.route : dispatch.value.route,
+					},
+				};
+			});
+
+			console.log("response", routes[0].geometry);
+
+			setFilteredDispatches(newDispatches);
 			setRouteCoordinates(polyline.decode(routes[0].geometry).map((c) => [c[1], c[0]]));
 		} else {
 			setRouteCoordinates(null);

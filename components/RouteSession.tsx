@@ -24,51 +24,57 @@ export default function RouteSession() {
 
 	const startRoute = async () => {
 		const startTime = moment(new Date()).format("yyyy-MM-DD HH:mm:ss");
-
 		if (!selectedDate) {
 			return;
 		}
 		if (!selectedRoute) {
 			return;
 		}
+		console.log("startTime", startTime);
 
 		const variables = {
 			date: selectedDate,
-			routeId: selectedRoute?.name,
+			id: selectedRoute?.name,
 			startTime,
 		};
 		await UpdateRouteStartTime({
 			variables,
 			onCompleted: (data) => {
+				console.log("onCompleted", data);
 				setSelectedRoute({
 					name: selectedRoute.name,
 					value: {
 						...selectedRoute.value,
 						startTime,
+						active: true,
 					},
 				});
+			},
+			onError: (data) => {
+				console.log("onError", data);
 			},
 		});
 	};
 
-	const showButton = selectedRoute && !selectedRoute?.value.startTime && dispatches && dispatches.length > 0;
+	const showButton = !selectedRoute && dispatches && dispatches.length > 0;
 	return (
-		showButton && (
-			<View>
-				{!selectedVehicle ? (
-					<View className="flex-col items-center justify-center mb-2">
-						<View className="bg-white px-4 py-2 rounded flex-row gap-2 items-center">
-							<Text>Navigate to </Text>
-							<View className="rounded-full border border-primary p-2">
-								<MaterialIcons name="settings" size={16} color={colors.primary} />
-							</View>
-							<Text>to select a vehicle</Text>
+		// showButton && (
+		<View>
+			{!selectedRoute ? (
+				<View className="flex-col items-center justify-center mb-2">
+					<View className="bg-white px-4 py-2 rounded flex-row gap-2 items-center">
+						<Text>Navigate to </Text>
+						<View className="rounded-full border border-primary p-2">
+							<MaterialIcons name="settings" size={16} color={colors.primary} />
 						</View>
-						<AntDesign name="caretdown" size={12} color="white" style={{ marginTop: -4 }} />
+						<Text>to select a route</Text>
 					</View>
-				) : (
-					<View />
-				)}
+					<AntDesign name="caretdown" size={12} color="white" style={{ marginTop: -4 }} />
+				</View>
+			) : (
+				<View />
+			)}
+			{!selectedRoute?.value.active && (
 				<View style={tw("flex flex-row items-center justify-center")}>
 					<Pressable
 						onPress={startRoute}
@@ -76,14 +82,15 @@ export default function RouteSession() {
 						style={{
 							width: 150,
 							marginHorizontal: "auto",
-							opacity: !selectedDate || !selectedVehicle ? 0.5 : 1,
+							opacity: !selectedDate || !selectedRoute ? 0.5 : 1,
 						}}
 					>
 						<Text className="text-center text-secondary text-lg font-semibold">Start Route</Text>
 						<AntDesign name="caretright" size={14} color="#6366f1" />
 					</Pressable>
 				</View>
-			</View>
-		)
+			)}
+		</View>
+		// )
 	);
 }

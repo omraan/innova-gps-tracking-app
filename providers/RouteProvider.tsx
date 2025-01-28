@@ -68,7 +68,12 @@ export const RouteProvider = ({ children }: PropsWithChildren) => {
 
 	useEffect(() => {
 		if (dataRoutes) {
-			setRoutes(dataRoutes.getRoutes || []);
+			setRoutes(
+				dataRoutes.getRoutes.map((route: { name: string; value: Route }) => ({
+					name: route.name,
+					value: { ...route.value, active: route.value.startTime && !route.value.endTime },
+				})) || []
+			);
 		}
 	}, [dataRoutes]);
 
@@ -87,44 +92,6 @@ export const RouteProvider = ({ children }: PropsWithChildren) => {
 			setSelectionRoutes(newSelectionRoutes);
 		}
 	}, [selectedVehicle, routes]);
-
-	// useEffect(() => {
-	// 	if (selectedRoute && selectedRoute.value.geometry) {
-	// 		const coordinates = polyline.decode(selectedRoute.value.geometry).map((c) => [c[1], c[0]]);
-	// 		setRouteCoordinates(coordinates);
-	// 	}
-	// }, [selectedRoute]);
-
-	// useEffect(() => {
-	// 	if (!selectedRoute) {
-	// 		setRouteCoordinates(null);
-	// 		return;
-	// 	}
-	// 	// const { waypoints } = route;
-
-	// 	// const newOrders = orders.map((order, indexOrder) => {
-	// 	// 	const waypoint = waypoints.find((waypoint, indexWaypoint) => {
-	// 	// 		// First waypoint is the start location, so we need to skip it.
-	// 	// 		return indexWaypoint - 1 === indexOrder;
-	// 	// 	});
-
-	// 	// 	if (waypoint) {
-	// 	// 		return {
-	// 	// 			...order,
-	// 	// 			value: {
-	// 	// 				...order,
-	// 	// 				routeIndex: waypoint.waypoint_index,
-	// 	// 			},
-	// 	// 		};
-	// 	// 	}
-	// 	// 	return order;
-	// 	// });
-	// 	// setOrders(newOrders);
-
-	// 	const decodedCoordinates = polyline.decode(route.trips[0].geometry).map((c) => [c[1], c[0]]);
-
-	// 	setRouteCoordinates(decodedCoordinates);
-	// }, [route]);
 
 	return (
 		<RouteContext.Provider

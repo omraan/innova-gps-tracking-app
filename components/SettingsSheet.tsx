@@ -33,11 +33,9 @@ export default function SettingsSheet() {
 	const handleRefresh = async () => {
 		const promises = Promise.all([
 			refetchRoutes(),
-			// refetchDispatches({
-			// 	variables: {
-			// 		routeId: selectedRoute?.name,
-			// 	},
-			// }),
+			refetchDispatches({
+				routeId: selectedRoute?.name,
+			}),
 			refetchVehicles(),
 		]);
 

@@ -44,6 +44,7 @@ export default function RouteSheet() {
 					value: {
 						...selectedRoute.value,
 						endTime,
+						active: false,
 					},
 				});
 			},
@@ -82,7 +83,7 @@ export default function RouteSheet() {
 			) : (
 				<View />
 			)}
-			{routeSession ? (
+			{selectedRoute?.value.active ? (
 				<View className="flex-row items-center justify-center py-4">
 					<TouchableOpacity onPress={endRoute} className="bg-black py-4 px-8 rounded">
 						<Text className="text-white font-bold">End Route</Text>
