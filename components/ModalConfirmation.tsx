@@ -2,6 +2,7 @@ import { useRouteSessionStore } from "@/hooks/useRouteSessionStore";
 import { isColorDark } from "@/lib/styles";
 import { useDispatch } from "@/providers/DispatchProvider";
 import { useMetadata } from "@/providers/MetaDataProvider";
+import { useRoute } from "@/providers/RouteProvider";
 import Feather from "@expo/vector-icons/Feather";
 import React, { useState } from "react";
 import { Pressable, StyleSheet, Text, TouchableOpacity, TouchableWithoutFeedback, View } from "react-native";
@@ -12,16 +13,16 @@ type ModalPickerProps = {};
 
 export const ModalConfirmation = ({ handleSave }: { handleSave: (status: StatusCategory | null) => void }) => {
 	const [modalVisible, setModalVisible] = useState(false);
-	const { orgRole, statusCategories } = useMetadata();
-	const { routeSession } = useRouteSessionStore();
+	const { statusCategories } = useMetadata();
 	const { selectedDispatch } = useDispatch();
+	const { selectedRoute } = useRoute();
 	const handleOpenModal = () => {
 		setModalVisible(true);
 	};
 	const [selectedStatus, setSelectedStatus] = useState<StatusCategory | null>(null);
 
 	const handleStatusPress = (status: StatusCategory) => {
-		if (routeSession && routeSession !== null) {
+		if (selectedRoute?.value.active) {
 			setSelectedStatus(status);
 			handleOpenModal();
 		}
@@ -38,13 +39,13 @@ export const ModalConfirmation = ({ handleSave }: { handleSave: (status: StatusC
 							<TouchableOpacity
 								key={status.name}
 								onPress={() => handleStatusPress(status)}
-								disabled={routeSession === null}
+								disabled={!selectedRoute?.value.active}
 								className="flex-1 rounded py-4 mx-1"
 								style={{
 									borderWidth: !isColorDark(status.color) ? 1 : 0,
 									borderColor: "#dddddd",
 									backgroundColor: status.color,
-									opacity: routeSession === null ? 0.5 : 1,
+									opacity: !selectedRoute?.value.active ? 0.5 : 1,
 									display: status.name !== selectedDispatch?.value.status ? "flex" : "none",
 								}}
 							>

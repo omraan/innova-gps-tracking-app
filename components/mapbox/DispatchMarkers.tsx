@@ -22,11 +22,11 @@ export default function OrderMarkers() {
 	const [bounceValue, setBounceValue] = useState([0, 0]);
 
 	const points = filteredDispatches.map((dispatch: { name: string; value: DispatchExtended }) => {
-		const isSelected = selectedDispatch && dispatch.value.customerId === selectedDispatch.value.customerId;
+		const isSelected = selectedDispatch && dispatch.name === selectedDispatch.name;
 
 		return point([dispatch.value.customer.lng, dispatch.value.customer.lat], {
 			dispatch,
-			customerId: dispatch.value.customerId,
+			dispatchId: dispatch.name,
 			statusCategory:
 				dispatch.value.category === "priority" ? dispatch.value.status + "Priority" : dispatch.value.status,
 			iconTranslate: isSelected ? bounceValue : [0, 0],
@@ -110,7 +110,7 @@ export default function OrderMarkers() {
 				filter={[
 					"all",
 					["!", ["has", "point_count"]],
-					["!=", ["get", "customerId"], selectedDispatch?.value.customerId || ""],
+					["!=", ["get", "dispatchId"], selectedDispatch?.name || ""],
 				]}
 			/>
 			<SymbolLayer
@@ -136,7 +136,7 @@ export default function OrderMarkers() {
 					iconColor: "blue",
 					iconTranslate: bounceValue,
 				}}
-				filter={["==", ["get", "customerId"], selectedDispatch?.value.customerId || ""]}
+				filter={["==", ["get", "dispatchId"], selectedDispatch?.name || ""]}
 			/>
 			<Images images={{ pinGreen, pinGreenPriority, pinRed, pinRedPriority, pinGray, pinGrayPriority }} />
 		</ShapeSource>

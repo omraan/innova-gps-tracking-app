@@ -1,9 +1,7 @@
 import colors from "@/colors";
 import { UPDATE_DISPATCH } from "@/graphql/mutations";
-import { GET_DISPATCHES } from "@/graphql/queries";
 import { useDateStore } from "@/hooks/useDateStore";
 import { removeTypenameProperties } from "@/lib/removeTypenameProperties";
-import { isColorDark } from "@/lib/styles";
 import { useDispatch } from "@/providers/DispatchProvider";
 import { useLocation } from "@/providers/LocationProvider";
 import { useMetadata } from "@/providers/MetaDataProvider";
@@ -15,7 +13,6 @@ import { MaterialIcons } from "@expo/vector-icons";
 import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
 import React, { useState } from "react";
 import { Pressable, Text, TextInput, View } from "react-native";
-import { Modal } from "./Modal";
 import { ModalConfirmation } from "./ModalConfirmation";
 
 export default function SelectedDispatchSheet() {
@@ -24,29 +21,22 @@ export default function SelectedDispatchSheet() {
 	const { dispatches, setDispatches, selectedDispatch, setSelectedDispatch } = useDispatch();
 	const { selectedRoute } = useRoute();
 
-	const { orgRole, statusCategories } = useMetadata();
+	const { orgRole } = useMetadata();
 
 	const { setActiveSheet } = useSheetContext();
 	const [notes, setNotes] = useState<string>("");
 	const { userId } = useAuth();
-
-	const [modalVisible, setModalVisible] = useState(false);
-
-	const [selectedStatus, setSelectedStatus] = useState<StatusCategory | null>(null);
 	const { isChangingLocation, setIsChangingLocation } = useLocation();
 
-	const handleOpenModal = () => {
-		setModalVisible(true);
-	};
-
-	const handleSave = () => {
+	const handleSave = (selectedStatus: StatusCategory | null) => {
+		console.log("handleSave", selectedStatus);
 		if (selectedStatus) {
 			onMarkerSubmit(selectedStatus, notes);
-			setModalVisible(false);
-			setSelectedDispatch(undefined);
-			setActiveSheet(null);
-			setNotes("");
 		}
+
+		setSelectedDispatch(undefined);
+		setActiveSheet(null);
+		setNotes("");
 	};
 
 	const [updateDispatch] = useMutation(UPDATE_DISPATCH, {
@@ -83,66 +73,24 @@ export default function SelectedDispatchSheet() {
 				newEvent.notes = notes;
 			}
 			variables.events = [...sanitizedDispatchEvents, newEvent];
-
-			// console.log("Variables", JSON.stringify(variables, null, 2));
 			updateDispatch({
 				variables,
-				onCompleted: () => {
-					// setLoading(false);
-					// setModalVisible(false);
-				},
-				update: (cache) => {
-					// Handmatig de cache bijwerken als dat nodig is
-					setDispatches(
-						dispatches.map((dispatch) => ({
-							name: dispatch.name,
-							value: {
-								...dispatch.value,
-								status: status.name,
-								notes: variables.notes || dispatch.value.notes || "",
-								events: [...(dispatch.value.events || []), newEvent],
-							},
-						}))
-					);
-
-					const existingDispatches = cache.readQuery<{
-						getDispatches: { name: string; value: DispatchExtended }[];
-					}>({
-						query: GET_DISPATCHES,
-						variables: {
-							routeId: selectedDispatch.value.route.id,
-						},
-					})?.getDispatches;
-
-					if (existingDispatches) {
-						const newDispatches = existingDispatches.map((existingDispatch) => {
-							if (existingDispatch.name === selectedDispatch.name) {
-								const newDispatch = {
-									name: existingDispatch.name,
-									value: {
-										...existingDispatch.value,
-										modifiedBy: userId!,
-										modifiedAt: Number(new Date()),
-										status: status.name,
-										notes: variables.notes || existingDispatch.value.notes || "",
-										events: [...(existingDispatch.value.events || []), newEvent],
-									},
-								};
-								return newDispatch;
-							}
-							return existingDispatch;
-						});
-
-						cache.writeQuery({
-							query: GET_DISPATCHES,
-							variables: {
-								date: selectedDate,
-							},
-							data: { getDispatches: newDispatches },
-						});
-					}
-				},
 			});
+
+			setDispatches(
+				dispatches.map((dispatch) => {
+					if (dispatch.name !== selectedDispatch.name) return dispatch;
+					return {
+						name: dispatch.name,
+						value: {
+							...dispatch.value,
+							status: status.name,
+							notes: variables.notes || dispatch.value.notes || "",
+							events: [...(dispatch.value.events || []), newEvent],
+						},
+					};
+				})
+			);
 		}
 	}
 
@@ -281,59 +229,6 @@ export default function SelectedDispatchSheet() {
 						/>
 					</View>
 					<ModalConfirmation handleSave={handleSave} />
-					{/* <View className="flex-row justify-between items-center mb-5">
-						{statusCategories &&
-							statusCategories.length > 0 &&
-							statusCategories
-								.filter((s) => s.name !== "No Location")
-								.map((status) => (
-									<Pressable
-										key={status.name}
-										onPress={() => {
-											if (selectedRoute?.value.startTime) {
-												setSelectedStatus(status);
-												handleOpenModal();
-											}
-										}}
-										disabled={!selectedRoute?.value.startTime}
-										className="flex-1 rounded py-4 mx-1"
-										style={{
-											borderWidth: !isColorDark(status.color) ? 1 : 0,
-											borderColor: "#dddddd",
-											backgroundColor: status.color,
-											opacity: !selectedRoute?.value.startTime ? 0.5 : 1,
-											display: status.name !== selectedDispatch.value.status ? "flex" : "none",
-										}}
-									>
-										<Text
-											className="text-center"
-											style={{ color: isColorDark(status.color) ? "white" : "#666666" }}
-										>
-											{status.name}
-										</Text>
-									</Pressable>
-								))}
-					</View>
-
-					<Modal modalVisible={modalVisible} setModalVisible={setModalVisible} handleSave={handleSave}>
-						<View className="mb-10">
-							<Text className="font-semibold text-2xl text-center mb-5">Change Status</Text>
-							<Text className="font-normal text-gray-500 text-center mb-10">
-								Select the new status for this order: {selectedDispatch.value.customer.name}
-							</Text>
-							<View
-								className="border rounded px-5 py-2 mx-auto"
-								style={{ borderColor: selectedStatus?.color }}
-							>
-								<Text
-									className="font-bold text-primary text-center text-2xl"
-									style={{ color: selectedStatus?.color }}
-								>
-									{selectedStatus?.name}
-								</Text>
-							</View>
-						</View>
-					</Modal> */}
 				</BottomSheetView>
 			)}
 		</BottomSheet>
