@@ -15,6 +15,7 @@ type ModalPickerProps = {
 		defaultValue?: string;
 		displayAll?: boolean;
 		displayAllLabel?: string;
+		emptyMessage?: string;
 	};
 	onSelect: (value: string) => void;
 	disabled?: boolean;
@@ -63,7 +64,11 @@ export const ModalPicker = ({ list, onSelect, options, disabled = false }: Modal
 					<Icon name="chevron-down" size={15} />
 				</TouchableOpacity>
 
-				<Modal modalVisible={modalVisible} setModalVisible={setModalVisible} handleSave={handleSave}>
+				<Modal
+					modalVisible={modalVisible}
+					setModalVisible={setModalVisible}
+					handleSave={list.length > 0 ? handleSave : null}
+				>
 					{options?.displayAll ? (
 						<TouchableOpacity
 							onPress={() => {
@@ -92,30 +97,39 @@ export const ModalPicker = ({ list, onSelect, options, disabled = false }: Modal
 					) : (
 						<View />
 					)}
-
-					{list.map((item) => (
-						<TouchableOpacity
-							key={item.value}
-							onPress={() => handleSelectItem(item.value)}
-							className="flex-row justify-start items-center gap-5 py-3 px-5 text-gray-400 w-full mb-3"
-							style={{
-								borderWidth: 1,
-								borderColor: item.label === selectedItem?.label ? "#6366f1" : "#9ca3af",
-								padding: 10,
-								borderRadius: 5,
-							}}
-						>
-							<Text
-								className="text-lg flex-1"
+					{list.length === 0 ? (
+						<View>
+							<Text className="text-center text-gray-500 mb-5">
+								{options?.emptyMessage || "No items to display"}
+							</Text>
+						</View>
+					) : (
+						list.map((item) => (
+							<TouchableOpacity
+								key={item.value}
+								onPress={() => handleSelectItem(item.value)}
+								className="flex-row justify-start items-center gap-5 py-3 px-5 text-gray-400 w-full mb-3"
 								style={{
-									color: item.label === selectedItem?.label ? "#6366f1" : "#9ca3af",
+									borderWidth: 1,
+									borderColor: item.label === selectedItem?.label ? "#6366f1" : "#9ca3af",
+									padding: 10,
+									borderRadius: 5,
 								}}
 							>
-								{item.label}
-							</Text>
-							{item.label === selectedItem?.label && <Feather name="check" size={24} color="#6366f1" />}
-						</TouchableOpacity>
-					))}
+								<Text
+									className="text-lg flex-1"
+									style={{
+										color: item.label === selectedItem?.label ? "#6366f1" : "#9ca3af",
+									}}
+								>
+									{item.label}
+								</Text>
+								{item.label === selectedItem?.label && (
+									<Feather name="check" size={24} color="#6366f1" />
+								)}
+							</TouchableOpacity>
+						))
+					)}
 				</Modal>
 			</View>
 		</View>

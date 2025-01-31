@@ -3,7 +3,7 @@
 		"name": "Innova",
 		"slug": "innova-gps-tracking",
 		"description": "Innova GPS Tracking",
-		"version": "1.0.12",
+		"version": "1.0.13",
 		"orientation": "default",
 		"owner": "innova-aruba",
 		"icon": "./assets/images/icon.png",

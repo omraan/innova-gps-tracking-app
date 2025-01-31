@@ -66,10 +66,9 @@ export default function DispatchListItem({ dispatch }: { dispatch: { name: strin
 						{!["open", "no location"].includes(dispatch.value.status.toLowerCase()) ? (
 							<View className="rounded px-3 py-1 mr-2" style={{ backgroundColor: statusCategory.color }}>
 								<Text className="text-white text-sm">
-									{latestEvent &&
-										moment(latestEvent?.modifiedAt || latestEvent?.createdAt || "No time").format(
-											"HH:mm"
-										)}
+									{moment(new Date(dispatch.value.modifiedAt ? dispatch.value.modifiedAt : 0)).format(
+										"HH:mm"
+									)}
 								</Text>
 							</View>
 						) : (

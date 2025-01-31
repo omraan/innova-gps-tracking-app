@@ -68,7 +68,24 @@ export const MetaDataProvider = ({ children }: PropsWithChildren) => {
 				},
 			]
 		);
-	}, [user?.publicMetadata, orgId]);
+	}, [user?.publicMetadata, orgId, vehicles]);
+
+	useEffect(() => {
+		if (user && orgId && selectedVehicle) {
+			user.update({
+				unsafeMetadata: {
+					...user.unsafeMetadata,
+					organizations: {
+						...user.unsafeMetadata.organizations,
+						[orgId]: {
+							...user.unsafeMetadata.organizations[orgId!],
+							vehicleId: selectedVehicle.name,
+						},
+					},
+				},
+			});
+		}
+	}, [selectedVehicle]);
 
 	return <MetaDataContext.Provider value={{ orgRole, statusCategories }}>{children}</MetaDataContext.Provider>;
 };

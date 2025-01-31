@@ -7,6 +7,7 @@ import { Modal, Platform, Pressable, Text, TouchableOpacity, View } from "react-
 interface DateTimePickerProps {
 	onChange: (date: Date) => void;
 	currentDate: Date;
+	disabled?: boolean;
 }
 export default function DateTimePicker(props: DateTimePickerProps) {
 	if (Platform.OS === "ios") {
@@ -17,7 +18,7 @@ export default function DateTimePicker(props: DateTimePickerProps) {
 	}
 }
 
-export const AndroidDateTimePicker = ({ onChange, currentDate }: DateTimePickerProps) => {
+export const AndroidDateTimePicker = ({ onChange, currentDate, disabled }: DateTimePickerProps) => {
 	const showDateTimePicker = () => {
 		DateTimePickerAndroid.open({
 			value: currentDate,
@@ -26,7 +27,7 @@ export const AndroidDateTimePicker = ({ onChange, currentDate }: DateTimePickerP
 		});
 	};
 	return (
-		<Pressable onPress={showDateTimePicker}>
+		<Pressable onPress={showDateTimePicker} disabled={disabled} style={{ opacity: disabled ? 0.5 : 1 }}>
 			<View className="w-full px-5 bg-gray-200 text-gray-700 font-semibold py-2 rounded">
 				<Text className="text-gray-700 text-sm">{moment(currentDate).format("yyyy-MM-DD")}</Text>
 			</View>
@@ -34,7 +35,7 @@ export const AndroidDateTimePicker = ({ onChange, currentDate }: DateTimePickerP
 	);
 };
 
-export const IOSDateTimePicker = ({ onChange, currentDate }: DateTimePickerProps) => {
+export const IOSDateTimePicker = ({ onChange, currentDate, disabled }: DateTimePickerProps) => {
 	const [modalVisible, setModalVisible] = React.useState(false);
 
 	return (
@@ -43,6 +44,8 @@ export const IOSDateTimePicker = ({ onChange, currentDate }: DateTimePickerProps
 			onPress={() => {
 				setModalVisible(true);
 			}}
+			disabled={disabled}
+			style={{ opacity: disabled ? 0.5 : 1 }}
 		>
 			<Text className="text-gray-500 flex-1 text-lg font-semibold">
 				{moment(currentDate).format("yyyy-MM-DD")}

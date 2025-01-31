@@ -86,6 +86,8 @@ export default function SelectedDispatchSheet() {
 							...dispatch.value,
 							status: status.name,
 							notes: variables.notes || dispatch.value.notes || "",
+							modifiedBy: userId!,
+							modifiedAt: Number(new Date()),
 							events: [...(dispatch.value.events || []), newEvent],
 						},
 					};

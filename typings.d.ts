@@ -80,6 +80,8 @@ interface Dispatch extends RegisterDispatch {
 	createdBy: string;
 	createdAt: number;
 	events?: DispatchEvent[];
+	modifiedAt?: number;
+	modifiedBy?: string;
 }
 interface DispatchRoute extends Dispatch {
 	index?: number;

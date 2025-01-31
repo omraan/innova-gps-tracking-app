@@ -3,6 +3,7 @@ import { useDateStore } from "@/hooks/useDateStore";
 import { useVehicleStore } from "@/hooks/useVehicleStore";
 import { getDirections } from "@/services/optimized-trips";
 import { useQuery } from "@apollo/client";
+import { useAuth } from "@clerk/clerk-expo";
 import polyline from "@mapbox/polyline";
 import { Position } from "@rnmapbox/maps/lib/typescript/src/types/Position";
 import * as Location from "expo-location";
@@ -36,19 +37,17 @@ const RouteContext = createContext<{
 	routes: { name: string; value: Route }[];
 	setRoutes(routes: { name: string; value: Route }[]): void;
 	refetchRoutes: () => void;
-	selectionRoutes: { name: string; value: Route }[];
-	setSelectionRoutes(routes: { name: string; value: Route }[]): void;
 	selectedRoute: { name: string; value: Route } | undefined;
 	setSelectedRoute(selectedRoute: { name: string; value: Route } | undefined): void;
 } | null>(null);
 
 export const RouteProvider = ({ children }: PropsWithChildren) => {
 	const [routes, setRoutes] = useState<{ name: string; value: Route }[]>([]);
-	const [selectionRoutes, setSelectionRoutes] = useState<{ name: string; value: Route }[]>([]);
 
 	const [selectedRoute, setSelectedRoute] = useState<{ name: string; value: Route }>();
 	const { selectedDate } = useDateStore();
 
+	const { orgId } = useAuth();
 	const { selectedVehicle } = useVehicleStore();
 
 	const {
@@ -82,16 +81,10 @@ export const RouteProvider = ({ children }: PropsWithChildren) => {
 	}, [selectedDate]);
 
 	useEffect(() => {
-		if (routes && routes.length > 0) {
-			let newSelectionRoutes = routes;
-			if (selectedVehicle) {
-				newSelectionRoutes = routes.filter(
-					(route: { name: string; value: Route }) => route.value.vehicleId === selectedVehicle.name
-				);
-			}
-			setSelectionRoutes(newSelectionRoutes);
+		if (selectedRoute && !routes.find((route) => route.name === selectedRoute.name)) {
+			setSelectedRoute(undefined);
 		}
-	}, [selectedVehicle, routes]);
+	}, [routes, orgId]);
 
 	return (
 		<RouteContext.Provider
@@ -101,8 +94,6 @@ export const RouteProvider = ({ children }: PropsWithChildren) => {
 				refetchRoutes,
 				selectedRoute,
 				setSelectedRoute,
-				selectionRoutes,
-				setSelectionRoutes,
 			}}
 		>
 			{children}

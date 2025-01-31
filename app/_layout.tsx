@@ -76,12 +76,10 @@ export default function RootLayout() {
 						<NavigationContainer>
 							<AuthProvider>
 								<ApolloProvider client={client}>
-									<LocationProvider>
-										<Stack screenOptions={{ headerBackTitle: "Back" }}>
-											<Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-											<Stack.Screen name="(auth)" options={{ headerShown: false }} />
-										</Stack>
-									</LocationProvider>
+									<Stack screenOptions={{ headerBackTitle: "Back" }}>
+										<Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+										<Stack.Screen name="(auth)" options={{ headerShown: false }} />
+									</Stack>
 								</ApolloProvider>
 							</AuthProvider>
 						</NavigationContainer>

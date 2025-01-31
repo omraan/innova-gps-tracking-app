@@ -1,29 +1,38 @@
 import { useLiveLocationStore } from "@/hooks/useLocationStore";
-import { useRouteSessionStore } from "@/hooks/useRouteSessionStore";
 import { defineLocationTask, UPDATE_LOCATION_TASK } from "@/lib/backgroundLocationTask";
 import { useAuth } from "@clerk/clerk-expo";
+import { Position } from "@rnmapbox/maps/lib/typescript/src/types/Position";
 import * as Location from "expo-location";
 import * as TaskManager from "expo-task-manager";
 import React, { createContext, PropsWithChildren, useContext, useEffect, useState } from "react";
-import { View } from "react-native";
-import { LatLng } from "react-native-maps";
+import { useDispatch } from "./DispatchProvider";
+import { useRoute } from "./RouteProvider";
 
 const LocationContext = createContext<{
 	liveLocation: LiveLocation | null;
 	setLiveLocation: (liveLocation: LiveLocation | null) => void;
 	isChangingLocation: boolean;
 	setIsChangingLocation: (isChanging: boolean) => void;
+	followUserLocation: boolean;
+	setFollowUserLocation: (followUserLocation: boolean) => void;
+	markerCoordinate: Position;
+	setMarkerCoordinate: (markerCoordinate: Position) => void;
 } | null>(null);
 
 const LocationProvider = ({ children }: PropsWithChildren) => {
 	const { userId, orgId } = useAuth();
-	const { routeSession, setRouteSession } = useRouteSessionStore();
 	const [backgroundTaskRegistered, setBackgroundTaskRegistered] = useState(false);
-	const { liveLocation, setLiveLocation } = useLiveLocationStore();
+	const { liveLocation, setLiveLocation, followUserLocation, setFollowUserLocation } = useLiveLocationStore();
 	const [isChangingLocation, setIsChangingLocation] = useState<boolean>(false);
+	const [markerCoordinate, setMarkerCoordinate] = useState<Position>([0, 0]);
 
+	const { selectedRoute, setSelectedRoute, setRoutes } = useRoute();
+	const { setDispatches } = useDispatch();
 	useEffect(() => {
 		const startBackgroundLocation = async () => {
+			if (!selectedRoute) {
+				return;
+			}
 			const { status } = await Location.requestForegroundPermissionsAsync();
 			if (status !== "granted") {
 				console.error("Permission to access location was denied");
@@ -36,8 +45,8 @@ const LocationProvider = ({ children }: PropsWithChildren) => {
 				return;
 			}
 
-			const routeSessionId = routeSession?.id;
-			defineLocationTask(userId!, orgId!, routeSessionId!, setLiveLocation);
+			const routeId = selectedRoute?.name;
+			defineLocationTask(userId!, orgId!, routeId!, setLiveLocation);
 			setBackgroundTaskRegistered(true);
 			console.log("Start location sync");
 
@@ -52,7 +61,7 @@ const LocationProvider = ({ children }: PropsWithChildren) => {
 			});
 		};
 
-		if (routeSession && userId && orgId) {
+		if (selectedRoute && selectedRoute.value.active && userId && orgId) {
 			startBackgroundLocation();
 		}
 		return () => {
@@ -61,11 +70,13 @@ const LocationProvider = ({ children }: PropsWithChildren) => {
 				setBackgroundTaskRegistered(false);
 			}
 		};
-	}, [routeSession]);
+	}, [selectedRoute]);
 
 	useEffect(() => {
-		if (routeSession) {
-			setRouteSession(null);
+		if (selectedRoute) {
+			setSelectedRoute(undefined);
+			setRoutes([]);
+			setDispatches([]);
 		}
 	}, [userId, orgId]);
 
@@ -76,6 +87,10 @@ const LocationProvider = ({ children }: PropsWithChildren) => {
 				setLiveLocation,
 				isChangingLocation,
 				setIsChangingLocation,
+				followUserLocation,
+				setFollowUserLocation,
+				markerCoordinate,
+				setMarkerCoordinate,
 			}}
 		>
 			{children}

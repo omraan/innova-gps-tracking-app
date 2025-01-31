@@ -1,5 +1,6 @@
 import colors from "@/colors";
 import { useDispatch } from "@/providers/DispatchProvider";
+import { useLocation } from "@/providers/LocationProvider";
 import { useSheetContext } from "@/providers/SheetProvider";
 import { MaterialIcons } from "@expo/vector-icons";
 import React from "react";
@@ -11,6 +12,7 @@ export default function Navigation() {
 	const { setActiveSheet } = useSheetContext();
 
 	const { dispatches } = useDispatch();
+	const { followUserLocation, setFollowUserLocation } = useLocation();
 
 	const dispatchCount = dispatches.filter(
 		(dispatch) => !dispatch.value.customer.lat || dispatch.value.customer.lat === 0
@@ -51,6 +53,18 @@ export default function Navigation() {
 							</View>
 						</View>
 					)}
+				</View>
+			</View>
+			<View className="flex-row justify-end px-6">
+				<View className="relative">
+					<Pressable
+						className={`bg-${
+							followUserLocation ? "white" : "gray-300"
+						} rounded-full p-4 shadow shadow-black/20`}
+						onPress={() => setFollowUserLocation(!followUserLocation)}
+					>
+						<MaterialIcons name="navigation" size={24} color={colors.primary} className="rotate-45" />
+					</Pressable>
 				</View>
 			</View>
 		</SafeAreaView>

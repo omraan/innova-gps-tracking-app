@@ -29,9 +29,10 @@ export async function getDirections(
 	const coordinates = [start, ...destinations].map((d) => `${d.longitude},${d.latitude}`).join(";");
 
 	const accessKey = process.env["EXPO_PUBLIC_MAPBOX_KEY"];
-	const url = `https://api.mapbox.com/directions/v5/mapbox/driving-traffic/${coordinates}?access_token=${accessKey}`;
+	const url = `https://api.mapbox.com/directions/v5/mapbox/driving/${coordinates}?access_token=${accessKey}&alternatives=false&geometries=polyline&overview=full`;
 	const response: any = await fetch(url);
 	const routeResponse: any = await response.json();
+
 	if (routeResponse.message === "Not Found") {
 		return {
 			success: false,

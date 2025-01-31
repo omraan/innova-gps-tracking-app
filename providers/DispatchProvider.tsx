@@ -117,8 +117,6 @@ export default function DispatchProvider({ children }: PropsWithChildren) {
 				};
 			});
 
-			console.log("response", routes[0].geometry);
-
 			setFilteredDispatches(newDispatches);
 			setRouteCoordinates(polyline.decode(routes[0].geometry).map((c) => [c[1], c[0]]));
 		} else {

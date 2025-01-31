@@ -1,24 +1,26 @@
 import colors from "@/colors";
-import { UPDATE_ROUTE_START_TIME } from "@/graphql/mutations";
+import { UPDATE_CUSTOMER, UPDATE_ROUTE_START_TIME } from "@/graphql/mutations";
+import { GET_DISPATCHES } from "@/graphql/queries";
 import { useDateStore } from "@/hooks/useDateStore";
 import { useVehicleStore } from "@/hooks/useVehicleStore";
 import { useDispatch } from "@/providers/DispatchProvider";
+import { useLocation } from "@/providers/LocationProvider";
 import { useRoute } from "@/providers/RouteProvider";
 import { useMutation, useQuery } from "@apollo/client";
-import { useAuth } from "@clerk/clerk-expo";
 import { AntDesign, MaterialIcons } from "@expo/vector-icons";
+import { Position } from "@rnmapbox/maps/lib/typescript/src/types/Position";
 import moment from "moment";
 import React, { useEffect, useState } from "react";
-import { Pressable, Text, View } from "react-native";
+import { Pressable, Text, TouchableOpacity, View } from "react-native";
 import { useTailwind } from "tailwind-rn";
 
 export default function RouteSession() {
 	const tw = useTailwind();
 
 	const { selectedDate } = useDateStore();
-	const { selectedVehicle } = useVehicleStore();
-	const { dispatches } = useDispatch();
+	const { dispatches, setDispatches, selectedDispatch, setSelectedDispatch } = useDispatch();
 	const { selectedRoute, setSelectedRoute } = useRoute();
+	const { isChangingLocation, setIsChangingLocation, markerCoordinate } = useLocation();
 
 	const [UpdateRouteStartTime] = useMutation(UPDATE_ROUTE_START_TIME);
 
@@ -30,8 +32,6 @@ export default function RouteSession() {
 		if (!selectedRoute) {
 			return;
 		}
-		console.log("startTime", startTime);
-
 		const variables = {
 			date: selectedDate,
 			id: selectedRoute?.name,
@@ -40,7 +40,6 @@ export default function RouteSession() {
 		await UpdateRouteStartTime({
 			variables,
 			onCompleted: (data) => {
-				console.log("onCompleted", data);
 				setSelectedRoute({
 					name: selectedRoute.name,
 					value: {
@@ -55,10 +54,103 @@ export default function RouteSession() {
 			},
 		});
 	};
+	const handleDiscardLocation = () => {
+		setSelectedDispatch(undefined);
+		setIsChangingLocation(false);
+	};
+	const [UpdateCustomer] = useMutation(UPDATE_CUSTOMER);
 
-	const showButton = !selectedRoute && dispatches && dispatches.length > 0;
+	const handleSaveLocation = async () => {
+		if (!selectedDispatch) {
+			console.log("No order selected");
+			return;
+		}
+
+		try {
+			await UpdateCustomer({
+				variables: {
+					id: selectedDispatch?.value.customerId,
+					lat: markerCoordinate[1],
+					lng: markerCoordinate[0],
+					lastCoordinateUpdate: Number(new Date()),
+				},
+				// onCompleted: () => setLoading(false),
+				update: (cache) => {
+					setDispatches(
+						dispatches.map((dispatch) => {
+							if (dispatch.name === selectedDispatch.name) {
+								return {
+									name: dispatch.name,
+									value: {
+										...dispatch.value,
+										customer: {
+											...dispatch.value.customer,
+											lat: markerCoordinate[1],
+											lng: markerCoordinate[0],
+										},
+									},
+								};
+							}
+							return dispatch;
+						})
+					);
+
+					// Handmatig de cache bijwerken als dat nodig is
+					const existingOrders = cache.readQuery<{
+						getOrdersByDate: { name: string; value: OrderExtended }[];
+					}>({
+						query: GET_DISPATCHES,
+						variables: {
+							date: selectedDate,
+						},
+					})?.getOrdersByDate;
+
+					if (existingOrders) {
+						const newOrders = existingOrders.map((existingOrder) =>
+							existingOrder.value.customerId === selectedDispatch?.value.customerId
+								? {
+										name: existingOrder.name,
+										value: {
+											...existingOrder.value,
+											customer: {
+												...existingOrder.value.customer,
+												lat: markerCoordinate[1],
+												lng: markerCoordinate[0],
+											},
+											events: [
+												...existingOrder.value.events!,
+												{
+													name: "",
+													createdAt: Number(new Date()),
+													createdBy: "",
+													notes: existingOrder.value.notes || "",
+													status: existingOrder.value.status,
+													lat: markerCoordinate[1],
+													lng: markerCoordinate[0],
+													modifiedAt: Number(new Date()),
+												},
+											],
+										},
+								  }
+								: existingOrder
+						);
+						cache.writeQuery({
+							query: GET_DISPATCHES,
+							variables: {
+								date: selectedDate,
+							},
+							data: { getOrdersByDate: newOrders },
+						});
+					}
+				},
+			});
+			setSelectedDispatch(undefined);
+			setIsChangingLocation(false);
+		} catch (error: any) {
+			console.error(error);
+		}
+	};
 	return (
-		// showButton && (
 		<View>
 			{!selectedRoute ? (
 				<View className="flex-col items-center justify-center mb-2">
@@ -74,7 +166,7 @@ export default function RouteSession() {
 			) : (
 				<View />
 			)}
-			{!selectedRoute?.value.active && (
+			{!selectedRoute?.value.active ? (
 				<View style={tw("flex flex-row items-center justify-center")}>
 					<Pressable
 						onPress={startRoute}
@@ -89,8 +181,22 @@ export default function RouteSession() {
 						<AntDesign name="caretright" size={14} color="#6366f1" />
 					</Pressable>
 				</View>
+			) : (
+				<View />
+			)}
+
+			{isChangingLocation ? (
+				<View className="flex flex-row justify-center gap-5 px-10 w-full">
+					<TouchableOpacity onPress={handleSaveLocation} className="bg-green-600 w-full flex-1 py-4 rounded">
+						<Text className="text-white text-center font-bold">Save</Text>
+					</TouchableOpacity>
+					<TouchableOpacity onPress={handleDiscardLocation} className="bg-red-600 flex-1 py-4 rounded">
+						<Text className="text-white text-center font-bold">Discard</Text>
+					</TouchableOpacity>
+				</View>
+			) : (
+				<View />
 			)}
 		</View>
-		// )
 	);
 }

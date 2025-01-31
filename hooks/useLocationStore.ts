@@ -5,6 +5,8 @@ import { createJSONStorage, persist } from "zustand/middleware";
 type LiveLocationStore = {
 	liveLocation: LiveLocation | null;
 	setLiveLocation: (liveLocation: LiveLocation | null) => void;
+	followUserLocation: boolean;
+	setFollowUserLocation: (followUserLocation: boolean) => void;
 	error?: null | {
 		message?: string;
 		details?: string;
@@ -17,6 +19,8 @@ export const useLiveLocationStore = create<LiveLocationStore>()(
 		(set, get) => ({
 			liveLocation: null,
 			setLiveLocation: (liveLocation) => set(() => ({ liveLocation })),
+			followUserLocation: false,
+			setFollowUserLocation: (followUserLocation) => set(() => ({ followUserLocation })),
 			error: null,
 			resetError: () => set({ error: null }),
 		}),

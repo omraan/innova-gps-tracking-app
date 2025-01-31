@@ -14,7 +14,7 @@ let startTime = Date.now();
 export const defineLocationTask = (
 	userId: string,
 	orgId: string,
-	routeSessionId: string,
+	routeId: string,
 	setLiveLocation: (location: any) => void
 ) =>
 	TaskManager.defineTask(UPDATE_LOCATION_TASK, async ({ data, error }: any) => {
@@ -57,7 +57,7 @@ export const defineLocationTask = (
 				const updates: { [key: string]: any } = {};
 
 				const newTracking = {
-					routeSessionId,
+					routeId,
 					latitude,
 					longitude,
 					speed,
@@ -68,8 +68,8 @@ export const defineLocationTask = (
 				const newTrackingRef = push(child(trackingRef, `${newDate}/users/${userId}`));
 				const newTrackingKey = newTrackingRef.key;
 
-				updates[`${newDate}/route-sessions/${routeSessionId}/${newTrackingKey}`] = newTracking;
-				updates[`current/route-sessions/${routeSessionId}`] = newTracking;
+				updates[`${newDate}/routes/${routeId}/${newTrackingKey}`] = newTracking;
+				updates[`current/routes/${routeId}`] = newTracking;
 				await update(trackingRef, updates);
 			}
 		}

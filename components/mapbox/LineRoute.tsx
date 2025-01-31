@@ -23,7 +23,7 @@ export default function LineRoute({ coordinates }: { coordinates: Position[] }) 
 					lineColor: colors.secondary,
 					lineCap: "round",
 					lineJoin: "round",
-					lineWidth: 3,
+					lineWidth: 6,
 				}}
 			/>
 		</ShapeSource>
