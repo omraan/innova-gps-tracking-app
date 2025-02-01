@@ -1,15 +1,17 @@
 import colors from "@/colors";
+import { useNavigationStore } from "@/hooks/useNavigationStore";
 import { useDispatch } from "@/providers/DispatchProvider";
 import { useLocation } from "@/providers/LocationProvider";
 import { useSheetContext } from "@/providers/SheetProvider";
-import { MaterialIcons } from "@expo/vector-icons";
-import React from "react";
-import { Pressable, Text, View } from "react-native";
+import { FontAwesome5, Ionicons, MaterialIcons } from "@expo/vector-icons";
+import React, { useState } from "react";
+import { Pressable, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import SearchBar from "./SearchBar";
 
 export default function Navigation() {
 	const { setActiveSheet } = useSheetContext();
+	const { activeNavigateOption, setActiveNavigateOption } = useNavigationStore();
 
 	const { dispatches } = useDispatch();
 	const { followUserLocation, setFollowUserLocation } = useLocation();
@@ -17,6 +19,38 @@ export default function Navigation() {
 	const dispatchCount = dispatches.filter(
 		(dispatch) => !dispatch.value.customer.lat || dispatch.value.customer.lat === 0
 	).length;
+
+	const navigateOptions: NavigationOption[] = [
+		{
+			name: "locate-dispatch",
+			iconName: "search-location",
+			iconObject: FontAwesome5,
+			iconSize: 24,
+		},
+		{
+			name: "locate-route",
+			iconName: "route",
+			iconObject: FontAwesome5,
+			iconSize: 24,
+		},
+		{
+			name: "locate-user",
+			iconName: "locate-sharp",
+			iconObject: Ionicons,
+			iconSize: 24,
+		},
+		{
+			name: "navigate",
+			iconName: "navigation",
+			iconObject: MaterialIcons,
+			iconSize: 24,
+			className: "rotate-45",
+		},
+	];
+
+	const [showOptions, setShowOptions] = useState<boolean>(false);
+
+	const activeOption = navigateOptions.find((o) => o.name == activeNavigateOption);
 
 	return (
 		<SafeAreaView className="absolute top-0 left-0 right-0">
@@ -56,15 +90,40 @@ export default function Navigation() {
 				</View>
 			</View>
 			<View className="flex-row justify-end px-6">
-				<View className="relative">
-					<Pressable
-						className={`bg-${
-							followUserLocation ? "white" : "gray-300"
-						} rounded-full p-4 shadow shadow-black/20`}
-						onPress={() => setFollowUserLocation(!followUserLocation)}
+				<View className="flex-row gap-5 bg-white rounded-full p-4 shadow shadow-black/20 ">
+					{showOptions && (
+						<>
+							{navigateOptions.map((item, index) => (
+								<item.iconObject
+									key={index}
+									size={item.iconSize}
+									color={activeNavigateOption === item.name ? colors.primary : "gray"}
+									name={item.iconName}
+									className={item.className}
+									onPress={() => {
+										setActiveNavigateOption(item.name);
+									}}
+								/>
+							))}
+							<View className="border border-gray-200" />
+						</>
+					)}
+
+					<TouchableOpacity
+						className=""
+						onPress={() => {
+							setShowOptions(!showOptions);
+						}}
 					>
-						<MaterialIcons name="navigation" size={24} color={colors.primary} className="rotate-45" />
-					</Pressable>
+						{activeOption && (
+							<activeOption.iconObject
+								size={activeOption.iconSize}
+								color={colors.primary}
+								name={activeOption.iconName}
+								className={`${activeOption.className}`}
+							/>
+						)}
+					</TouchableOpacity>
 				</View>
 			</View>
 		</SafeAreaView>

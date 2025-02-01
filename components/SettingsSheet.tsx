@@ -1,9 +1,11 @@
 import { MapViewOptions } from "@/constants/MapViewOptions";
+import { client } from "@/graphql/client";
 import { UPDATE_ROUTE_END_TIME, UPDATE_ROUTE_START_TIME } from "@/graphql/mutations";
 import { GET_DISPATCHES, GET_VEHICLES } from "@/graphql/queries";
 import { useDateStore } from "@/hooks/useDateStore";
 import { useVehicleStore } from "@/hooks/useVehicleStore";
 import toastPromise from "@/lib/toastPromise";
+import { useDispatch } from "@/providers/DispatchProvider";
 import { useRoute } from "@/providers/RouteProvider";
 import { useSheetContext } from "@/providers/SheetProvider";
 import { useMutation, useQuery } from "@apollo/client";
@@ -14,6 +16,7 @@ import { useEffect } from "react";
 import { Pressable, Text, TouchableOpacity, View } from "react-native";
 import DateTimePicker from "./DateTimePicker";
 import { ModalPicker } from "./ModalPicker";
+
 export default function SettingsSheet() {
 	const { bottomSheetRefs, handlePanDownToClose } = useSheetContext();
 	const { selectedDate, setSelectedDate } = useDateStore();
@@ -21,6 +24,8 @@ export default function SettingsSheet() {
 	const { user } = useUser();
 	const { selectedRoute, refetchRoutes, routes, setSelectedRoute } = useRoute();
 	const { selectedVehicle, setSelectedVehicle } = useVehicleStore();
+
+	const { fetchRoutePolyline } = useDispatch();
 
 	const { refetch: refetchDispatches } = useQuery(GET_DISPATCHES, { fetchPolicy: "network-only" });
 	const { data: dataVehicles, refetch: refetchVehicles } = useQuery(GET_VEHICLES, { fetchPolicy: "network-only" });
@@ -38,13 +43,16 @@ export default function SettingsSheet() {
 	const handleRefresh = async () => {
 		const promises = Promise.all([
 			refetchRoutes(),
-			() =>
-				selectedRoute?.name &&
-				refetchDispatches({
-					routeId: selectedRoute?.name,
-				}),
+			// () =>
+			// 	selectedRoute?.name &&
+			// 	refetchDispatches({
+			// 		routeId: selectedRoute?.name,
+			// 	}),
 			refetchVehicles(),
 		]);
+		if (selectedRoute) {
+			fetchRoutePolyline();
+		}
 
 		toastPromise(promises, {
 			loading: "Refreshing data...",

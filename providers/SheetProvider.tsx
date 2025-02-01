@@ -1,7 +1,7 @@
 import BottomSheet from "@gorhom/bottom-sheet";
 import React, { act, createContext, PropsWithChildren, useContext, useEffect, useRef, useState } from "react";
 
-type SheetCategories = "dispatches" | "route" | "metadata" | "settings" | "account";
+type SheetCategories = "dispatches" | "route" | "metadata" | "settings" | "account" | "currentDispatch";
 
 interface SheetContextProps {
 	activeSheet: SheetCategories | null;
@@ -12,6 +12,7 @@ interface SheetContextProps {
 		metadata: React.RefObject<BottomSheet>;
 		settings: React.RefObject<BottomSheet>;
 		account: React.RefObject<BottomSheet>;
+		currentDispatch: React.RefObject<BottomSheet>;
 	};
 	handlePanDownToClose: (sheet: SheetCategories) => void;
 }
@@ -19,7 +20,7 @@ interface SheetContextProps {
 const SheetContext = createContext<SheetContextProps | null>(null);
 
 export const SheetProvider = ({ children }: PropsWithChildren) => {
-	const [activeSheet, setActiveSheet] = useState<SheetCategories | null>(null);
+	const [activeSheet, setActiveSheet] = useState<SheetCategories | null>("currentDispatch");
 
 	const bottomSheetRefs = {
 		dispatches: useRef<BottomSheet>(null),
@@ -27,6 +28,7 @@ export const SheetProvider = ({ children }: PropsWithChildren) => {
 		metadata: useRef<BottomSheet>(null),
 		settings: useRef<BottomSheet>(null),
 		account: useRef<BottomSheet>(null),
+		currentDispatch: useRef<BottomSheet>(null),
 	};
 
 	const handleSetActiveSheet = (sheet: SheetCategories | null) => {
@@ -40,7 +42,7 @@ export const SheetProvider = ({ children }: PropsWithChildren) => {
 					bottomSheetRefs.dispatches.current?.expand();
 				}, 200);
 			}
-			setActiveSheet(null);
+			setActiveSheet("currentDispatch");
 		} else {
 			setActiveSheet(sheet);
 		}
@@ -49,7 +51,7 @@ export const SheetProvider = ({ children }: PropsWithChildren) => {
 	const handlePanDownToClose = (sheet: SheetCategories) => {
 		if (activeSheet === sheet) {
 			bottomSheetRefs[sheet].current?.close();
-			setActiveSheet(null);
+			setActiveSheet("currentDispatch");
 		}
 	};
 

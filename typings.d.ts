@@ -88,6 +88,7 @@ interface DispatchRoute extends Dispatch {
 	distance?: number;
 	duration?: number;
 	estimatedTimeArrival?: string;
+	steps: Step[];
 }
 interface DispatchExtended extends Dispatch {
 	customer: RegisterCustomer;
@@ -162,3 +163,33 @@ interface TrackingLocation {
 	speedInKmh: number;
 	timestamp: number;
 }
+
+interface Step {
+	name: string;
+	duration: number;
+	distance: number;
+	driving_side: string;
+	weight: number;
+	mode: string;
+	maneuver: {
+		type: string;
+		instruction: string;
+		bearing_before: number;
+		bearing_after: number;
+		location: [number, number];
+	};
+	geometry: {
+		type: string;
+		coordinates: [number, number][];
+	};
+}
+
+type NavigateOptionName = "navigate" | "locate-dispatch" | "locate-user" | "locate-route";
+
+type NavigationOption = {
+	name: NavigateOptionName;
+	iconName: string;
+	iconObject: string | Icon;
+	iconSize: number;
+	className?: string;
+};

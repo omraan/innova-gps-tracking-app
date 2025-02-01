@@ -66,6 +66,7 @@ export const RouteProvider = ({ children }: PropsWithChildren) => {
 	}, [error]);
 
 	useEffect(() => {
+		console.log("trigger");
 		if (dataRoutes) {
 			setRoutes(
 				dataRoutes.getRoutes.map((route: { name: string; value: Route }) => ({

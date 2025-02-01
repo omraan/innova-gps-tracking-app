@@ -64,7 +64,7 @@ export const defineLocationTask = (
 					speedInKmh,
 					timestamp: format(new Date(), "yyyy-MM-dd HH:mm:ss"),
 				};
-				setLiveLocation(newTracking);
+				// setLiveLocation(newTracking);
 				const newTrackingRef = push(child(trackingRef, `${newDate}/users/${userId}`));
 				const newTrackingKey = newTrackingRef.key;
 

@@ -61,7 +61,7 @@ export const MetaDataProvider = ({ children }: PropsWithChildren) => {
 			}
 		}
 		setStatusCategories(
-			organization?.publicMetadata.statusCategories || [
+			(organization?.publicMetadata.statusCategories as StatusCategory[]) || [
 				{
 					color: "#000000",
 					name: "Unknown",

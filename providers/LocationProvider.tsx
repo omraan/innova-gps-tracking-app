@@ -2,8 +2,10 @@ import { useLiveLocationStore } from "@/hooks/useLocationStore";
 import { defineLocationTask, UPDATE_LOCATION_TASK } from "@/lib/backgroundLocationTask";
 import { useAuth } from "@clerk/clerk-expo";
 import { Position } from "@rnmapbox/maps/lib/typescript/src/types/Position";
+import { format } from "date-fns-tz";
 import * as Location from "expo-location";
 import * as TaskManager from "expo-task-manager";
+import moment from "moment";
 import React, { createContext, PropsWithChildren, useContext, useEffect, useState } from "react";
 import { useDispatch } from "./DispatchProvider";
 import { useRoute } from "./RouteProvider";
@@ -60,14 +62,44 @@ const LocationProvider = ({ children }: PropsWithChildren) => {
 				},
 			});
 		};
+		let locationSubscription: Location.LocationSubscription | null = null;
+
+		const startLiveTracking = async () => {
+			const { status } = await Location.requestForegroundPermissionsAsync();
+			if (status !== "granted") {
+				console.error("Permission to access location was denied");
+				return;
+			}
+
+			locationSubscription = await Location.watchPositionAsync(
+				{
+					accuracy: Location.Accuracy.High,
+					timeInterval: 1000,
+					distanceInterval: 10,
+				},
+				(location) => {
+					setLiveLocation({
+						latitude: location.coords.latitude,
+						longitude: location.coords.longitude,
+						speed: location.coords.speed,
+						speedInKmh: location.coords.speed ? location.coords.speed * 3.6 : 0,
+						timestamp: moment(location.timestamp).toISOString(),
+					});
+				}
+			);
+		};
 
 		if (selectedRoute && selectedRoute.value.active && userId && orgId) {
 			startBackgroundLocation();
+			startLiveTracking();
 		}
 		return () => {
 			if (backgroundTaskRegistered) {
 				TaskManager.unregisterTaskAsync(UPDATE_LOCATION_TASK);
 				setBackgroundTaskRegistered(false);
+			}
+			if (locationSubscription) {
+				locationSubscription.remove();
 			}
 		};
 	}, [selectedRoute]);

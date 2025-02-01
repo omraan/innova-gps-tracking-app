@@ -166,7 +166,7 @@ export default function RouteSession() {
 			) : (
 				<View />
 			)}
-			{!selectedRoute?.value.active ? (
+			{!selectedRoute ? (
 				<View style={tw("flex flex-row items-center justify-center")}>
 					<Pressable
 						onPress={startRoute}

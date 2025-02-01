@@ -19,6 +19,7 @@ const DispatchContext = createContext<{
 	setSearchQuery(searchQuery: string): void;
 	filteredDispatches: { name: string; value: DispatchExtended }[];
 	routeCoordinates: Position[] | null;
+	fetchRoutePolyline: () => void;
 } | null>(null);
 
 export default function DispatchProvider({ children }: PropsWithChildren) {
@@ -101,6 +102,7 @@ export default function DispatchProvider({ children }: PropsWithChildren) {
 							// index: index + 1,
 							duration: routes[0].legs[index].duration,
 							distance: routes[0].legs[index].distance,
+							steps: routes[0].legs[index].steps,
 						},
 					},
 				};
@@ -138,6 +140,7 @@ export default function DispatchProvider({ children }: PropsWithChildren) {
 				setSearchQuery,
 				filteredDispatches,
 				routeCoordinates,
+				fetchRoutePolyline,
 			}}
 		>
 			{children}
