@@ -1,3 +1,4 @@
+import { useSelectionStore } from "@/hooks/useSelectionStore";
 import BottomSheet from "@gorhom/bottom-sheet";
 import React, { act, createContext, PropsWithChildren, useContext, useEffect, useRef, useState } from "react";
 
@@ -20,7 +21,9 @@ interface SheetContextProps {
 const SheetContext = createContext<SheetContextProps | null>(null);
 
 export const SheetProvider = ({ children }: PropsWithChildren) => {
-	const [activeSheet, setActiveSheet] = useState<SheetCategories | null>("currentDispatch");
+	const { selectedRoute, isToday } = useSelectionStore();
+
+	const [activeSheet, setActiveSheet] = useState<SheetCategories | null>(null);
 
 	const bottomSheetRefs = {
 		dispatches: useRef<BottomSheet>(null),
@@ -32,17 +35,13 @@ export const SheetProvider = ({ children }: PropsWithChildren) => {
 	};
 
 	const handleSetActiveSheet = (sheet: SheetCategories | null) => {
-		// console.log("handleActiveSheet", sheet, activeSheet);
 		if (sheet === activeSheet) {
-			if (activeSheet !== "dispatches") {
-				setActiveSheet(null);
-			} else {
+			if (activeSheet === "dispatches") {
 				bottomSheetRefs.dispatches.current?.close();
 				setTimeout(() => {
 					bottomSheetRefs.dispatches.current?.expand();
 				}, 200);
 			}
-			setActiveSheet("currentDispatch");
 		} else {
 			setActiveSheet(sheet);
 		}
@@ -51,7 +50,8 @@ export const SheetProvider = ({ children }: PropsWithChildren) => {
 	const handlePanDownToClose = (sheet: SheetCategories) => {
 		if (activeSheet === sheet) {
 			bottomSheetRefs[sheet].current?.close();
-			setActiveSheet("currentDispatch");
+
+			setActiveSheet(null);
 		}
 	};
 

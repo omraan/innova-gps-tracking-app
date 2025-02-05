@@ -1,3 +1,4 @@
+import pinNew from "@/assets/images/pin-new.png";
 import puckShadow from "@/assets/images/puck-shadow.png";
 import puck from "@/assets/images/puck.png";
 import { MapViewOptions } from "@/constants/MapViewOptions";
@@ -18,8 +19,9 @@ import Mapbox, {
 import { featureCollection, point } from "@turf/helpers";
 import * as Location from "expo-location";
 import React, { useEffect, useRef, useState } from "react";
-import { Text, TouchableOpacity, View } from "react-native";
+import { Text, View } from "react-native";
 import DispatchMarkers from "./DispatchMarkers";
+import InstructionBox from "./InstructionBox";
 import LineRoute from "./LineRoute";
 const publicAccessToken =
 	"pk.eyJ1IjoidmVkaXNwYXRjaCIsImEiOiJjbTU4NWU0ZzkzbXB1MmtzZGdlOGIwZjM2In0.3C22WiMd_1T_mRsYAWm8GQ";
@@ -29,7 +31,15 @@ export default function Map() {
 	const { organization } = useOrganization();
 	const { liveLocation, isChangingLocation, setFollowUserLocation, markerCoordinate, setMarkerCoordinate } =
 		useLocation();
-	const { dispatches, filteredDispatches, routeCoordinates } = useDispatch();
+	const {
+		dispatches,
+		filteredDispatches,
+		routeCoordinates,
+		currentDispatch,
+		setCurrentDispatch,
+		currentStepIndex,
+		setCurrentStepIndex,
+	} = useDispatch();
 
 	const cameraRef = useRef<Camera>(null);
 	const mapViewRef = useRef<MapView>(null);
@@ -46,31 +56,6 @@ export default function Map() {
 	const { user } = useUser();
 
 	const mapView = (user?.unsafeMetadata.defaultMapView as string) || "standard";
-	const [currentStepIndex, setCurrentStepIndex] = useState(0);
-	const currentDispatch = filteredDispatches
-		.filter((dispatch) => dispatch.value.status === "Open")
-		.sort((a, b) => a.value.route.index! - b.value.route.index!)[0];
-
-	useEffect(() => {
-		if (currentDispatch && liveLocation) {
-			const { steps } = currentDispatch.value.route;
-			let closestStepIndex = 0;
-			let minDistance = Infinity;
-			if (steps && steps.length > 0) {
-				steps.forEach((step: Step, index: number) => {
-					const distance = getDistance(
-						{ latitude: liveLocation.latitude, longitude: liveLocation.longitude },
-						{ latitude: step.maneuver.location[1], longitude: step.maneuver.location[0] }
-					);
-					if (distance < minDistance) {
-						minDistance = distance;
-						closestStepIndex = index;
-					}
-				});
-				setCurrentStepIndex(closestStepIndex);
-			}
-		}
-	}, [filteredDispatches, liveLocation]);
 
 	useEffect(() => {
 		if (activeNavigateOption) {
@@ -125,17 +110,22 @@ export default function Map() {
 					case "locate-route":
 						// Locate both user and dispatch location and adjust the camera position accordingly
 						if (currentDispatch && liveLocation) {
-							cameraRef.current?.fitBounds(
-								[liveLocation.longitude, liveLocation.latitude],
-								[currentDispatch.value.customer.lng, currentDispatch.value.customer.lat],
-								[50, 50, 50, 50]
-							);
+							cameraRef.current?.setCamera({
+								pitch: 0,
+							});
+
+							setTimeout(() => {
+								cameraRef.current?.fitBounds(
+									[liveLocation.longitude, liveLocation.latitude],
+									[currentDispatch.value.customer.lng, currentDispatch.value.customer.lat],
+									[50, 50, 50, 50]
+								);
+							}, 100);
 						}
 						break;
 					default:
 						break;
 				}
-				// setActiveNavigateOption(null); // Reset the activeNavigateOption after handling
 			};
 			handleNavigation();
 		}
@@ -159,6 +149,35 @@ export default function Map() {
 
 		setUserInteractionTimeout(timeout);
 	};
+
+	useEffect(() => {
+		setCurrentDispatch(
+			dispatches
+				.filter((dispatch) => dispatch.value.status === "Open")
+				.sort((a, b) => a.value.route.index! - b.value.route.index!)[0] || null
+		);
+	}, [dispatches]);
+
+	useEffect(() => {
+		if (currentDispatch && liveLocation) {
+			const { steps } = currentDispatch.value.route;
+			let closestStepIndex = 0;
+			let minDistance = Infinity;
+			if (steps && steps.length > 0) {
+				steps.forEach((step: Step, index: number) => {
+					const distance = getDistance(
+						{ latitude: liveLocation.latitude, longitude: liveLocation.longitude },
+						{ latitude: step.maneuver.location[1], longitude: step.maneuver.location[0] }
+					);
+					if (distance < minDistance) {
+						minDistance = distance;
+						closestStepIndex = index;
+					}
+				});
+				setCurrentStepIndex(closestStepIndex);
+			}
+		}
+	}, [filteredDispatches, liveLocation]);
 
 	return (
 		<MapView
@@ -222,20 +241,25 @@ export default function Map() {
 								iconAnchor: "bottom",
 							}}
 						/>
-						<Images images={{ puck }} />
+						<Images images={{ puck, pinNew }} />
 					</ShapeSource>
 				</>
 			)}
 			{currentDispatch?.value.route.steps &&
 				currentDispatch?.value.route.steps[currentStepIndex] &&
 				currentDispatch?.value.route.steps[currentStepIndex].maneuver.instruction && (
-					<View className="absolute top-16 left-0 right-0 pt-20 pr-[90px] pl-5">
-						<View className="bg-black/50 p-5 rounded-xl h-auto">
-							<Text className=" text-xl font-bold text-white">
-								{currentDispatch?.value.route.steps[currentStepIndex].maneuver.instruction}
-							</Text>
-						</View>
-					</View>
+					<InstructionBox
+						steps={currentDispatch?.value.route.steps}
+						currentStep={currentDispatch?.value.route.steps[currentStepIndex]}
+					/>
+					// <View className="absolute top-16 left-0 right-0 pt-20 pr-[90px] pl-5">
+					// 	<View className="bg-black/50 p-5 rounded-xl h-auto">
+					// 		<Text className=" text-xl font-bold text-white">
+
+					// 			{currentDispatch?.value.route.steps[currentStepIndex].maneuver.instruction}
+					// 		</Text>
+					// 	</View>
+					// </View>
 				)}
 		</MapView>
 	);

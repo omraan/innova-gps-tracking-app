@@ -171,9 +171,19 @@ interface Step {
 	driving_side: string;
 	weight: number;
 	mode: string;
+	intersections: {
+		bearings: [number];
+		entry: [boolean];
+		is_urban: boolean;
+		admin_index: number;
+		out: number;
+		geometry_index: number;
+		location: [number, number];
+	}[];
 	maneuver: {
 		type: string;
 		instruction: string;
+		modifier: string;
 		bearing_before: number;
 		bearing_after: number;
 		location: [number, number];

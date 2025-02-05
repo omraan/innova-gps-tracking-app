@@ -27,7 +27,7 @@ export default function CurrentDispatchSheet() {
 	return (
 		<BottomSheet
 			ref={bottomSheetRefs.currentDispatch}
-			// index={-1}
+			index={-1}
 			backgroundStyle={{ backgroundColor: "#ffffff" }}
 			snapPoints={[110]}
 		>

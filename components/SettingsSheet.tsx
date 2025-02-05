@@ -1,9 +1,9 @@
 import { MapViewOptions } from "@/constants/MapViewOptions";
-import { client } from "@/graphql/client";
 import { UPDATE_ROUTE_END_TIME, UPDATE_ROUTE_START_TIME } from "@/graphql/mutations";
-import { GET_DISPATCHES, GET_VEHICLES } from "@/graphql/queries";
+import { GET_VEHICLES } from "@/graphql/queries";
 import { useSelectionStore } from "@/hooks/useSelectionStore";
 import toastPromise from "@/lib/toastPromise";
+import { useDispatch } from "@/providers/DispatchProvider";
 import { useRoute } from "@/providers/RouteProvider";
 import { useSheetContext } from "@/providers/SheetProvider";
 import { useMutation, useQuery } from "@apollo/client";
@@ -20,11 +20,13 @@ export default function SettingsSheet() {
 
 	const { user } = useUser();
 	const { refetchRoutes, routes } = useRoute();
+	const { refetchDispatches } = useDispatch();
+	const { setActiveSheet } = useSheetContext();
 	const { selectedRoute, setSelectedRoute, selectedVehicle, setSelectedVehicle, selectedDate, setSelectedDate } =
 		useSelectionStore();
 
 	const { data: dataVehicles, refetch: refetchVehicles } = useQuery(GET_VEHICLES, { fetchPolicy: "network-only" });
-	const vehicles = dataVehicles?.getVehicles || [];
+	const vehicles: { name: string; value: Vehicle }[] = dataVehicles?.getVehicles || [];
 
 	const onDateChange = (newDate: any) => {
 		const currentDate = newDate;
@@ -32,22 +34,16 @@ export default function SettingsSheet() {
 	};
 
 	const handlePickerChange = (value: string) => {
-		setSelectedVehicle(vehicles.find((v: any) => v.value.licensePlate === value));
+		setSelectedVehicle(vehicles.find((v) => v.name === value) || null);
 	};
 
 	const handleRefresh = async () => {
-		const promises = Promise.all([
-			refetchRoutes(),
-			// () =>
-			// 	selectedRoute?.name &&
-			// 	refetchDispatches({
-			// 		routeId: selectedRoute?.name,
-			// 	}),
-			refetchVehicles(),
-		]);
-		// if (selectedRoute) {
-		// 	fetchRoutePolyline();
-		// }
+		let promises;
+		if (selectedRoute?.name) {
+			promises = Promise.all([refetchRoutes(), refetchDispatches(), refetchVehicles()]);
+		} else {
+			promises = Promise.all([refetchRoutes(), refetchVehicles()]);
+		}
 
 		toastPromise(promises, {
 			loading: "Refreshing data...",
@@ -113,6 +109,7 @@ export default function SettingsSheet() {
 					active: true,
 				},
 			});
+			setActiveSheet("currentDispatch");
 		} else {
 			await UpdateRouteStartTime({
 				variables,
@@ -125,6 +122,7 @@ export default function SettingsSheet() {
 							active: true,
 						},
 					});
+					setActiveSheet("currentDispatch");
 				},
 				onError: (data) => {
 					console.log("onError", data);
@@ -147,7 +145,14 @@ export default function SettingsSheet() {
 			enablePanDownToClose
 			enableDynamicSizing={true}
 			backgroundStyle={{ backgroundColor: "#f9f9f9" }}
-			onClose={() => handlePanDownToClose("settings")}
+			onChange={(index) => {
+				if (index === -1) {
+					handlePanDownToClose("settings");
+					if (selectedRoute?.value.active) {
+						setActiveSheet("currentDispatch");
+					}
+				}
+			}}
 		>
 			<BottomSheetView className="px-8 py-3">
 				<View className="mb-8 flex-row gap-5">
@@ -184,14 +189,15 @@ export default function SettingsSheet() {
 						<View className="">
 							<Text className="text-gray-500">Choose vehicle</Text>
 							<ModalPicker
+								key={selectedVehicle?.name}
 								list={vehicles.map((v: any) => {
 									return {
-										value: v.value.licensePlate,
+										value: v.name,
 										label: v.value.licensePlate,
 									};
 								})}
 								options={{
-									defaultValue: selectedVehicle?.value.licensePlate,
+									defaultValue: selectedVehicle?.name,
 									displayAll: true,
 									displayAllLabel: "All Vehicles",
 								}}
@@ -205,6 +211,7 @@ export default function SettingsSheet() {
 				<View className="mb-2">
 					<Text className=" text-gray-500">Select a route to start</Text>
 					<ModalPicker
+						key={selectedRoute?.name}
 						list={routes
 							.filter((route) => {
 								if (selectedVehicle?.name) {

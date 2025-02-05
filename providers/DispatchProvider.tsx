@@ -1,5 +1,6 @@
 import { GET_DISPATCHES } from "@/graphql/queries";
 import { useSelectionStore } from "@/hooks/useSelectionStore";
+import { getDistance } from "@/lib/getDistance";
 import { getDirections } from "@/services/optimized-trips";
 import { useQuery } from "@apollo/client";
 import polyline from "@mapbox/polyline";
@@ -8,25 +9,38 @@ import * as Location from "expo-location";
 import moment from "moment";
 import { PropsWithChildren, createContext, useContext, useEffect, useState } from "react";
 import Toast from "react-native-toast-message";
+import { useLocation } from "./LocationProvider";
 
 const DispatchContext = createContext<{
 	dispatches: { name: string; value: DispatchExtended }[];
 	setDispatches(dispatches: { name: string; value: DispatchExtended }[]): void;
+	currentDispatch: { name: string; value: DispatchExtended } | null;
+	setCurrentDispatch(currentDispatch: { name: string; value: DispatchExtended } | null): void;
+	currentStepIndex: number;
+	setCurrentStepIndex(currentStepIndex: number): void;
 	setSearchQuery(searchQuery: string): void;
 	filteredDispatches: { name: string; value: DispatchExtended }[];
 	routeCoordinates: Position[] | null;
-	fetchRoutePolyline: (dispatches: { name: string; value: DispatchExtended }[]) => void;
+	refetchDispatches: () => void;
+	fetchRoutePolyline: (dispatches?: { name: string; value: DispatchExtended }[]) => void;
 } | null>(null);
 
 export default function DispatchProvider({ children }: PropsWithChildren) {
 	const [dispatches, setDispatches] = useState<{ name: string; value: DispatchExtended }[]>([]);
+	const [currentDispatch, setCurrentDispatch] = useState<{ name: string; value: DispatchExtended } | null>(null);
+	const [currentStepIndex, setCurrentStepIndex] = useState<number>(0);
 	const [searchQuery, setSearchQuery] = useState<string>("");
 	const [filteredDispatches, setFilteredDispatches] = useState<{ name: string; value: DispatchExtended }[]>([]);
 	const [routeCoordinates, setRouteCoordinates] = useState<Position[] | null>(null);
 
-	const { selectedRoute, selectedDispatch, setSelectedDispatch, selectedDate } = useSelectionStore();
+	const { selectedRoute, selectedDate, isToday } = useSelectionStore();
 
-	const { data, loading, error, refetch } = useQuery(GET_DISPATCHES, {
+	const {
+		data,
+		loading,
+		error,
+		refetch: refetchDispatches,
+	} = useQuery(GET_DISPATCHES, {
 		variables: {
 			routeId: selectedRoute?.name,
 		},
@@ -40,8 +54,8 @@ export default function DispatchProvider({ children }: PropsWithChildren) {
 	}, [data]);
 
 	useEffect(() => {
-		refetch();
-	}, [selectedDate, refetch]);
+		refetchDispatches();
+	}, [selectedDate]);
 
 	useEffect(() => {
 		const filtered = dispatches.filter((dispatch: { name: string; value: DispatchExtended }) => {
@@ -56,13 +70,15 @@ export default function DispatchProvider({ children }: PropsWithChildren) {
 		setFilteredDispatches(filtered);
 	}, [searchQuery, dispatches]);
 
-	const fetchRoutePolyline = async (dispatches: { name: string; value: DispatchExtended }[]) => {
-		let newDispatches: { name: string; value: DispatchExtended }[] = [];
-		if (dispatches && dispatches.length > 0 && selectedDate === moment(new Date()).format("YYYY-MM-DD")) {
+	const fetchRoutePolyline = async (dataDispatches?: { name: string; value: DispatchExtended }[]) => {
+		let newDispatches: { name: string; value: DispatchExtended }[] = dataDispatches || [];
+		const totalDispatches = dataDispatches || dispatches || [];
+		console.log("totalDispatches", totalDispatches.length);
+		if (totalDispatches && totalDispatches.length > 0 && isToday()) {
 			const { coords } = await Location.getCurrentPositionAsync();
 			const { latitude, longitude } = coords;
 
-			const selectionDispatches = dispatches
+			const selectionDispatches = totalDispatches
 				.filter((dispatch) => !["Completed", "Failed"].includes(dispatch.value.status))
 				.filter((dispatch) => dispatch.value.customer.lat !== 0)
 				.sort((a, b) => a.value.route.index! - b.value.route.index!)
@@ -98,13 +114,13 @@ export default function DispatchProvider({ children }: PropsWithChildren) {
 							// index: index + 1,
 							duration: routes[0].legs[index].duration,
 							distance: routes[0].legs[index].distance,
-							steps: routes[0].legs[index].steps,
+							steps: routes[0].legs[index].steps.filter((step: Step, index: number) => index !== 0),
 						},
 					},
 				};
 			});
 
-			newDispatches = dispatches.map((dispatch, index) => {
+			newDispatches = totalDispatches.map((dispatch, index) => {
 				const newDispatch = newSelectionDispatches.find((d) => d.name === dispatch.name);
 				return {
 					name: dispatch.name,
@@ -115,12 +131,11 @@ export default function DispatchProvider({ children }: PropsWithChildren) {
 				};
 			});
 
-			setFilteredDispatches(newDispatches);
 			setRouteCoordinates(polyline.decode(routes[0].geometry).map((c) => [c[1], c[0]]));
 		} else {
 			setRouteCoordinates(null);
 		}
-		setDispatches(newDispatches || []);
+		setDispatches(newDispatches);
 	};
 
 	return (
@@ -128,9 +143,14 @@ export default function DispatchProvider({ children }: PropsWithChildren) {
 			value={{
 				dispatches,
 				setDispatches,
+				currentDispatch,
+				setCurrentDispatch,
+				currentStepIndex,
+				setCurrentStepIndex,
 				setSearchQuery,
 				filteredDispatches,
 				routeCoordinates,
+				refetchDispatches,
 				fetchRoutePolyline,
 			}}
 		>

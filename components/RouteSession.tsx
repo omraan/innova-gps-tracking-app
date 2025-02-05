@@ -13,7 +13,7 @@ import { useTailwind } from "tailwind-rn";
 export default function RouteSession() {
 	const tw = useTailwind();
 
-	const { dispatches, setDispatches } = useDispatch();
+	const { dispatches, setDispatches, fetchRoutePolyline } = useDispatch();
 	const { selectedRoute, setSelectedRoute, selectedDispatch, setSelectedDispatch, selectedDate } =
 		useSelectionStore();
 	const { isChangingLocation, setIsChangingLocation, markerCoordinate } = useLocation();
@@ -71,8 +71,8 @@ export default function RouteSession() {
 					lastCoordinateUpdate: Number(new Date()),
 				},
 				// onCompleted: () => setLoading(false),
-				update: (cache) => {
-					setDispatches(
+				update: () => {
+					fetchRoutePolyline(
 						dispatches.map((dispatch) => {
 							if (dispatch.name === selectedDispatch.name) {
 								return {
@@ -90,54 +90,6 @@ export default function RouteSession() {
 							return dispatch;
 						})
 					);
-
-					// Handmatig de cache bijwerken als dat nodig is
-					const existingOrders = cache.readQuery<{
-						getOrdersByDate: { name: string; value: OrderExtended }[];
-					}>({
-						query: GET_DISPATCHES,
-						variables: {
-							date: selectedDate,
-						},
-					})?.getOrdersByDate;
-
-					if (existingOrders) {
-						const newOrders = existingOrders.map((existingOrder) =>
-							existingOrder.value.customerId === selectedDispatch?.value.customerId
-								? {
-										name: existingOrder.name,
-										value: {
-											...existingOrder.value,
-											customer: {
-												...existingOrder.value.customer,
-												lat: markerCoordinate[1],
-												lng: markerCoordinate[0],
-											},
-											events: [
-												...existingOrder.value.events!,
-												{
-													name: "",
-													createdAt: Number(new Date()),
-													createdBy: "",
-													notes: existingOrder.value.notes || "",
-													status: existingOrder.value.status,
-													lat: markerCoordinate[1],
-													lng: markerCoordinate[0],
-													modifiedAt: Number(new Date()),
-												},
-											],
-										},
-								  }
-								: existingOrder
-						);
-						cache.writeQuery({
-							query: GET_DISPATCHES,
-							variables: {
-								date: selectedDate,
-							},
-							data: { getOrdersByDate: newOrders },
-						});
-					}
 				},
 			});
 			setSelectedDispatch(null);

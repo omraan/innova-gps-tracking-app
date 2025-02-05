@@ -53,7 +53,7 @@ export default function Navigation() {
 	const activeOption = navigateOptions.find((o) => o.name == activeNavigateOption);
 
 	return (
-		<SafeAreaView className="absolute top-0 left-0 right-0">
+		<SafeAreaView className="absolute top-2 left-0 right-0">
 			<View className="flex-row justify-between gap-5 px-6 items-start">
 				<Pressable
 					className="bg-white rounded-full p-4 m-auto shadow shadow-black/20"

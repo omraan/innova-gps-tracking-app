@@ -4,10 +4,10 @@ import { LineLayer, ShapeSource } from "@rnmapbox/maps";
 import { Position } from "@rnmapbox/maps/lib/typescript/src/types/Position";
 import React from "react";
 export default function LineRoute({ coordinates }: { coordinates: Position[] }) {
-	const { activeNavigateOption } = useNavigationStore();
+	// const { activeNavigateOption } = useNavigationStore();
 	return (
 		<ShapeSource
-			id="routeSource"
+			id="routeLineSource"
 			lineMetrics
 			shape={{
 				properties: {},
@@ -19,13 +19,12 @@ export default function LineRoute({ coordinates }: { coordinates: Position[] }) 
 			}}
 		>
 			<LineLayer
-				id="exampleLineLayer"
-				belowLayerID="symbolLocationSymbols"
+				id="routeLineLayer"
 				style={{
 					lineColor: colors.secondary,
 					lineCap: "round",
 					lineJoin: "round",
-					lineWidth: activeNavigateOption === "navigate" ? 12 : 6,
+					lineWidth: 8,
 				}}
 			/>
 		</ShapeSource>
