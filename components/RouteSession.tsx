@@ -1,25 +1,21 @@
 import colors from "@/colors";
 import { UPDATE_CUSTOMER, UPDATE_ROUTE_START_TIME } from "@/graphql/mutations";
 import { GET_DISPATCHES } from "@/graphql/queries";
-import { useDateStore } from "@/hooks/useDateStore";
-import { useVehicleStore } from "@/hooks/useVehicleStore";
+import { useSelectionStore } from "@/hooks/useSelectionStore";
 import { useDispatch } from "@/providers/DispatchProvider";
 import { useLocation } from "@/providers/LocationProvider";
-import { useRoute } from "@/providers/RouteProvider";
-import { useMutation, useQuery } from "@apollo/client";
+import { useMutation } from "@apollo/client";
 import { AntDesign, MaterialIcons } from "@expo/vector-icons";
-import { Position } from "@rnmapbox/maps/lib/typescript/src/types/Position";
 import moment from "moment";
-import React, { useEffect, useState } from "react";
 import { Pressable, Text, TouchableOpacity, View } from "react-native";
 import { useTailwind } from "tailwind-rn";
 
 export default function RouteSession() {
 	const tw = useTailwind();
 
-	const { selectedDate } = useDateStore();
-	const { dispatches, setDispatches, selectedDispatch, setSelectedDispatch } = useDispatch();
-	const { selectedRoute, setSelectedRoute } = useRoute();
+	const { dispatches, setDispatches } = useDispatch();
+	const { selectedRoute, setSelectedRoute, selectedDispatch, setSelectedDispatch, selectedDate } =
+		useSelectionStore();
 	const { isChangingLocation, setIsChangingLocation, markerCoordinate } = useLocation();
 
 	const [UpdateRouteStartTime] = useMutation(UPDATE_ROUTE_START_TIME);
@@ -55,7 +51,7 @@ export default function RouteSession() {
 		});
 	};
 	const handleDiscardLocation = () => {
-		setSelectedDispatch(undefined);
+		setSelectedDispatch(null);
 		setIsChangingLocation(false);
 	};
 	const [UpdateCustomer] = useMutation(UPDATE_CUSTOMER);
@@ -144,7 +140,7 @@ export default function RouteSession() {
 					}
 				},
 			});
-			setSelectedDispatch(undefined);
+			setSelectedDispatch(null);
 			setIsChangingLocation(false);
 		} catch (error: any) {
 			console.error(error);

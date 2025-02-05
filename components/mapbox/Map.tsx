@@ -1,12 +1,10 @@
 import puckShadow from "@/assets/images/puck-shadow.png";
 import puck from "@/assets/images/puck.png";
 import { MapViewOptions } from "@/constants/MapViewOptions";
-import { useDateStore } from "@/hooks/useDateStore";
 import { useNavigationStore } from "@/hooks/useNavigationStore";
 import { getDistance } from "@/lib/getDistance";
 import { useDispatch } from "@/providers/DispatchProvider";
 import { useLocation } from "@/providers/LocationProvider";
-import { useRoute } from "@/providers/RouteProvider";
 import { useOrganization, useUser } from "@clerk/clerk-expo";
 import Mapbox, {
 	Camera,
@@ -29,25 +27,13 @@ const publicAccessToken =
 Mapbox.setAccessToken(publicAccessToken);
 export default function Map() {
 	const { organization } = useOrganization();
-	// const [followingUser, setFollowUserLocation] = useState(false);
-	const {
-		liveLocation,
-		isChangingLocation,
-		setIsChangingLocation,
-		followUserLocation,
-		setFollowUserLocation,
-		markerCoordinate,
-		setMarkerCoordinate,
-	} = useLocation();
-	const { selectedRoute } = useRoute();
-	const { dispatches, setDispatches, filteredDispatches, selectedDispatch, setSelectedDispatch, routeCoordinates } =
-		useDispatch();
+	const { liveLocation, isChangingLocation, setFollowUserLocation, markerCoordinate, setMarkerCoordinate } =
+		useLocation();
+	const { dispatches, filteredDispatches, routeCoordinates } = useDispatch();
 
 	const cameraRef = useRef<Camera>(null);
 	const mapViewRef = useRef<MapView>(null);
-
-	const { selectedDate } = useDateStore();
-	const { activeNavigateOption, setActiveNavigateOption } = useNavigationStore();
+	const { activeNavigateOption } = useNavigationStore();
 
 	const defaultLatitude = liveLocation?.latitude || (organization?.publicMetadata.lat as number) || 12.503286;
 	const defaultLongitude = liveLocation?.longitude || (organization?.publicMetadata.lng as number) || -69.980893;
@@ -60,23 +46,6 @@ export default function Map() {
 	const { user } = useUser();
 
 	const mapView = (user?.unsafeMetadata.defaultMapView as string) || "standard";
-
-	// const [UpdateOrder] = useMutation(UPDATE_ORDER);
-
-	// useEffect(() => {
-	// 	const setMapCenter = async () => {
-	// 		const { coords } = await Location.getCurrentPositionAsync();
-	// 		const { latitude, longitude } = coords;
-
-	// 		cameraRef.current?.setCamera({
-	// 			centerCoordinate: [longitude, latitude],
-	// 			animationDuration: 0,
-	// 			// zoomLevel: 11, // Stel het zoomniveau in zoals gewenst
-	// 			// duration: 0, // Geen animatie
-	// 		});
-	// 	};
-	// 	setMapCenter();
-	// }, [followUserLocation]);
 	const [currentStepIndex, setCurrentStepIndex] = useState(0);
 	const currentDispatch = filteredDispatches
 		.filter((dispatch) => dispatch.value.status === "Open")

@@ -1,6 +1,5 @@
 import { GET_DISPATCHES } from "@/graphql/queries";
-import { useDateStore } from "@/hooks/useDateStore";
-import { getRelatedOrders } from "@/lib/getRelatedOrders";
+import { useSelectionStore } from "@/hooks/useSelectionStore";
 import { getDirections } from "@/services/optimized-trips";
 import { useQuery } from "@apollo/client";
 import polyline from "@mapbox/polyline";
@@ -9,28 +8,23 @@ import * as Location from "expo-location";
 import moment from "moment";
 import { PropsWithChildren, createContext, useContext, useEffect, useState } from "react";
 import Toast from "react-native-toast-message";
-import { useRoute } from "./RouteProvider";
 
 const DispatchContext = createContext<{
 	dispatches: { name: string; value: DispatchExtended }[];
 	setDispatches(dispatches: { name: string; value: DispatchExtended }[]): void;
-	selectedDispatch: { name: string; value: DispatchExtended } | undefined;
-	setSelectedDispatch(selectedDispatch: { name: string; value: DispatchExtended } | undefined): void;
 	setSearchQuery(searchQuery: string): void;
 	filteredDispatches: { name: string; value: DispatchExtended }[];
 	routeCoordinates: Position[] | null;
-	fetchRoutePolyline: () => void;
+	fetchRoutePolyline: (dispatches: { name: string; value: DispatchExtended }[]) => void;
 } | null>(null);
 
 export default function DispatchProvider({ children }: PropsWithChildren) {
 	const [dispatches, setDispatches] = useState<{ name: string; value: DispatchExtended }[]>([]);
-	const [selectedDispatch, setSelectedDispatch] = useState<{ name: string; value: DispatchExtended }>();
 	const [searchQuery, setSearchQuery] = useState<string>("");
 	const [filteredDispatches, setFilteredDispatches] = useState<{ name: string; value: DispatchExtended }[]>([]);
 	const [routeCoordinates, setRouteCoordinates] = useState<Position[] | null>(null);
 
-	const { selectedDate } = useDateStore();
-	const { selectedRoute } = useRoute();
+	const { selectedRoute, selectedDispatch, setSelectedDispatch, selectedDate } = useSelectionStore();
 
 	const { data, loading, error, refetch } = useQuery(GET_DISPATCHES, {
 		variables: {
@@ -41,7 +35,7 @@ export default function DispatchProvider({ children }: PropsWithChildren) {
 
 	useEffect(() => {
 		if (data) {
-			setDispatches(data.getDispatches || []);
+			fetchRoutePolyline(data.getDispatches || []);
 		}
 	}, [data]);
 
@@ -62,7 +56,8 @@ export default function DispatchProvider({ children }: PropsWithChildren) {
 		setFilteredDispatches(filtered);
 	}, [searchQuery, dispatches]);
 
-	const fetchRoutePolyline = async () => {
+	const fetchRoutePolyline = async (dispatches: { name: string; value: DispatchExtended }[]) => {
+		let newDispatches: { name: string; value: DispatchExtended }[] = [];
 		if (dispatches && dispatches.length > 0 && selectedDate === moment(new Date()).format("YYYY-MM-DD")) {
 			const { coords } = await Location.getCurrentPositionAsync();
 			const { latitude, longitude } = coords;
@@ -92,6 +87,7 @@ export default function DispatchProvider({ children }: PropsWithChildren) {
 				});
 				return;
 			}
+
 			const newSelectionDispatches = selectionDispatches.map((dispatch, index) => {
 				return {
 					name: dispatch.name,
@@ -108,7 +104,7 @@ export default function DispatchProvider({ children }: PropsWithChildren) {
 				};
 			});
 
-			const newDispatches = dispatches.map((dispatch, index) => {
+			newDispatches = dispatches.map((dispatch, index) => {
 				const newDispatch = newSelectionDispatches.find((d) => d.name === dispatch.name);
 				return {
 					name: dispatch.name,
@@ -124,19 +120,14 @@ export default function DispatchProvider({ children }: PropsWithChildren) {
 		} else {
 			setRouteCoordinates(null);
 		}
+		setDispatches(newDispatches || []);
 	};
-
-	useEffect(() => {
-		fetchRoutePolyline();
-	}, [dispatches]);
 
 	return (
 		<DispatchContext.Provider
 			value={{
 				dispatches,
 				setDispatches,
-				selectedDispatch,
-				setSelectedDispatch,
 				setSearchQuery,
 				filteredDispatches,
 				routeCoordinates,

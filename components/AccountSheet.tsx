@@ -1,10 +1,10 @@
 import { client } from "@/graphql/client";
-import { useVehicleStore } from "@/hooks/useVehicleStore";
+import { useSelectionStore } from "@/hooks/useSelectionStore";
 import { useSheetContext } from "@/providers/SheetProvider";
 import { useAuth, useOrganizationList, useUser } from "@clerk/clerk-expo";
 import BottomSheet, { BottomSheetScrollView } from "@gorhom/bottom-sheet";
 import Constants from "expo-constants";
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import { Text, TouchableOpacity, View } from "react-native";
 import { ModalPicker } from "./ModalPicker";
 
@@ -15,7 +15,7 @@ export default function AccountSheet() {
 	const { user } = useUser();
 	const expoConfig = Constants.expoConfig;
 
-	const { selectedVehicle, setSelectedVehicle } = useVehicleStore();
+	const { selectedVehicle, setSelectedVehicle } = useSelectionStore();
 
 	const { userMemberships, setActive, isLoaded } = useOrganizationList({
 		userMemberships: true,
@@ -30,7 +30,7 @@ export default function AccountSheet() {
 		signOut();
 	};
 	useEffect(() => {
-		setSelectedVehicle(undefined);
+		setSelectedVehicle(null);
 	}, [orgId]);
 
 	return (

@@ -1,9 +1,8 @@
 import colors from "@/colors";
-import { useDispatch } from "@/providers/DispatchProvider";
+import { useSelectionStore } from "@/hooks/useSelectionStore";
 import { useLocation } from "@/providers/LocationProvider";
 import { useMetadata } from "@/providers/MetaDataProvider";
 import { useSheetContext } from "@/providers/SheetProvider";
-import { useOrganization } from "@clerk/clerk-expo";
 import { MaterialIcons } from "@expo/vector-icons";
 import Entypo from "@expo/vector-icons/Entypo";
 import moment from "moment";
@@ -12,8 +11,7 @@ import { Text, TouchableOpacity, View } from "react-native";
 import FontAwesomeIcon from "react-native-vector-icons/FontAwesome6";
 
 export default function DispatchListItem({ dispatch }: { dispatch: { name: string; value: DispatchExtended } }) {
-	const { organization } = useOrganization();
-	const { setSelectedDispatch } = useDispatch();
+	const { setSelectedDispatch } = useSelectionStore();
 	const { setActiveSheet } = useSheetContext();
 
 	const { statusCategories } = useMetadata();

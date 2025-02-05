@@ -1,7 +1,7 @@
 import LoadingScreen from "@/components/LoadingScreen";
 import { ModalPicker } from "@/components/ModalPicker";
 import { GET_VEHICLES } from "@/graphql/queries";
-import { useVehicleStore } from "@/hooks/useVehicleStore";
+import { useSelectionStore } from "@/hooks/useSelectionStore";
 import { useQuery } from "@apollo/client";
 import { useAuth, useOrganizationList, useUser } from "@clerk/clerk-expo";
 import { useNavigation } from "expo-router";
@@ -12,44 +12,23 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import FontAwesomeIcon from "react-native-vector-icons/FontAwesome";
 import { useTailwind } from "tailwind-rn";
 
-declare global {
-	interface UserUnsafeMetadata {
-		defaultMapView?: string;
-		organizations: {
-			[key: string]: {
-				vehicleId?: string;
-				labels?: string[];
-			};
-		};
-	}
-	interface UserPublicMetadata {
-		organizations: {
-			[key: string]: {
-				orgRole?: string;
-			};
-		};
-	}
-}
-
 function Organisation() {
 	const tw = useTailwind();
 	const navigation = useNavigation();
+
+	const { data: dataVehicles } = useQuery(GET_VEHICLES);
+	const vehicles = dataVehicles?.getVehicles || [];
 	const { userMemberships, setActive, isLoaded } = useOrganizationList({
 		userMemberships: true,
 		revalidate: true,
 	});
-
-	const { data: dataVehicles } = useQuery(GET_VEHICLES);
-	const vehicles = dataVehicles?.getVehicles || [];
-
 	const organizations: any = userMemberships.data || [];
 
 	const { orgId } = useAuth();
 	const { user } = useUser();
-	const { selectedVehicle, setSelectedVehicle } = useVehicleStore();
+	const { selectedVehicle, setSelectedVehicle } = useSelectionStore();
 	const [labels, setLabels] = useState<string[]>([]);
 	const [loading, setLoading] = useState(false);
-	const [initialLoading, setInitialLoading] = useState(true);
 
 	useLayoutEffect(() => {
 		navigation.setOptions({
@@ -73,7 +52,7 @@ function Organisation() {
 
 	useEffect(() => {
 		setLabels([]);
-		setSelectedVehicle(undefined);
+		setSelectedVehicle(null);
 	}, [orgId]);
 
 	useEffect(() => {

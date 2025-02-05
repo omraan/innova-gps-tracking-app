@@ -1,8 +1,8 @@
 import { useLiveLocationStore } from "@/hooks/useLocationStore";
+import { useSelectionStore } from "@/hooks/useSelectionStore";
 import { defineLocationTask, UPDATE_LOCATION_TASK } from "@/lib/backgroundLocationTask";
 import { useAuth } from "@clerk/clerk-expo";
 import { Position } from "@rnmapbox/maps/lib/typescript/src/types/Position";
-import { format } from "date-fns-tz";
 import * as Location from "expo-location";
 import * as TaskManager from "expo-task-manager";
 import moment from "moment";
@@ -28,8 +28,9 @@ const LocationProvider = ({ children }: PropsWithChildren) => {
 	const [isChangingLocation, setIsChangingLocation] = useState<boolean>(false);
 	const [markerCoordinate, setMarkerCoordinate] = useState<Position>([0, 0]);
 
-	const { selectedRoute, setSelectedRoute, setRoutes } = useRoute();
+	const { setRoutes } = useRoute();
 	const { setDispatches } = useDispatch();
+	const { selectedRoute, setSelectedRoute } = useSelectionStore();
 	useEffect(() => {
 		const startBackgroundLocation = async () => {
 			if (!selectedRoute) {
@@ -106,7 +107,7 @@ const LocationProvider = ({ children }: PropsWithChildren) => {
 
 	useEffect(() => {
 		if (selectedRoute) {
-			setSelectedRoute(undefined);
+			setSelectedRoute(null);
 			setRoutes([]);
 			setDispatches([]);
 		}

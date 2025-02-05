@@ -1,11 +1,10 @@
 import colors from "@/colors";
 import { UPDATE_DISPATCH } from "@/graphql/mutations";
-import { useDateStore } from "@/hooks/useDateStore";
+import { useSelectionStore } from "@/hooks/useSelectionStore";
 import { removeTypenameProperties } from "@/lib/removeTypenameProperties";
 import { useDispatch } from "@/providers/DispatchProvider";
 import { useLocation } from "@/providers/LocationProvider";
 import { useMetadata } from "@/providers/MetaDataProvider";
-import { useRoute } from "@/providers/RouteProvider";
 import { useSheetContext } from "@/providers/SheetProvider";
 import { useMutation } from "@apollo/client";
 import { useAuth } from "@clerk/clerk-expo";
@@ -17,24 +16,20 @@ import { ModalConfirmation } from "./ModalConfirmation";
 
 export default function SelectedDispatchSheet() {
 	const { bottomSheetRefs, handlePanDownToClose } = useSheetContext();
-	const { selectedDate, isToday } = useDateStore();
-	const { dispatches, setDispatches, selectedDispatch, setSelectedDispatch } = useDispatch();
-	const { selectedRoute } = useRoute();
-
+	const { dispatches, setDispatches } = useDispatch();
+	const { selectedRoute, selectedDispatch, setSelectedDispatch, selectedDate, isToday } = useSelectionStore();
 	const { orgRole } = useMetadata();
-
 	const { setActiveSheet } = useSheetContext();
 	const [notes, setNotes] = useState<string>("");
 	const { userId } = useAuth();
 	const { isChangingLocation, setIsChangingLocation } = useLocation();
 
 	const handleSave = (selectedStatus: StatusCategory | null) => {
-		console.log("handleSave", selectedStatus);
 		if (selectedStatus) {
 			onMarkerSubmit(selectedStatus, notes);
 		}
 
-		setSelectedDispatch(undefined);
+		setSelectedDispatch(null);
 		setActiveSheet(null);
 		setNotes("");
 	};
@@ -110,7 +105,7 @@ export default function SelectedDispatchSheet() {
 				if (index === -1) {
 					handlePanDownToClose("dispatches");
 					if (!isChangingLocation) {
-						setSelectedDispatch(undefined);
+						setSelectedDispatch(null);
 					}
 				}
 			}}

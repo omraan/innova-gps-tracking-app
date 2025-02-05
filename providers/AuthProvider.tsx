@@ -7,6 +7,7 @@ import * as SecureStore from "expo-secure-store";
 import { onIdTokenChanged, signInWithCustomToken } from "firebase/auth";
 import React, { createContext, useEffect, useState } from "react";
 import { ActivityIndicator, StyleSheet, View } from "react-native";
+
 const signInWithToken = async (token: string) => {
 	if (token) {
 		const userCredentials = await signInWithCustomToken(auth, token);

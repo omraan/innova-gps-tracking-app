@@ -6,6 +6,7 @@ import pinRedPriority from "@/assets/images/pin-red-priority.png";
 import pinRed from "@/assets/images/pin-red.png";
 
 import colors from "@/colors";
+import { useSelectionStore } from "@/hooks/useSelectionStore";
 
 import { useDispatch } from "@/providers/DispatchProvider";
 import { useLocation } from "@/providers/LocationProvider";
@@ -16,7 +17,8 @@ import { featureCollection, point } from "@turf/helpers";
 import { useEffect, useState } from "react";
 
 export default function OrderMarkers() {
-	const { selectedDispatch, setSelectedDispatch, filteredDispatches } = useDispatch();
+	const { filteredDispatches } = useDispatch();
+	const { selectedDispatch, setSelectedDispatch } = useSelectionStore();
 	const { isChangingLocation } = useLocation();
 
 	const [bounceValue, setBounceValue] = useState([0, 0]);

@@ -11,9 +11,8 @@ export default function Settings() {
 	const tw = useTailwind();
 	const router = useRouter();
 	const { signOut, isSignedIn } = useAuth();
-	const expoConfig = Constants.expoConfig;
-
 	const { user } = useUser();
+	const expoConfig = Constants.expoConfig;
 
 	useEffect(() => {
 		if (!isSignedIn) {

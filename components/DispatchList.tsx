@@ -2,38 +2,14 @@ import colors from "@/colors";
 import { isColorDark } from "@/lib/styles";
 import { useDispatch } from "@/providers/DispatchProvider";
 import { useMetadata } from "@/providers/MetaDataProvider";
-import { isArray } from "@apollo/client/utilities";
-import { useAuth, useOrganization, useUser } from "@clerk/clerk-expo";
 import { MaterialIcons } from "@expo/vector-icons";
-import { Card } from "@rneui/themed";
-import { format } from "date-fns";
-import moment from "moment";
 import React, { useEffect, useState } from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
-import { useTailwind } from "tailwind-rn";
 import DispatchListItem from "./DispatchListItem";
 
-interface StatusCategoryFilter extends StatusCategory {
-	active: boolean;
-}
-
-interface OrderExtendedWithLabels extends OrderExtended {
-	label: string;
-}
-
-interface publicMetadata {
-	categories: {
-		color: string;
-		name: string;
-	}[];
-}
-
 export default function DispatchList() {
-	const { organization } = useOrganization();
-
 	const { dispatches } = useDispatch();
 	const { statusCategories } = useMetadata();
-
 	const [selectedStatusCategories, setSelectedStatusCategories] = useState<StatusCategory[] | null>();
 
 	useEffect(() => {

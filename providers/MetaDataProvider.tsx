@@ -1,5 +1,5 @@
 import { GET_VEHICLES } from "@/graphql/queries";
-import { useVehicleStore } from "@/hooks/useVehicleStore";
+import { useSelectionStore } from "@/hooks/useSelectionStore";
 import { useQuery } from "@apollo/client";
 import { useAuth, useOrganization, useUser } from "@clerk/clerk-expo";
 import { createContext, PropsWithChildren, useContext, useEffect, useState } from "react";
@@ -36,7 +36,7 @@ export const MetaDataProvider = ({ children }: PropsWithChildren) => {
 	const { organization } = useOrganization();
 	const [statusCategories, setStatusCategories] = useState<StatusCategory[] | null>(null);
 
-	const { selectedVehicle, setSelectedVehicle } = useVehicleStore();
+	const { selectedVehicle, setSelectedVehicle } = useSelectionStore();
 	const { data: dataVehicles } = useQuery(GET_VEHICLES);
 	const vehicles = dataVehicles?.getVehicles || [];
 

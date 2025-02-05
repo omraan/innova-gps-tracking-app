@@ -1,25 +1,18 @@
 import colors from "@/colors";
-import { UPDATE_DISPATCH } from "@/graphql/mutations";
-import { useDateStore } from "@/hooks/useDateStore";
-import { removeTypenameProperties } from "@/lib/removeTypenameProperties";
+import { useSelectionStore } from "@/hooks/useSelectionStore";
 import { useDispatch } from "@/providers/DispatchProvider";
-import { useLocation } from "@/providers/LocationProvider";
-import { useMetadata } from "@/providers/MetaDataProvider";
-import { useRoute } from "@/providers/RouteProvider";
 import { useSheetContext } from "@/providers/SheetProvider";
-import { useMutation } from "@apollo/client";
-import { useAuth } from "@clerk/clerk-expo";
 import { MaterialIcons } from "@expo/vector-icons";
-import EvilIcons from "@expo/vector-icons/EvilIcons";
 import FontAwesome5 from "@expo/vector-icons/FontAwesome5";
 import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
-import React, { useState } from "react";
-import { Pressable, Text, TextInput, View } from "react-native";
-import { ModalConfirmation } from "./ModalConfirmation";
+import React from "react";
+import { Text, View } from "react-native";
 
 export default function CurrentDispatchSheet() {
 	const { bottomSheetRefs, handlePanDownToClose } = useSheetContext();
-	const { dispatches, setDispatches, selectedDispatch, setSelectedDispatch } = useDispatch();
+	const { dispatches } = useDispatch();
+
+	const { selectedDispatch, setSelectedDispatch } = useSelectionStore();
 
 	// const { activeSheet, setActiveSheet } = useSheetContext();
 	// // if (!dispatches) return;

@@ -1,4 +1,5 @@
 import { useRouteSessionStore } from "@/hooks/useRouteSessionStore";
+import { useSelectionStore } from "@/hooks/useSelectionStore";
 import { isColorDark } from "@/lib/styles";
 import { useDispatch } from "@/providers/DispatchProvider";
 import { useMetadata } from "@/providers/MetaDataProvider";
@@ -14,8 +15,7 @@ type ModalPickerProps = {};
 export const ModalConfirmation = ({ handleSave }: { handleSave: (status: StatusCategory | null) => void }) => {
 	const [modalVisible, setModalVisible] = useState(false);
 	const { statusCategories } = useMetadata();
-	const { selectedDispatch } = useDispatch();
-	const { selectedRoute } = useRoute();
+	const { selectedRoute, selectedDispatch } = useSelectionStore();
 	const handleOpenModal = () => {
 		setModalVisible(true);
 	};

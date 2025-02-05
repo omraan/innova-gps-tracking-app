@@ -1,6 +1,5 @@
 import { GET_ROUTES } from "@/graphql/queries";
-import { useDateStore } from "@/hooks/useDateStore";
-import { useVehicleStore } from "@/hooks/useVehicleStore";
+import { useSelectionStore } from "@/hooks/useSelectionStore";
 import { getDirections } from "@/services/optimized-trips";
 import { useQuery } from "@apollo/client";
 import { useAuth } from "@clerk/clerk-expo";
@@ -37,18 +36,13 @@ const RouteContext = createContext<{
 	routes: { name: string; value: Route }[];
 	setRoutes(routes: { name: string; value: Route }[]): void;
 	refetchRoutes: () => void;
-	selectedRoute: { name: string; value: Route } | undefined;
-	setSelectedRoute(selectedRoute: { name: string; value: Route } | undefined): void;
 } | null>(null);
 
 export const RouteProvider = ({ children }: PropsWithChildren) => {
 	const [routes, setRoutes] = useState<{ name: string; value: Route }[]>([]);
 
-	const [selectedRoute, setSelectedRoute] = useState<{ name: string; value: Route }>();
-	const { selectedDate } = useDateStore();
-
 	const { orgId } = useAuth();
-	const { selectedVehicle } = useVehicleStore();
+	const { selectedRoute, setSelectedRoute, selectedDate } = useSelectionStore();
 
 	const {
 		data: dataRoutes,
@@ -83,7 +77,7 @@ export const RouteProvider = ({ children }: PropsWithChildren) => {
 
 	useEffect(() => {
 		if (selectedRoute && !routes.find((route) => route.name === selectedRoute.name)) {
-			setSelectedRoute(undefined);
+			setSelectedRoute(null);
 		}
 	}, [routes, orgId]);
 
@@ -93,8 +87,6 @@ export const RouteProvider = ({ children }: PropsWithChildren) => {
 				routes,
 				setRoutes,
 				refetchRoutes,
-				selectedRoute,
-				setSelectedRoute,
 			}}
 		>
 			{children}

@@ -1,9 +1,7 @@
 import { ModalPicker } from "@/components/ModalPicker";
-import { GET_VEHICLES } from "@/graphql/queries";
-import { useQuery } from "@apollo/client";
-import { useAuth, useUser } from "@clerk/clerk-expo";
+import { useUser } from "@clerk/clerk-expo";
 import { useNavigation } from "expo-router";
-import React, { useEffect, useLayoutEffect, useState } from "react";
+import React, { useLayoutEffect } from "react";
 import { SafeAreaView, Text, View } from "react-native";
 import { useTailwind } from "tailwind-rn";
 

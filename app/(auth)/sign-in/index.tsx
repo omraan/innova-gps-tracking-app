@@ -2,19 +2,9 @@ import { useSignIn } from "@clerk/clerk-expo";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Image } from "@rneui/themed/dist/Image";
 import { LinearGradient } from "expo-linear-gradient";
-import { Link, useNavigation, useRouter } from "expo-router";
+import { useNavigation } from "expo-router";
 import React, { useCallback, useEffect, useLayoutEffect, useState } from "react";
-import {
-	Button,
-	KeyboardAvoidingView,
-	Platform,
-	Pressable,
-	ScrollView,
-	StyleSheet,
-	Text,
-	TextInput,
-	View,
-} from "react-native";
+import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 
 export default function Page() {
 	const { signIn, setActive, isLoaded } = useSignIn();
