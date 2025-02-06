@@ -27,9 +27,6 @@ export default function InstructionBox({ steps, currentStep }: { steps: Step[]; 
 	}
 	const roundedDistance = roundDistance(actualDistance);
 	const getIconName = (type: string, modifier: string): string => {
-		// console.log("current: ", JSON.stringify(currentStep, null, 2));
-		// console.log("Type: ", type);
-		// console.log("modifier", modifier);
 		switch (type) {
 			case "continue":
 				if (modifier === "left") return "arrow-left";

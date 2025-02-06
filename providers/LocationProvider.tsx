@@ -85,6 +85,7 @@ const LocationProvider = ({ children }: PropsWithChildren) => {
 						speed: location.coords.speed,
 						speedInKmh: location.coords.speed ? location.coords.speed * 3.6 : 0,
 						timestamp: moment(location.timestamp).toISOString(),
+						heading: location.coords.heading!,
 					});
 				}
 			);

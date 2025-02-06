@@ -3,6 +3,7 @@ import puckShadow from "@/assets/images/puck-shadow.png";
 import puck from "@/assets/images/puck.png";
 import { MapViewOptions } from "@/constants/MapViewOptions";
 import { useNavigationStore } from "@/hooks/useNavigationStore";
+import { getBearing } from "@/lib/getBearing";
 import { getDistance } from "@/lib/getDistance";
 import { useDispatch } from "@/providers/DispatchProvider";
 import { useLocation } from "@/providers/LocationProvider";
@@ -163,6 +164,8 @@ export default function Map() {
 			const { steps } = currentDispatch.value.route;
 			let closestStepIndex = 0;
 			let minDistance = Infinity;
+			const thresholdDistance = 50;
+
 			if (steps && steps.length > 0) {
 				steps.forEach((step: Step, index: number) => {
 					const distance = getDistance(
@@ -174,7 +177,37 @@ export default function Map() {
 						closestStepIndex = index;
 					}
 				});
-				setCurrentStepIndex(closestStepIndex);
+
+				const currentStepDistance = getDistance(
+					{ latitude: liveLocation.latitude, longitude: liveLocation.longitude },
+					{
+						latitude: steps[closestStepIndex].maneuver.location[1],
+						longitude: steps[closestStepIndex].maneuver.location[0],
+					}
+				);
+
+				if (liveLocation.heading !== null) {
+					const nextStepIndex = closestStepIndex + 1;
+					if (nextStepIndex < steps.length) {
+						const nextStep = steps[nextStepIndex];
+						const bearingToNextStep = getBearing(
+							{ latitude: liveLocation.latitude, longitude: liveLocation.longitude },
+							{ latitude: nextStep.maneuver.location[1], longitude: nextStep.maneuver.location[0] }
+						);
+
+						const headingDifference = Math.abs(liveLocation.heading - bearingToNextStep);
+						if (headingDifference < 45 || headingDifference > 315) {
+							// User driving towards next step
+							setCurrentStepIndex(nextStepIndex);
+						} else {
+							setCurrentStepIndex(closestStepIndex);
+						}
+					} else {
+						setCurrentStepIndex(closestStepIndex);
+					}
+				} else {
+					setCurrentStepIndex(closestStepIndex);
+				}
 			}
 		}
 	}, [filteredDispatches, liveLocation]);

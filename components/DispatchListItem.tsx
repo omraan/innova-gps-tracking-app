@@ -94,7 +94,6 @@ export default function DispatchListItem({ dispatch }: { dispatch: { name: strin
 					<TouchableOpacity
 						className="rounded flex justify-center items-center p-3"
 						onPress={() => {
-							// setActiveSheet("orders");
 							setSelectedDispatch(dispatch);
 							if (dispatch.value.customer.lat === 0) {
 								setIsChangingLocation(true);

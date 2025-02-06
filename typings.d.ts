@@ -137,6 +137,7 @@ interface LiveLocation extends GeoLocation {
 	speed: number | null;
 	speedInKmh: number;
 	timestamp: string;
+	heading: number;
 }
 
 interface Route {
