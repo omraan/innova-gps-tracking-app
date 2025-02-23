@@ -58,6 +58,10 @@ export default function Map() {
 
 	const mapView = (user?.unsafeMetadata.defaultMapView as string) || "standard";
 
+	const [prevLocation, setPrevLocation] = useState<LiveLocation | null>(null);
+	const [towardsCurrentDispatch, setTowardsCurrentDispatch] = useState<boolean | undefined>(undefined);
+	const [currentIndex, setCurrentIndex] = useState<number>(0);
+
 	useEffect(() => {
 		if (activeNavigateOption) {
 			const handleNavigation = async () => {
@@ -160,35 +164,43 @@ export default function Map() {
 	}, [dispatches]);
 
 	useEffect(() => {
-		if (currentDispatch && liveLocation) {
+		if (currentDispatch && liveLocation && prevLocation !== liveLocation) {
 			const { steps } = currentDispatch.value.route;
 			let closestStepIndex = 0;
 			let minDistance = Infinity;
-			const thresholdDistance = 50;
 
-			if (steps && steps.length > 0) {
-				steps.forEach((step: Step, index: number) => {
-					const distance = getDistance(
+			if (prevLocation) {
+				if (steps && steps.length > 0) {
+					steps.forEach((step: Step, index: number) => {
+						const distance = getDistance(
+							{ latitude: liveLocation.latitude, longitude: liveLocation.longitude },
+							{ latitude: step.maneuver.location[1], longitude: step.maneuver.location[0] }
+						);
+						if (distance < minDistance) {
+							minDistance = distance;
+							closestStepIndex = index;
+						}
+					});
+					const currentDistance = getDistance(
 						{ latitude: liveLocation.latitude, longitude: liveLocation.longitude },
-						{ latitude: step.maneuver.location[1], longitude: step.maneuver.location[0] }
+						{
+							latitude: steps[closestStepIndex].maneuver.location[1],
+							longitude: steps[closestStepIndex].maneuver.location[0],
+						}
 					);
-					if (distance < minDistance) {
-						minDistance = distance;
-						closestStepIndex = index;
-					}
-				});
-
-				const currentStepDistance = getDistance(
-					{ latitude: liveLocation.latitude, longitude: liveLocation.longitude },
-					{
-						latitude: steps[closestStepIndex].maneuver.location[1],
-						longitude: steps[closestStepIndex].maneuver.location[0],
-					}
-				);
-
-				if (liveLocation.heading !== null) {
+					const prevDistance = getDistance(
+						{ latitude: prevLocation.latitude, longitude: prevLocation.longitude },
+						{
+							latitude: steps[closestStepIndex].maneuver.location[1],
+							longitude: steps[closestStepIndex].maneuver.location[0],
+						}
+					);
 					const nextStepIndex = closestStepIndex + 1;
-					if (nextStepIndex < steps.length) {
+					if (
+						currentDistance > prevDistance && // Driving away from current dispatch
+						nextStepIndex < steps.length && // There is a next step
+						liveLocation.heading !== null // We can measure the heading of driver
+					) {
 						const nextStep = steps[nextStepIndex];
 						const bearingToNextStep = getBearing(
 							{ latitude: liveLocation.latitude, longitude: liveLocation.longitude },
@@ -197,7 +209,7 @@ export default function Map() {
 
 						const headingDifference = Math.abs(liveLocation.heading - bearingToNextStep);
 						if (headingDifference < 45 || headingDifference > 315) {
-							// User driving towards next step
+							// User driving/facing towards next step
 							setCurrentStepIndex(nextStepIndex);
 						} else {
 							setCurrentStepIndex(closestStepIndex);
@@ -205,12 +217,11 @@ export default function Map() {
 					} else {
 						setCurrentStepIndex(closestStepIndex);
 					}
-				} else {
-					setCurrentStepIndex(closestStepIndex);
 				}
 			}
+			setPrevLocation(liveLocation);
 		}
-	}, [filteredDispatches, liveLocation]);
+	}, [prevLocation, currentDispatch]);
 
 	return (
 		<MapView

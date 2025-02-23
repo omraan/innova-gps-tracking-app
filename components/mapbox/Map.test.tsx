@@ -1,4 +1,4 @@
-import { getBearing } from "@/lib/getBearing";
+import { getBearing } from "@/lib/getBearing"; // Voeg deze functie toe aan je lib
 import { getDistance } from "@/lib/getDistance";
 import { act, renderHook } from "@testing-library/react-hooks";
 import { useEffect, useState } from "react";
@@ -102,6 +102,8 @@ test("should update currentStepIndex correctly", () => {
 			heading: 0, // Noord
 		});
 	});
+
+	console.log("result.current.currentStepIndex", result.current.currentStepIndex);
 
 	// Step index should update to 1
 	expect(result.current.currentStepIndex).toBe(1);
