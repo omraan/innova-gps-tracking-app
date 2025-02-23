@@ -1,10 +1,10 @@
 import colors from "@/colors";
-import { UPDATE_DISPATCH } from "@/graphql/mutations";
+import { UPDATE_ROUTE_STOP } from "@/graphql/mutations";
 import { useSelectionStore } from "@/hooks/useSelectionStore";
 import { removeTypenameProperties } from "@/lib/removeTypenameProperties";
-import { useDispatch } from "@/providers/DispatchProvider";
 import { useLocation } from "@/providers/LocationProvider";
 import { useMetadata } from "@/providers/MetaDataProvider";
+import { useRoute } from "@/providers/RouteProvider";
 import { useSheetContext } from "@/providers/SheetProvider";
 import { useMutation } from "@apollo/client";
 import { useAuth } from "@clerk/clerk-expo";
@@ -14,10 +14,10 @@ import React, { useState } from "react";
 import { Pressable, Text, TextInput, View } from "react-native";
 import { ModalConfirmation } from "./ModalConfirmation";
 
-export default function SelectedDispatchSheet() {
+export default function SelectedRouteStopSheet() {
 	const { bottomSheetRefs, handlePanDownToClose } = useSheetContext();
-	const { dispatches, setDispatches } = useDispatch();
-	const { selectedRoute, selectedDispatch, setSelectedDispatch, selectedDate, isToday } = useSelectionStore();
+	const { selectedRoute, setSelectedRoute, selectedRouteStop, setSelectedRouteStop, selectedDate, isToday } =
+		useSelectionStore();
 	const { orgRole } = useMetadata();
 	const { setActiveSheet } = useSheetContext();
 	const [notes, setNotes] = useState<string>("");
@@ -29,12 +29,12 @@ export default function SelectedDispatchSheet() {
 			onMarkerSubmit(selectedStatus, notes);
 		}
 
-		setSelectedDispatch(null);
+		setSelectedRouteStop(null);
 		setActiveSheet(null);
 		setNotes("");
 	};
 
-	const [updateDispatch] = useMutation(UPDATE_DISPATCH, {
+	const [updateRouteStop] = useMutation(UPDATE_ROUTE_STOP, {
 		onCompleted: () => {},
 		onError: (error) => {
 			console.error(error);
@@ -42,9 +42,9 @@ export default function SelectedDispatchSheet() {
 	});
 
 	async function onMarkerSubmit(status: StatusCategory, notes?: string) {
-		if (selectedDispatch) {
+		if (selectedRouteStop && selectedRoute) {
 			const variables: any = {
-				id: selectedDispatch.name,
+				id: selectedRouteStop.name,
 				routeId: selectedRoute?.name,
 				date: selectedDate,
 				modifiedBy: userId!,
@@ -54,45 +54,55 @@ export default function SelectedDispatchSheet() {
 
 			let newEvent: any = {
 				name: "Status updated",
-				createdBy: userId!,
-				createdAt: Number(new Date()),
-				status: status.name,
+				description: `Status updated to ${status.name}`,
+				timestamp: new Date().toISOString(),
+				userId: userId!,
 			};
 
-			const dispatchWithoutTypename = removeTypenameProperties(selectedDispatch.value);
+			const routeStopWithoutTypename = removeTypenameProperties(selectedRouteStop.value);
 
-			const sanitizedDispatchEvents = dispatchWithoutTypename.events;
+			const sanitizedRouteStopEvents = routeStopWithoutTypename.events;
 
 			if (notes && notes !== "") {
 				variables.notes = notes;
 				newEvent.notes = notes;
 			}
-			variables.events = [...sanitizedDispatchEvents, newEvent];
-			updateDispatch({
+			variables.events = [...sanitizedRouteStopEvents, newEvent];
+			updateRouteStop({
 				variables,
 			});
-
-			setDispatches(
-				dispatches.map((dispatch) => {
-					if (dispatch.name !== selectedDispatch.name) return dispatch;
-					return {
-						name: dispatch.name,
-						value: {
-							...dispatch.value,
-							status: status.name,
-							notes: variables.notes || dispatch.value.notes || "",
-							modifiedBy: userId!,
-							modifiedAt: Number(new Date()),
-							events: [...(dispatch.value.events || []), newEvent],
-						},
-					};
-				})
-			);
+			setSelectedRouteStop({
+				name: selectedRouteStop.name,
+				value: {
+					...selectedRouteStop.value,
+					status: status.name,
+				},
+			});
+			setSelectedRoute({
+				name: selectedRoute.name,
+				value: {
+					...selectedRoute.value,
+					stops: selectedRoute.value.stops.map((stop) => {
+						if (stop.name !== selectedRouteStop.name) return stop;
+						return {
+							...stop,
+							value: {
+								...stop.value,
+								status: status.name,
+								notes: variables.notes || stop.value.notes || "",
+								modifiedBy: userId!,
+								modifiedAt: Number(new Date()),
+								events: [...(stop.value.events || []), newEvent],
+							},
+						};
+					}),
+				},
+			});
 		}
 	}
 
-	const orderNumbers = selectedDispatch?.value.orders?.map((o) => o.orderNumber).filter(Boolean);
-	const customerWithLocation = selectedDispatch?.value.customer?.lat !== 0;
+	const orderNumbers = selectedRouteStop?.value.dispatch?.orders?.map((o) => o.orderNumber).filter(Boolean);
+	const customerWithLocation = selectedRouteStop?.value.location.latitude !== 0;
 
 	return (
 		<BottomSheet
@@ -105,44 +115,36 @@ export default function SelectedDispatchSheet() {
 				if (index === -1) {
 					handlePanDownToClose("dispatches");
 					if (!isChangingLocation) {
-						setSelectedDispatch(null);
+						setSelectedRouteStop(null);
 					}
 				}
 			}}
 		>
-			{selectedDispatch && (
+			{selectedRouteStop && (
 				<BottomSheetView style={{ flex: 1, padding: 15 }}>
 					<View style={{ flexDirection: "row", gap: 20, marginBottom: 10 }}>
 						{/* <Image source={OrderImage} style={{ width: 60, height: 60 }} /> */}
 						<View style={{ flex: 1, gap: 5 }}>
-							<Text className="font-semibold text-2xl">{selectedDispatch.value.customer.name}</Text>
+							<Text className="font-semibold text-2xl">{selectedRouteStop.value.displayName}</Text>
 							<Text className="font-normal text-gray-500">{`${
-								selectedDispatch.value.customer.streetName && selectedDispatch.value.customer.streetName
+								selectedRouteStop.value.location.streetName &&
+								selectedRouteStop.value.location.streetName
 							} ${
-								selectedDispatch.value.customer.streetNumber &&
-								selectedDispatch.value.customer.streetNumber
+								selectedRouteStop.value.location.streetNumber &&
+								selectedRouteStop.value.location.streetNumber
 							}`}</Text>
-							{selectedDispatch.value.customer.city && (
+							{selectedRouteStop.value.location.city && (
 								<Text className="font-normal text-gray-500">
-									{selectedDispatch.value.customer.city}
+									{selectedRouteStop.value.location.city}
 								</Text>
 							)}
-							{selectedDispatch.value.customer.phoneNumber && (
-								<Text className="font-normal text-gray-500">
-									{selectedDispatch.value.customer.phoneNumber}
-								</Text>
-							)}
-							{selectedDispatch.value.customer.phoneNumber2 && (
-								<Text className="font-normal text-gray-500">
-									{selectedDispatch.value.customer.phoneNumber2}
-								</Text>
-							)}
-							{selectedDispatch.value.customer.phoneNumber3 && (
-								<Text className="font-normal text-gray-500">
-									{selectedDispatch.value.customer.phoneNumber3}
-								</Text>
-							)}
+							{selectedRouteStop.value.dispatch?.customer.phoneNumbers &&
+								selectedRouteStop.value.dispatch?.customer.phoneNumbers.length > 0 &&
+								selectedRouteStop.value.dispatch?.customer.phoneNumbers.map((p) => (
+									<Text className="font-normal text-gray-500">{p.number}</Text>
+								))}
 						</View>
+
 						<Pressable
 							className="bg-primary p-3 rounded mb-auto"
 							onPress={() => {
@@ -166,17 +168,17 @@ export default function SelectedDispatchSheet() {
 							</View>
 						)}
 					</View>
-					{selectedDispatch.value.notes || selectedDispatch.value.customer.notes ? (
+					{selectedRouteStop.value.notes || selectedRouteStop.value.dispatch?.customer.notes ? (
 						<View className="mb-5 bg-gray-100 rounded-lg p-5">
 							<Text className="text-center text-sm text-gray-400 mb-3">Notes</Text>
 							<Text
 								className="text-center flex flex-wrap"
-								style={{ maxWidth: 300, marginBottom: selectedDispatch.value.notes ? 5 : 0 }}
+								style={{ maxWidth: 300, marginBottom: selectedRouteStop.value.notes ? 5 : 0 }}
 							>
-								{selectedDispatch.value.customer.notes}
+								{selectedRouteStop.value.dispatch?.customer.notes}
 							</Text>
 							<Text className="text-center max-w-[300px] flex flex-wrap">
-								{selectedDispatch.value.notes}
+								{selectedRouteStop.value.notes}
 							</Text>
 						</View>
 					) : (
@@ -186,7 +188,7 @@ export default function SelectedDispatchSheet() {
 					{/* {orgRole && orgRole !== "org:viewer" && selectedDate == moment(new Date()).format("yyyy-MM-DD") && (
 						
 					)} */}
-					{!selectedRoute?.value.startTime && (
+					{!selectedRoute?.value.actual.timeStart && (
 						<View className="bg-red-200 border border-red-400 p-5 rounded mb-5 ">
 							<Text className="text-md text-red-700">
 								{!isToday() ? (
@@ -217,9 +219,11 @@ export default function SelectedDispatchSheet() {
 							value={notes}
 							onChangeText={setNotes}
 							className="text-sm rounded text-gray-700 border-b pb-2 border-gray-300 flex flex-wrap text-wrap "
-							style={{ maxWidth: 300, opacity: !selectedRoute?.value.startTime ? 0.5 : 1 }}
+							style={{ maxWidth: 300, opacity: !selectedRoute?.value.actual.timeStart ? 0.5 : 1 }}
 							editable={
-								orgRole && orgRole !== "org:viewer" && selectedRoute?.value.startTime ? true : false
+								orgRole && orgRole !== "org:viewer" && selectedRoute?.value.actual.timeStart
+									? true
+									: false
 							}
 							multiline={true}
 							numberOfLines={4}

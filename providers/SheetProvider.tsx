@@ -2,13 +2,13 @@ import { useSelectionStore } from "@/hooks/useSelectionStore";
 import BottomSheet from "@gorhom/bottom-sheet";
 import React, { act, createContext, PropsWithChildren, useContext, useEffect, useRef, useState } from "react";
 
-type SheetCategories = "dispatches" | "route" | "metadata" | "settings" | "account" | "currentDispatch";
+type SheetCategories = "routeStop" | "route" | "metadata" | "settings" | "account" | "currentDispatch";
 
 interface SheetContextProps {
 	activeSheet: SheetCategories | null;
 	setActiveSheet: (sheet: SheetCategories | null) => void;
 	bottomSheetRefs: {
-		dispatches: React.RefObject<BottomSheet>;
+		routeStop: React.RefObject<BottomSheet>;
 		route: React.RefObject<BottomSheet>;
 		metadata: React.RefObject<BottomSheet>;
 		settings: React.RefObject<BottomSheet>;
@@ -26,7 +26,7 @@ export const SheetProvider = ({ children }: PropsWithChildren) => {
 	const [activeSheet, setActiveSheet] = useState<SheetCategories | null>(null);
 
 	const bottomSheetRefs = {
-		dispatches: useRef<BottomSheet>(null),
+		routeStop: useRef<BottomSheet>(null),
 		route: useRef<BottomSheet>(null),
 		metadata: useRef<BottomSheet>(null),
 		settings: useRef<BottomSheet>(null),
@@ -36,10 +36,10 @@ export const SheetProvider = ({ children }: PropsWithChildren) => {
 
 	const handleSetActiveSheet = (sheet: SheetCategories | null) => {
 		if (sheet === activeSheet) {
-			if (activeSheet === "dispatches") {
-				bottomSheetRefs.dispatches.current?.close();
+			if (activeSheet === "routeStop") {
+				bottomSheetRefs.routeStop.current?.close();
 				setTimeout(() => {
-					bottomSheetRefs.dispatches.current?.expand();
+					bottomSheetRefs.routeStop.current?.expand();
 				}, 200);
 			}
 		} else {

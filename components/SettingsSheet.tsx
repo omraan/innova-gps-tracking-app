@@ -3,7 +3,6 @@ import { UPDATE_ROUTE_END_TIME, UPDATE_ROUTE_START_TIME } from "@/graphql/mutati
 import { GET_VEHICLES } from "@/graphql/queries";
 import { useSelectionStore } from "@/hooks/useSelectionStore";
 import toastPromise from "@/lib/toastPromise";
-import { useDispatch } from "@/providers/DispatchProvider";
 import { useRoute } from "@/providers/RouteProvider";
 import { useSheetContext } from "@/providers/SheetProvider";
 import { useMutation, useQuery } from "@apollo/client";
@@ -20,7 +19,6 @@ export default function SettingsSheet() {
 
 	const { user } = useUser();
 	const { refetchRoutes, routes } = useRoute();
-	const { refetchDispatches } = useDispatch();
 	const { setActiveSheet } = useSheetContext();
 	const { selectedRoute, setSelectedRoute, selectedVehicle, setSelectedVehicle, selectedDate, setSelectedDate } =
 		useSelectionStore();
@@ -38,14 +36,7 @@ export default function SettingsSheet() {
 	};
 
 	const handleRefresh = async () => {
-		let promises;
-		if (selectedRoute?.name) {
-			promises = Promise.all([refetchRoutes(), refetchDispatches(), refetchVehicles()]);
-		} else {
-			promises = Promise.all([refetchRoutes(), refetchVehicles()]);
-		}
-
-		toastPromise(promises, {
+		toastPromise(Promise.all([refetchRoutes(), refetchVehicles()]), {
 			loading: "Refreshing data...",
 			success: "Data refreshed",
 			error: "Failed to refresh data",
@@ -54,7 +45,7 @@ export default function SettingsSheet() {
 	const [UpdateRouteEndTime] = useMutation(UPDATE_ROUTE_END_TIME);
 
 	const endRoute = async () => {
-		const endTime = moment(new Date()).format("yyyy-MM-DD HH:mm:ss");
+		const timeEnd = moment(new Date()).format("yyyy-MM-DD HH:mm:ss");
 
 		if (!selectedDate) {
 			return;
@@ -66,7 +57,7 @@ export default function SettingsSheet() {
 		const variables = {
 			date: selectedDate,
 			id: selectedRoute?.name,
-			endTime,
+			timeEnd,
 		};
 		await UpdateRouteEndTime({
 			variables,
@@ -75,8 +66,11 @@ export default function SettingsSheet() {
 					name: selectedRoute.name,
 					value: {
 						...selectedRoute.value,
-						endTime,
-						active: false,
+						actual: {
+							...selectedRoute.value.actual,
+							timeEnd,
+							active: false,
+						},
 					},
 				});
 			},
@@ -101,12 +95,15 @@ export default function SettingsSheet() {
 			id: selectedRoute?.name,
 			startTime,
 		};
-		if (selectedRoute?.value.startTime) {
+		if (selectedRoute?.value.actual.timeStart) {
 			setSelectedRoute({
 				name: selectedRoute.name,
 				value: {
 					...selectedRoute.value,
-					active: true,
+					actual: {
+						...selectedRoute.value.actual,
+						active: true,
+					},
 				},
 			});
 			setActiveSheet("currentDispatch");
@@ -118,8 +115,10 @@ export default function SettingsSheet() {
 						name: selectedRoute.name,
 						value: {
 							...selectedRoute.value,
-							startTime,
-							active: true,
+							actual: {
+								...selectedRoute.value.actual,
+								active: true,
+							},
 						},
 					});
 					setActiveSheet("currentDispatch");
@@ -148,7 +147,7 @@ export default function SettingsSheet() {
 			onChange={(index) => {
 				if (index === -1) {
 					handlePanDownToClose("settings");
-					if (selectedRoute?.value.active) {
+					if (selectedRoute?.value.actual?.active) {
 						setActiveSheet("currentDispatch");
 					}
 				}
@@ -161,7 +160,7 @@ export default function SettingsSheet() {
 							<Text className="text-gray-700  text-center font-semibold">Refresh data</Text>
 						</View>
 					</Pressable>
-					{selectedRoute?.value.active ? (
+					{selectedRoute?.value.actual?.active ? (
 						<TouchableOpacity onPress={endRoute} className="flex-1 bg-black py-4 rounded">
 							<Text className="text-white font-bold text-center">End Route</Text>
 						</TouchableOpacity>
@@ -181,7 +180,7 @@ export default function SettingsSheet() {
 					<DateTimePicker
 						currentDate={moment(selectedDate).toDate()}
 						onChange={onDateChange}
-						disabled={selectedRoute?.value.active}
+						disabled={selectedRoute?.value.actual?.active}
 					/>
 				</View>
 				<View className="mb-2">
@@ -202,7 +201,7 @@ export default function SettingsSheet() {
 									displayAllLabel: "All Vehicles",
 								}}
 								onSelect={handlePickerChange}
-								disabled={selectedRoute?.value.active}
+								disabled={selectedRoute?.value.actual?.active}
 							/>
 						</View>
 					)}
@@ -225,7 +224,7 @@ export default function SettingsSheet() {
 									label: route.value.title,
 								};
 							})}
-						disabled={selectedRoute?.value.active}
+						disabled={selectedRoute?.value.actual?.active}
 						options={{
 							defaultValue: selectedRoute?.name,
 							emptyMessage: `No routes available this day${

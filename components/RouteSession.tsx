@@ -1,9 +1,8 @@
 import colors from "@/colors";
-import { UPDATE_CUSTOMER, UPDATE_ROUTE_START_TIME } from "@/graphql/mutations";
-import { GET_DISPATCHES } from "@/graphql/queries";
+import { UPDATE_LOCATION, UPDATE_ROUTE_START_TIME } from "@/graphql/mutations";
 import { useSelectionStore } from "@/hooks/useSelectionStore";
-import { useDispatch } from "@/providers/DispatchProvider";
 import { useLocation } from "@/providers/LocationProvider";
+import { useRoute } from "@/providers/RouteProvider";
 import { useMutation } from "@apollo/client";
 import { AntDesign, MaterialIcons } from "@expo/vector-icons";
 import moment from "moment";
@@ -13,9 +12,9 @@ import { useTailwind } from "tailwind-rn";
 export default function RouteSession() {
 	const tw = useTailwind();
 
-	const { dispatches, setDispatches, fetchRoutePolyline } = useDispatch();
-	const { selectedRoute, setSelectedRoute, selectedDispatch, setSelectedDispatch, selectedDate } =
+	const { selectedRoute, setSelectedRoute, selectedDate, selectedRouteStop, setSelectedRouteStop } =
 		useSelectionStore();
+	const { fetchRoutePolyline } = useRoute();
 	const { isChangingLocation, setIsChangingLocation, markerCoordinate } = useLocation();
 
 	const [UpdateRouteStartTime] = useMutation(UPDATE_ROUTE_START_TIME);
@@ -40,8 +39,11 @@ export default function RouteSession() {
 					name: selectedRoute.name,
 					value: {
 						...selectedRoute.value,
-						startTime,
-						active: true,
+						actual: {
+							...selectedRoute.value.actual,
+							timeStart: startTime,
+							active: true,
+						},
 					},
 				});
 			},
@@ -51,48 +53,53 @@ export default function RouteSession() {
 		});
 	};
 	const handleDiscardLocation = () => {
-		setSelectedDispatch(null);
+		setSelectedRouteStop(null);
 		setIsChangingLocation(false);
 	};
-	const [UpdateCustomer] = useMutation(UPDATE_CUSTOMER);
+	const [UpdateLocation] = useMutation(UPDATE_LOCATION);
 
 	const handleSaveLocation = async () => {
-		if (!selectedDispatch) {
+		if (!selectedRouteStop) {
 			console.log("No order selected");
+			return;
+		}
+		if (!selectedRoute) {
+			console.log("No route selected");
 			return;
 		}
 
 		try {
-			await UpdateCustomer({
+			await UpdateLocation({
 				variables: {
-					id: selectedDispatch?.value.customerId,
+					id: selectedRouteStop?.value.locationId,
 					lat: markerCoordinate[1],
 					lng: markerCoordinate[0],
 					lastCoordinateUpdate: Number(new Date()),
 				},
 				// onCompleted: () => setLoading(false),
 				update: () => {
-					fetchRoutePolyline(
-						dispatches.map((dispatch) => {
-							if (dispatch.name === selectedDispatch.name) {
-								return {
-									name: dispatch.name,
-									value: {
-										...dispatch.value,
-										customer: {
-											...dispatch.value.customer,
+					fetchRoutePolyline({
+						name: selectedRoute.name,
+						value: {
+							...selectedRoute.value,
+							stops: selectedRoute.value.stops.map((routeStop) => {
+								if (routeStop.name === selectedRouteStop.name) {
+									return {
+										...routeStop,
+										location: {
+											...routeStop.value.location,
 											lat: markerCoordinate[1],
 											lng: markerCoordinate[0],
 										},
-									},
-								};
-							}
-							return dispatch;
-						})
-					);
+									};
+								}
+								return routeStop;
+							}),
+						},
+					});
 				},
 			});
-			setSelectedDispatch(null);
+			setSelectedRouteStop(null);
 			setIsChangingLocation(false);
 		} catch (error: any) {
 			console.error(error);

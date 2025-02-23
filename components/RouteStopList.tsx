@@ -1,14 +1,14 @@
 import colors from "@/colors";
+import { useSelectionStore } from "@/hooks/useSelectionStore";
 import { isColorDark } from "@/lib/styles";
-import { useDispatch } from "@/providers/DispatchProvider";
 import { useMetadata } from "@/providers/MetaDataProvider";
 import { MaterialIcons } from "@expo/vector-icons";
 import React, { useEffect, useState } from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
-import DispatchListItem from "./DispatchListItem";
+import RouteStopListItem from "./RouteStopListItem";
 
-export default function DispatchList() {
-	const { dispatches } = useDispatch();
+export default function RouteStopList() {
+	const { selectedRoute } = useSelectionStore();
 	const { statusCategories } = useMetadata();
 	const [selectedStatusCategories, setSelectedStatusCategories] = useState<StatusCategory[] | null>();
 
@@ -18,16 +18,16 @@ export default function DispatchList() {
 		}
 	}, [statusCategories]);
 
-	const dispatchesWithMissingLocation =
-		dispatches.filter((dispatch) => Number(dispatch.value.customer.lat) === 0) || [];
+	const routeStopsWithMissingLocation =
+		selectedRoute?.value.stops.filter((routeStop) => Number(routeStop.value.location.latitude) === 0) || [];
 
 	return (
 		<View className="flex-1 mb-20 px-3">
-			{dispatchesWithMissingLocation.length > 0 ? (
+			{routeStopsWithMissingLocation.length > 0 ? (
 				<View className="flex-1">
 					<View className="bg-red-200 border border-red-400 p-5 rounded mb-10">
 						<Text className="text-lg font-bold text-gray-500 mb-2">
-							{dispatchesWithMissingLocation.length} order(s) with missing location
+							{routeStopsWithMissingLocation.length} order(s) with missing location
 						</Text>
 						<Text className="text-md text-gray-700 mb-5">
 							Please update the location of the following order(s):
@@ -49,8 +49,8 @@ export default function DispatchList() {
 			)}
 			<View className=" pt-2 ">
 				<Text className="text-center mb-2">
-					{dispatches.length} dispatch
-					{dispatches.length !== 1 ? "es" : ""}
+					{selectedRoute?.value.stops.length} stop
+					{selectedRoute?.value.stops.length !== 1 ? "s" : ""}
 				</Text>
 
 				<ScrollView horizontal className="pb-5 mb-2">
@@ -86,9 +86,10 @@ export default function DispatchList() {
 										]}
 									>
 										{status.name === "No Location"
-											? dispatchesWithMissingLocation.length
-											: dispatches.filter((dispatch) => dispatch.value.status === status.name)
-													.length}{" "}
+											? routeStopsWithMissingLocation.length
+											: selectedRoute?.value.stops.filter(
+													(routeStop) => routeStop.value.status === status.name
+											  ).length}{" "}
 										{status.name}
 									</Text>
 								</View>
@@ -98,15 +99,15 @@ export default function DispatchList() {
 			</View>
 
 			<View style={{ flex: 1, flexDirection: "column", gap: 20 }}>
-				{dispatches &&
-					dispatches.length > 0 &&
+				{selectedRoute?.value.stops &&
+					selectedRoute?.value.stops.length > 0 &&
 					// labels &&
-					dispatches
-						.filter((dispatch) => {
-							const dispatchNoLocation = Number(dispatch.value.customer.lat) === 0;
+					selectedRoute?.value.stops
+						.filter((routeStop) => {
+							const routeStopNoLocation = Number(routeStop.value.location.latitude) === 0;
 							if (
-								dispatchNoLocation &&
-								dispatch.value.status?.toLowerCase() === "open" &&
+								routeStopNoLocation &&
+								routeStop.value.status?.toLowerCase() === "open" &&
 								selectedStatusCategories &&
 								selectedStatusCategories.find(
 									(status) => status.active && status.name === "No Location"
@@ -117,10 +118,10 @@ export default function DispatchList() {
 
 							const status =
 								selectedStatusCategories &&
-								selectedStatusCategories.find((s) => s.name === dispatch.value.status);
+								selectedStatusCategories.find((s) => s.name === routeStop.value.status);
 							return status?.active ?? false;
 						})
-						.map((dispatch, index: number) => <DispatchListItem dispatch={dispatch} key={index} />)}
+						.map((routeStop, index: number) => <RouteStopListItem routeStop={routeStop} key={index} />)}
 			</View>
 		</View>
 	);

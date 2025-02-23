@@ -7,30 +7,31 @@ import pinRed from "@/assets/images/pin-red.png";
 
 import colors from "@/colors";
 import { useSelectionStore } from "@/hooks/useSelectionStore";
-
-import { useDispatch } from "@/providers/DispatchProvider";
 import { useLocation } from "@/providers/LocationProvider";
+import { useRoute } from "@/providers/RouteProvider";
 import { useSheetContext } from "@/providers/SheetProvider";
 import { CircleLayer, Images, ShapeSource, SymbolLayer } from "@rnmapbox/maps";
 import { OnPressEvent } from "@rnmapbox/maps/lib/typescript/src/types/OnPressEvent";
 import { featureCollection, point } from "@turf/helpers";
 import { useEffect, useState } from "react";
 
-export default function OrderMarkers() {
-	const { filteredDispatches } = useDispatch();
-	const { selectedDispatch, setSelectedDispatch } = useSelectionStore();
+export default function RouteStopMarkers() {
+	const { filteredRouteStops } = useRoute();
+	const { selectedRouteStop, setSelectedRouteStop } = useSelectionStore();
 	const { isChangingLocation } = useLocation();
 
 	const [bounceValue, setBounceValue] = useState([0, 0]);
 
-	const points = filteredDispatches.map((dispatch: { name: string; value: DispatchExtended }) => {
-		const isSelected = selectedDispatch && dispatch.name === selectedDispatch.name;
+	const points = filteredRouteStops.map((routeStop: { name: string; value: RouteStop }) => {
+		const isSelected = selectedRouteStop && routeStop.name === selectedRouteStop.name;
 
-		return point([dispatch.value.customer.lng, dispatch.value.customer.lat], {
-			dispatch,
-			dispatchId: dispatch.name,
+		return point([routeStop.value.location.longitude, routeStop.value.location.latitude], {
+			routeStop,
+			routeStopId: routeStop.name,
 			statusCategory:
-				dispatch.value.category === "priority" ? dispatch.value.status + "Priority" : dispatch.value.status,
+				routeStop.value.dispatch?.category === "priority"
+					? routeStop.value.dispatch?.status + "Priority"
+					: routeStop.value.dispatch?.status,
 			iconTranslate: isSelected ? bounceValue : [0, 0],
 		});
 	});
@@ -38,16 +39,16 @@ export default function OrderMarkers() {
 	const { setActiveSheet } = useSheetContext();
 
 	const onPointPress = async (event: OnPressEvent) => {
-		if (event.features[0].properties?.dispatch) {
-			setSelectedDispatch(event.features[0].properties.dispatch);
-			setActiveSheet("dispatches");
+		if (event.features[0].properties?.routeStop) {
+			setSelectedRouteStop(event.features[0].properties.routeStop);
+			setActiveSheet("routeStop");
 		}
 	};
 
 	useEffect(() => {
 		if (!isChangingLocation) {
 			setBounceValue([0, 0]);
-			if (selectedDispatch) {
+			if (selectedRouteStop) {
 				let bounce = 0;
 
 				const interval = setInterval(() => {
@@ -57,7 +58,7 @@ export default function OrderMarkers() {
 				return () => clearInterval(interval);
 			}
 		}
-	}, [selectedDispatch]);
+	}, [selectedRouteStop]);
 
 	return (
 		<ShapeSource id="orderShape" shape={featureCollection(points)} cluster onPress={onPointPress}>
@@ -112,7 +113,7 @@ export default function OrderMarkers() {
 				filter={[
 					"all",
 					["!", ["has", "point_count"]],
-					["!=", ["get", "dispatchId"], selectedDispatch?.name || ""],
+					["!=", ["get", "routeStopId"], selectedRouteStop?.name || ""],
 				]}
 			/>
 			<SymbolLayer
@@ -138,7 +139,7 @@ export default function OrderMarkers() {
 					iconColor: "blue",
 					iconTranslate: bounceValue,
 				}}
-				filter={["==", ["get", "dispatchId"], selectedDispatch?.name || ""]}
+				filter={["==", ["get", "routeStopId"], selectedRouteStop?.name || ""]}
 			/>
 			<Images images={{ pinGreen, pinGreenPriority, pinRed, pinRedPriority, pinGray, pinGrayPriority }} />
 		</ShapeSource>

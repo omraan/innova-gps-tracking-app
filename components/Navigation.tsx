@@ -1,6 +1,6 @@
 import colors from "@/colors";
 import { useNavigationStore } from "@/hooks/useNavigationStore";
-import { useDispatch } from "@/providers/DispatchProvider";
+import { useSelectionStore } from "@/hooks/useSelectionStore";
 import { useLocation } from "@/providers/LocationProvider";
 import { useSheetContext } from "@/providers/SheetProvider";
 import { FontAwesome5, Ionicons, MaterialIcons } from "@expo/vector-icons";
@@ -13,11 +13,11 @@ export default function Navigation() {
 	const { setActiveSheet } = useSheetContext();
 	const { activeNavigateOption, setActiveNavigateOption } = useNavigationStore();
 
-	const { dispatches } = useDispatch();
 	const { followUserLocation, setFollowUserLocation } = useLocation();
+	const { selectedRoute } = useSelectionStore();
 
-	const dispatchCount = dispatches.filter(
-		(dispatch) => !dispatch.value.customer.lat || dispatch.value.customer.lat === 0
+	const routeStopCount = selectedRoute?.value.stops.filter(
+		(routeStop) => !routeStop.value.location.latitude || routeStop.value.location.latitude === 0
 	).length;
 
 	const navigateOptions: NavigationOption[] = [
@@ -80,10 +80,10 @@ export default function Navigation() {
 					>
 						<MaterialIcons name="route" size={24} color={colors.primary} />
 					</Pressable>
-					{dispatchCount > 0 && (
+					{routeStopCount > 0 && (
 						<View className="w-6 h-6 bg-red-500 rounded-full absolute top-0 -right-2 z-10">
 							<View className="flex-row justify-center items-center h-full w-full">
-								<Text className="text-white text-xs text-center font-bold">{dispatchCount}</Text>
+								<Text className="text-white text-xs text-center font-bold">{routeStopCount}</Text>
 							</View>
 						</View>
 					)}

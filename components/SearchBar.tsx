@@ -1,9 +1,9 @@
-import { useDispatch } from "@/providers/DispatchProvider";
+import { useRoute } from "@/providers/RouteProvider";
 import React, { useState } from "react";
 import { StyleSheet, TextInput, View } from "react-native";
 
 const SearchBar = () => {
-	const { setSearchQuery } = useDispatch();
+	const { setSearchQuery } = useRoute();
 	const [query, setQuery] = useState("");
 
 	const handleSearch = (text: string) => {

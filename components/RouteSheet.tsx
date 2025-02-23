@@ -1,11 +1,9 @@
 import { useSelectionStore } from "@/hooks/useSelectionStore";
-import { useDispatch } from "@/providers/DispatchProvider";
 import { useSheetContext } from "@/providers/SheetProvider";
 import BottomSheet, { BottomSheetScrollView } from "@gorhom/bottom-sheet";
-import DispatchList from "./DispatchList";
+import RouteStopList from "./RouteStopList";
 
 export default function RouteSheet() {
-	const { dispatches }: any = useDispatch();
 	const { bottomSheetRefs, handlePanDownToClose, setActiveSheet } = useSheetContext();
 	const { selectedRoute } = useSelectionStore();
 	return (
@@ -19,20 +17,20 @@ export default function RouteSheet() {
 			onChange={(index) => {
 				if (index === -1) {
 					handlePanDownToClose("route");
-					if (selectedRoute?.value.active) {
+					if (selectedRoute?.value.actual.active) {
 						setActiveSheet("currentDispatch");
 					}
 				}
 			}}
 		>
-			{dispatches && dispatches.length > 0 && (
+			{selectedRoute && (
 				<BottomSheetScrollView
 					style={{
 						flex: 1,
 						padding: 10,
 					}}
 				>
-					<DispatchList />
+					<RouteStopList />
 				</BottomSheetScrollView>
 			)}
 		</BottomSheet>

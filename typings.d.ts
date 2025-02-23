@@ -19,97 +19,99 @@ declare global {
 }
 
 interface RegisterCustomer {
-	name: string;
+	firstName?: string;
+	lastName?: string;
+	companyName?: string;
 	email?: string;
-	lat: number;
-	lng: number;
 	code: string;
-	city?: string;
-	streetName?: string;
-	streetNumber?: string;
-	phoneNumber?: string;
-	phoneNumber2?: string;
-	phoneNumber3?: string;
+	phoneNumbers?: {
+		type: PhoneType;
+		countryCode: string;
+		number: string;
+	}[];
 	notes?: string;
+	type: CustomerType;
+	locationIds: string[];
+	defaultLocationId?: string;
+	locations?: RegisterLocation[];
 }
-
+enum CustomerType {
+	COMMERCIAL = "COMMERCIAL",
+	PRIVATE = "PRIVATE",
+}
 interface Customer extends RegisterCustomer {
 	id: string;
+	defaultLocation: Location;
 }
-
+interface RegisterBreak {
+	duration: string;
+	earliestStartTime: string;
+	latestEndTime: string;
+}
+interface Break extends RegisterBreak {
+	index: number;
+}
 interface RegisterVehicle {
-	name: string;
+	title: string;
 	licensePlate: string;
+	earliestStartTime?: string | null;
+	latestEndTime?: string | null;
+	capacity?: {
+		volume?: number | null;
+		weight?: number | null;
+		units?: number | null;
+	} | null;
+	type?: string;
+	breaks: RegisterBreak[];
+	defaultDriverId?: string | null;
+	type: string;
 }
 
 interface Vehicle extends RegisterVehicle {
 	id: string;
 }
 
-interface RegisterOrder {
-	createdBy: string;
-	createdAt: number;
-	driverId?: string;
-	vehicleId?: string;
-	customerId?: string;
-	expectedDeliveryDate?: string;
-	status?: string;
-	category?: string;
-	orderNumber?: string;
-	notes?: string;
-}
-
 interface RegisterDispatch {
 	routeId?: string;
 	customerId?: string;
-	expectedDeliveryDate?: string;
-	estimatedTimeArrival?: string;
+	locationId?: string;
+	plannedDeliveryDate?: string;
 	trackAndTraceCode: string;
-	status: string;
+	status?: string;
 	category?: string;
-	orderNumbers?: string;
 	orders?: {
-		orderId: string | null;
 		orderNumber?: string;
 	}[];
 	notes?: string;
+	requirements?: {
+		vehicleType?: string;
+		capacity?: {
+			volume?: number;
+			weight?: number;
+			units?: number;
+		};
+	};
 }
-
 interface Dispatch extends RegisterDispatch {
 	id: string;
 	createdBy: string;
 	createdAt: number;
 	events?: DispatchEvent[];
-	modifiedAt?: number;
-	modifiedBy?: string;
+	orders: {
+		orderNumber?: string;
+	}[];
 }
-interface DispatchRoute extends Dispatch {
-	index?: number;
-	distance?: number;
-	duration?: number;
-	estimatedTimeArrival?: string;
-	steps: Step[];
-}
+
 interface DispatchExtended extends Dispatch {
-	customer: RegisterCustomer;
+	customer: Customer;
 	amountDispatches?: number;
-	route: DispatchRoute;
-}
-
-interface Order extends RegisterOrder {
-	id: string;
-	events?: OrderEvent[];
-}
-interface OrderExtended extends Order {
-	customer: RegisterCustomer;
-}
-
-interface OrderEvent extends RegisterOrder {
-	name: string;
-	description?: string;
-	createdAt?: number;
-	modifiedAt?: number;
-	modifiedBy?: string;
+	route: {
+		id?: string;
+		distance?: number;
+		duration?: number;
+		estimatedTimeArrival?: string;
+		index?: number;
+	};
 }
 
 interface RegisterCountry {
@@ -140,19 +142,40 @@ interface LiveLocation extends GeoLocation {
 	heading: number;
 }
 
-interface Route {
-	title: string;
-	vehicleId: string;
-	driverId: string;
-	startTime?: string;
-	endTime?: string;
-	expectedStartTime: string;
-	expectedEndTime?: string;
+interface RouteMetrics {
+	duration?: number;
+	distance?: number;
+	timeStart: string;
+	timeEnd?: string | null;
 	geometry?: string;
+}
+interface RouteMetricsActual extends RouteMetrics {
 	active?: boolean;
 }
-interface RegisterRoute extends Route {
+interface RegisterRoute {
+	title: string;
 	date: string;
+	vehicleId: string;
+	driverId: string;
+	estimation: RouteMetrics;
+	vehicleType: string;
+	geometry?: string;
+	stops: RegisterRouteStop[];
+	createdBy?: string;
+	createdAt?: number;
+	modifiedBy?: string;
+	modifiedAt?: number;
+}
+interface Route extends RegisterRoute {
+	id: string;
+	actual: RouteMetricsActual;
+	stops: { name: string; value: RouteStop }[];
+	vehicle?: Vehicle;
+	coordinates?: [number, number][];
+	createdBy: string;
+	createdAt: number;
+	modifiedBy: string;
+	modifiedAt: number;
 }
 
 type RouteOptions = "existing" | "new" | "open";
@@ -204,3 +227,112 @@ type NavigationOption = {
 	iconSize: number;
 	className?: string;
 };
+
+interface RegisterLocation {
+	title: string;
+	streetName: string;
+	streetNumber: string;
+	city: string;
+	postalCode?: string;
+	country?: string;
+	latitude: number;
+	longitude: number;
+	notes?: string;
+	isDefault?: boolean;
+	type: LocationType;
+	customerId?: string;
+	openingHours?: OpeningHours;
+	serviceTime?: string;
+}
+
+interface TimeSlot {
+	startTime: string; // Format: "HH:mm"
+	endTime: string; // Format: "HH:mm"
+}
+
+interface DaySchedule {
+	isOpen: boolean;
+	timeSlots: TimeSlot[];
+}
+
+interface OpeningHours {
+	monday: DaySchedule;
+	tuesday: DaySchedule;
+	wednesday: DaySchedule;
+	thursday: DaySchedule;
+	friday: DaySchedule;
+	saturday: DaySchedule;
+	sunday: DaySchedule;
+}
+
+interface Location extends RegisterLocation {
+	id: string;
+	createdBy: string;
+	createdAt: number;
+	modifiedBy?: string;
+	modifiedAt?: number;
+}
+
+interface Phone {
+	type: "MOBILE" | "LANDLINE";
+	countryCode: string;
+	number: string;
+}
+interface BulkCustomer {
+	id?: string;
+	firstName?: string;
+	lastName?: string;
+	companyName?: string;
+	code: string;
+	email?: string;
+	phoneNumbers?: Phone[];
+	type: "COMMERCIAL" | "PRIVATE";
+	locations: {
+		id?: string;
+		streetName: string;
+		streetNumber: string;
+		city: string;
+		postalCode?: string;
+		country?: string;
+		latitude?: number;
+		longitude?: number;
+	}[];
+}
+
+interface RegisterRouteStop {
+	id?: string;
+	locationId: string;
+	routeId?: string;
+	dispatchId?: string;
+	transitPointId?: string;
+	stopType: RouteStopType;
+	dispatch?: RegisterDispatch;
+	transitPoint?: TransitPoint;
+	dependsOn?: string;
+	sequence?: number;
+	status: string;
+}
+
+interface RouteStop extends RegisterRouteStop {
+	id: string;
+	sequence: number;
+	route: Route;
+	dispatch?: DispatchExtended;
+	location: Location;
+	estimation?: RouteStopMetrics;
+	actual?: RouteStopMetrics;
+	createdBy?: string;
+	createdAt?: number;
+	modifiedBy?: string;
+	modifiedAt?: number;
+	type: RouteStopType;
+	displayName: string;
+}
+
+interface RouteStopMetrics {
+	duration?: number;
+	distance?: number;
+	timeDeparture?: string;
+	timeArrival?: string;
+	serviceTime?: string;
+}

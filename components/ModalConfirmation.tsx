@@ -1,12 +1,10 @@
 import { useRouteSessionStore } from "@/hooks/useRouteSessionStore";
 import { useSelectionStore } from "@/hooks/useSelectionStore";
 import { isColorDark } from "@/lib/styles";
-import { useDispatch } from "@/providers/DispatchProvider";
 import { useMetadata } from "@/providers/MetaDataProvider";
-import { useRoute } from "@/providers/RouteProvider";
 import Feather from "@expo/vector-icons/Feather";
 import React, { useState } from "react";
-import { Pressable, StyleSheet, Text, TouchableOpacity, TouchableWithoutFeedback, View } from "react-native";
+import { Text, TouchableOpacity, View } from "react-native";
 import Icon from "react-native-vector-icons/Ionicons";
 import { Modal } from "./Modal";
 
@@ -15,14 +13,14 @@ type ModalPickerProps = {};
 export const ModalConfirmation = ({ handleSave }: { handleSave: (status: StatusCategory | null) => void }) => {
 	const [modalVisible, setModalVisible] = useState(false);
 	const { statusCategories } = useMetadata();
-	const { selectedRoute, selectedDispatch } = useSelectionStore();
+	const { selectedRoute, selectedRouteStop } = useSelectionStore();
 	const handleOpenModal = () => {
 		setModalVisible(true);
 	};
 	const [selectedStatus, setSelectedStatus] = useState<StatusCategory | null>(null);
 
 	const handleStatusPress = (status: StatusCategory) => {
-		if (selectedRoute?.value.active) {
+		if (selectedRoute?.value.actual.active) {
 			setSelectedStatus(status);
 			handleOpenModal();
 		}
@@ -39,14 +37,14 @@ export const ModalConfirmation = ({ handleSave }: { handleSave: (status: StatusC
 							<TouchableOpacity
 								key={status.name}
 								onPress={() => handleStatusPress(status)}
-								disabled={!selectedRoute?.value.active}
+								disabled={!selectedRoute?.value.actual.active}
 								className="flex-1 rounded py-4 mx-1"
 								style={{
 									borderWidth: !isColorDark(status.color) ? 1 : 0,
 									borderColor: "#dddddd",
 									backgroundColor: status.color,
-									opacity: !selectedRoute?.value.active ? 0.5 : 1,
-									display: status.name !== selectedDispatch?.value.status ? "flex" : "none",
+									opacity: !selectedRoute?.value.actual.active ? 0.5 : 1,
+									display: status.name !== selectedRouteStop?.value.status ? "flex" : "none",
 								}}
 							>
 								<Text
@@ -67,7 +65,7 @@ export const ModalConfirmation = ({ handleSave }: { handleSave: (status: StatusC
 				<View className="mb-10">
 					<Text className="font-semibold text-2xl text-center mb-5">Change Status</Text>
 					<Text className="font-normal text-gray-500 text-center mb-10">
-						Select the new status for this order: {selectedDispatch?.value.customer.name}
+						Select the new status for this order: {selectedRouteStop?.value.displayName}
 					</Text>
 					<View className="border rounded px-5 py-2 mx-auto" style={{ borderColor: selectedStatus?.color }}>
 						<Text

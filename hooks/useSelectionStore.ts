@@ -8,8 +8,8 @@ type SelectionStore = {
 	setSelectedVehicle: (vehicle: { name: string; value: Vehicle } | null) => void;
 	selectedRoute: { name: string; value: Route } | null;
 	setSelectedRoute: (route: { name: string; value: Route } | null) => void;
-	selectedDispatch: { name: string; value: DispatchExtended } | null;
-	setSelectedDispatch(selectedDispatch: { name: string; value: DispatchExtended } | null): void;
+	selectedRouteStop: { name: string; value: RouteStop } | null;
+	setSelectedRouteStop: (routeStop: { name: string; value: RouteStop } | null) => void;
 	selectedDate: string | null;
 	setSelectedDate: (date: string) => void;
 	isToday: () => boolean;
@@ -27,8 +27,8 @@ export const useSelectionStore = create<SelectionStore>()(
 		setSelectedVehicle: (selectedVehicle) => set(() => ({ selectedVehicle })),
 		selectedRoute: null,
 		setSelectedRoute: (selectedRoute) => set(() => ({ selectedRoute })),
-		selectedDispatch: null,
-		setSelectedDispatch: (selectedDispatch) => set(() => ({ selectedDispatch })),
+		selectedRouteStop: null,
+		setSelectedRouteStop: (selectedRouteStop) => set(() => ({ selectedRouteStop })),
 		selectedDate: moment(new Date()).format("YYYY-MM-DD"),
 		setSelectedDate: (selectedDate) => set(() => ({ selectedDate })),
 		isToday: () => get().selectedDate === moment(new Date()).format("YYYY-MM-DD"),

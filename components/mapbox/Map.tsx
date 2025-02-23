@@ -3,10 +3,11 @@ import puckShadow from "@/assets/images/puck-shadow.png";
 import puck from "@/assets/images/puck.png";
 import { MapViewOptions } from "@/constants/MapViewOptions";
 import { useNavigationStore } from "@/hooks/useNavigationStore";
+import { useSelectionStore } from "@/hooks/useSelectionStore";
 import { getBearing } from "@/lib/getBearing";
 import { getDistance } from "@/lib/getDistance";
-import { useDispatch } from "@/providers/DispatchProvider";
 import { useLocation } from "@/providers/LocationProvider";
+import { useRoute } from "@/providers/RouteProvider";
 import { useOrganization, useUser } from "@clerk/clerk-expo";
 import Mapbox, {
 	Camera,
@@ -21,9 +22,9 @@ import { featureCollection, point } from "@turf/helpers";
 import * as Location from "expo-location";
 import React, { useEffect, useRef, useState } from "react";
 import { Text, View } from "react-native";
-import DispatchMarkers from "./DispatchMarkers";
 import InstructionBox from "./InstructionBox";
 import LineRoute from "./LineRoute";
+import RouteStopMarkers from "./RouteStopMarkers";
 const publicAccessToken =
 	"pk.eyJ1IjoidmVkaXNwYXRjaCIsImEiOiJjbTU4NWU0ZzkzbXB1MmtzZGdlOGIwZjM2In0.3C22WiMd_1T_mRsYAWm8GQ";
 
@@ -32,15 +33,8 @@ export default function Map() {
 	const { organization } = useOrganization();
 	const { liveLocation, isChangingLocation, setFollowUserLocation, markerCoordinate, setMarkerCoordinate } =
 		useLocation();
-	const {
-		dispatches,
-		filteredDispatches,
-		routeCoordinates,
-		currentDispatch,
-		setCurrentDispatch,
-		currentStepIndex,
-		setCurrentStepIndex,
-	} = useDispatch();
+	const { currentRouteStop, setCurrentRouteStop, currentStepIndex, setCurrentStepIndex } = useRoute();
+	const { selectedRoute } = useSelectionStore();
 
 	const cameraRef = useRef<Camera>(null);
 	const mapViewRef = useRef<MapView>(null);
@@ -88,10 +82,12 @@ export default function Map() {
 						break;
 					case "locate-dispatch":
 						// Locate the next location (currentDispatch) and center the camera position
-						if (currentDispatch) {
-							const { lat: dispatchLatitude, lng: dispatchLongitude } = currentDispatch.value.customer;
+						if (currentRouteStop) {
 							cameraRef.current?.setCamera({
-								centerCoordinate: [dispatchLongitude, dispatchLatitude],
+								centerCoordinate: [
+									currentRouteStop.value.location.longitude,
+									currentRouteStop.value.location.latitude,
+								],
 								zoomLevel: 15,
 								animationDuration: 1000,
 								animationMode: "flyTo",
@@ -114,7 +110,7 @@ export default function Map() {
 						break;
 					case "locate-route":
 						// Locate both user and dispatch location and adjust the camera position accordingly
-						if (currentDispatch && liveLocation) {
+						if (currentRouteStop && liveLocation) {
 							cameraRef.current?.setCamera({
 								pitch: 0,
 							});
@@ -122,7 +118,10 @@ export default function Map() {
 							setTimeout(() => {
 								cameraRef.current?.fitBounds(
 									[liveLocation.longitude, liveLocation.latitude],
-									[currentDispatch.value.customer.lng, currentDispatch.value.customer.lat],
+									[
+										currentRouteStop.value.location.longitude,
+										currentRouteStop.value.location.latitude,
+									],
 									[50, 50, 50, 50]
 								);
 							}, 100);
@@ -156,16 +155,17 @@ export default function Map() {
 	};
 
 	useEffect(() => {
-		setCurrentDispatch(
-			dispatches
-				.filter((dispatch) => dispatch.value.status === "Open")
-				.sort((a, b) => a.value.route.index! - b.value.route.index!)[0] || null
+		setCurrentRouteStop(
+			selectedRoute?.value.stops
+				.filter((routeStop) => routeStop.value.status === "Open")
+				.sort((a, b) => a.value.sequence! - b.value.sequence!)[0] || null
 		);
-	}, [dispatches]);
+	}, [selectedRoute]);
 
 	useEffect(() => {
-		if (currentDispatch && liveLocation && prevLocation !== liveLocation) {
-			const { steps } = currentDispatch.value.route;
+		if (currentRouteStop && liveLocation && prevLocation !== liveLocation) {
+			const estimation = currentRouteStop.value.estimation;
+			const steps = estimation?.steps;
 			let closestStepIndex = 0;
 			let minDistance = Infinity;
 
@@ -221,7 +221,7 @@ export default function Map() {
 			}
 			setPrevLocation(liveLocation);
 		}
-	}, [prevLocation, currentDispatch]);
+	}, [prevLocation, currentRouteStop]);
 
 	return (
 		<MapView
@@ -269,8 +269,8 @@ export default function Map() {
 					<LocationPuck puckBearingEnabled puckBearing="heading" pulsing={{ isEnabled: true }} />
 				</>
 			)}
-			{dispatches && dispatches.length > 0 && <DispatchMarkers />}
-			{routeCoordinates && <LineRoute coordinates={routeCoordinates} />}
+			{selectedRoute?.value.stops && selectedRoute.value.stops.length > 0 && <RouteStopMarkers />}
+			{selectedRoute?.value.coordinates && <LineRoute coordinates={selectedRoute.value.coordinates} />}
 
 			<Images images={{ puck, puckShadow }} />
 
@@ -289,12 +289,12 @@ export default function Map() {
 					</ShapeSource>
 				</>
 			)}
-			{currentDispatch?.value.route.steps &&
-				currentDispatch?.value.route.steps[currentStepIndex] &&
-				currentDispatch?.value.route.steps[currentStepIndex].maneuver.instruction && (
+			{currentRouteStop?.value.estimation?.steps &&
+				currentRouteStop?.value.estimation.steps[currentStepIndex] &&
+				currentRouteStop?.value.estimation.steps[currentStepIndex].maneuver.instruction && (
 					<InstructionBox
-						steps={currentDispatch?.value.route.steps}
-						currentStep={currentDispatch?.value.route.steps[currentStepIndex]}
+						steps={currentRouteStop?.value.estimation.steps}
+						currentStep={currentRouteStop?.value.estimation.steps[currentStepIndex]}
 					/>
 					// <View className="absolute top-16 left-0 right-0 pt-20 pr-[90px] pl-5">
 					// 	<View className="bg-black/50 p-5 rounded-xl h-auto">
